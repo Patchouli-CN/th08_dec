@@ -1,6 +1,8 @@
 #include "th_pch.h"
 
 #include "Gui.hpp"
+#include "ItemManager.hpp"
+#include "Player.hpp"
 
 namespace th08
 {
@@ -111,8 +113,8 @@ ZunResult Gui::LoadMsg(const char *path)
         g_GameErrorContext.Log("error : \x83\x81\x83" "b\x83Z\x81[\x83W\x83t\x83@\x83" "C\x83\x8b %s \x82\xaa\x93\xc7\x82\xdd\x8d\x9e\x82\xdf\x82\xdc\x82\xb9\x82\xf1\x82\xc5\x82\xb5\x82\xbd\x0d\x0a", path);
         return ZUN_ERROR;
     }
-    this->impl->msgState.unk08 = -1;
-    this->impl->msgState.unk04 = 0;
+    this->impl->msgState.currentMsgIdx = -1;
+    this->impl->msgState.curInstr = NULL;
     for (i = 0; i < (i32)((GuiMsgData *)this->impl->msgState.msgFileData)->entryCount; i++)
     {
         ((GuiMsgData *)this->impl->msgState.msgFileData)->offsets[i] += (u32)this->impl->msgState.msgFileData;
@@ -130,8 +132,97 @@ void Gui::FreeMsgFile(void)
 }
 
 // STUB: th08 0x433db3
-void GuiImpl::RunMsg()
+// FUNCTION: th08 0x433db3
+ZunResult GuiImpl::RunMsg()
 {
+    MsgRawInstr *curInstr;
+
+    if (this->msgState.currentMsgIdx < 0)
+    {
+        return ZUN_ERROR;
+    }
+    if (this->msgState.ignoreWaitCounter > 0)
+    {
+        this->msgState.ignoreWaitCounter--;
+    }
+    if (this->msgState.dialogueSkippable && IS_PRESSED(TH_BUTTON_SKIP))
+    {
+        this->msgState.timer = this->msgState.curInstr->time;
+    }
+    if (g_Player.playerState != PLAYER_STATE_DEAD)
+    {
+        g_ItemManager.AutoCollectAllItems();
+    }
+
+    while (this->msgState.timer >= (i32)this->msgState.curInstr->time)
+    {
+        // WIP: cases laid out in the original's source order (opcode values 0-22).
+        // Only case 0 (DELETE) is implemented; the rest need decoding from 0x433db3.
+        switch (this->msgState.curInstr->opcode)
+        {
+        case 0: // MSG_DELETE
+            this->msgState.currentMsgIdx = -1;
+            return ZUN_ERROR;
+        case 15:
+            break;
+        case 17:
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 16:
+            break;
+        case 19:
+            break;
+        case 20:
+            break;
+        case 21:
+            break;
+        case 22:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        case 7:
+            break;
+        case 8:
+            break;
+        case 9:
+            break;
+        case 10:
+            break;
+        case 12:
+            break;
+        case 14:
+            break;
+        case 11:
+            break;
+        case 13:
+            break;
+        case 18:
+            break;
+        default:
+            break;
+        }
+        this->msgState.curInstr = (MsgRawInstr *)((u8 *)this->msgState.curInstr + 4 + this->msgState.curInstr->argsize);
+    }
+
+    g_AnmManager->ExecuteScript(&this->msgState.vms[0]);
+    g_AnmManager->ExecuteScript(&this->msgState.vms[1]);
+    g_AnmManager->ExecuteScript(&this->msgState.vms[2]);
+    g_AnmManager->ExecuteScript(&this->msgState.vms[3]);
+    g_AnmManager->ExecuteScript(&this->msgState.vms2[0]);
+    g_AnmManager->ExecuteScript(&this->msgState.vms2[1]);
+    g_AnmManager->ExecuteScript(&this->msgState.vms3[0]);
+    g_AnmManager->ExecuteScript(&this->msgState.vms3[1]);
+
+    return ZUN_SUCCESS;
 }
 
 // STUB: th08 0x43542b

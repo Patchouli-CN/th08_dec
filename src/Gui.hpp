@@ -7,17 +7,23 @@
 namespace th08
 {
 
+struct MsgRawInstr;
+
 struct GuiMsgState
 {
     u8 *msgFileData;
-    i32 unk04;
-    i32 unk08;
+    MsgRawInstr *curInstr;
+    i32 currentMsgIdx;
     ZunTimer timer;
     unknown_fields(0x18, 0x8);
     AnmVm vms[4];
     AnmVm vms2[2];
     AnmVm vms3[2];
-    unknown_fields(0x1540, 0x30);
+    unknown_fields(0x1540, 0x24);
+    u32 ignoreWaitCounter; // 0x1564
+    u8 dialogueSkippable;  // 0x1568
+    unknown_fields(0x1569, 0x3);
+    i32 unk156c; // 0x156c
     i32 unk1570;
     unknown_fields(0x1574, 0x4);
 };
@@ -38,9 +44,44 @@ struct GuiMsgData
     u32 offsets[1];
 };
 
+union MsgRawInstrArgs {
+    struct
+    {
+        i16 portraitIdx;
+        i16 anmScriptIdx;
+    } portrait;
+    struct
+    {
+        i16 textColor;
+        i16 textLine;
+        char text[5];
+    } dialogue;
+    struct
+    {
+        i32 duration;
+    } pause;
+    struct
+    {
+        i16 unkIdx;
+        u8 interrupt;
+    } msgSwitch;
+    struct
+    {
+        i32 musicIdx;
+    } music;
+};
+
+struct MsgRawInstr
+{
+    u16 time; // 0x0
+    u8 opcode; // 0x2
+    u8 argsize; // 0x3
+    MsgRawInstrArgs args; // 0x4
+};
+
 struct GuiImpl
 {
-    void RunMsg();
+    ZunResult RunMsg();
     void DrawDialogue();
 
     AnmVm vmsA[16];
