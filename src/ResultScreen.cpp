@@ -52,9 +52,163 @@ void ResultScreen::FreeScore(i32 difficulty, i32 character)
     ScoreDat::FreeAllScores(&this->scores[difficulty][character]);
 }
 
-// STUB: th08 0x454cb2
-void ResultScreen::HandleCategorySelectScreen()
+// FUNCTION: th08 0x454cb2 (97% FIXME: switch 临时槽副本)
+i32 ResultScreen::HandleCategorySelectScreen()
 {
+    i32 i;
+    i32 selected;
+    AnmVm *vm;
+
+    switch (this->unk10)
+    {
+    case 0:
+        if (this->unk18 == 0)
+        {
+            vm = (AnmVm *)((u8 *)this + 0x1a0);
+
+            for (i = 0; i < 0x48; i++, vm = (AnmVm *)((u8 *)vm + 0x2a4))
+            {
+                *(u16 *)((u8 *)vm + 0x1fe) = 0x1;
+            }
+
+            for (i = 0; i <= 3; i++)
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
+                g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+
+                if (i == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                }
+            }
+        }
+
+        if (this->unk18 < 0x14)
+        {
+            break;
+        }
+
+        this->unk10++;
+        this->unk18 = 0;
+        /* fallthrough */
+    case 1:
+        i = this->MoveCursor(4);
+
+        if (i != 0)
+        {
+            for (i = 0; i <= 3; i++)
+            {
+                if (i == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                }
+            }
+        }
+
+        if (WAS_PRESSED(0x2000))
+        {
+            this->LogScoreDataToFile(this);
+        }
+
+        if (WAS_PRESSED(0xa))
+        {
+            if (this->unk1c == 3)
+            {
+                goto case3;
+            }
+
+            this->unk1c = 3;
+            g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
+
+            for (i = 0; i <= 3; i++)
+            {
+                if (i == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                }
+            }
+        }
+
+        if (WAS_PRESSED(0x1001))
+        {
+            vm = (AnmVm *)((u8 *)this + 0x1a0);
+            selected = this->unk1c;
+
+            switch (selected)
+            {
+            case 0:
+                this->SetState((ResultScreenState)3);
+
+                for (i = 0; i <= 3; i++)
+                {
+                    if (i == this->unk1c)
+                    {
+                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                    }
+                    else
+                    {
+                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                    }
+                }
+                break;
+            case 1:
+                this->SetState((ResultScreenState)6);
+
+                for (i = 0; i <= 3; i++)
+                {
+                    if (i == this->unk1c)
+                    {
+                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                    }
+                    else
+                    {
+                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                    }
+                }
+                break;
+            case 2:
+                for (i = 0; i <= 3; i++)
+                {
+                    if (i == this->unk1c)
+                    {
+                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                    }
+                    else
+                    {
+                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                    }
+                }
+
+                this->SetState((ResultScreenState)0x13);
+                break;
+            case3:
+            case 3:
+                this->SetState((ResultScreenState)2);
+                g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
+                return 1;
+            }
+
+            g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
+            return 1;
+        }
+        break;
+    }
+
+    this->unk18++;
+
+    return 0;
 }
 
 // FUNCTION: th08 0x4550b7

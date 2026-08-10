@@ -30,7 +30,7 @@ struct ResultScreen
     static void LogScoreDataToFile(ResultScreen *resultScreen);
     void LinkScoreEx(void *out, int difficulty, i32 character);
     void FreeScore(i32 difficulty, i32 character);
-    void HandleCategorySelectScreen();
+    i32 HandleCategorySelectScreen();
     void SetState(ResultScreenState state);
 
     i32 HandleHighScoreDifficultySelect();
