@@ -6,16 +6,26 @@
 namespace th08
 {
 
-// STUB: th08 0x453cd1
+// FUNCTION: th08 0x453cd1
 const char *ResultScreen::GetStageName(i32 stage)
 {
-    return NULL;
+    const char *name;
+
+    if (stage >= 9)
+    {
+        name = (const char *)0x4b7108;
+    }
+    else
+    {
+        name = ((const char **)0x4c7fac)[stage];
+    }
+    return name;
 }
 
-// STUB: th08 0x453cfa
+// FUNCTION: th08 0x453cfa
 const char *ResultScreen::GetCharacterName(i32 character)
 {
-    return NULL;
+    return ((const char **)0x4c7f4c)[character];
 }
 
 // STUB: th08 0x453d0d

@@ -906,15 +906,6 @@ void GameManager::CutChain()
 }
 
 
-i32 GameManager::GetLives()
-{
-    return this->globals->livesRemaining;
-}
-
-i32 GameManager::GetBombsRemaining()
-{
-    return (i32)this->globals->bombsRemaining;
-}
 
 
 i32 GameManager::GetTimeOrbs()

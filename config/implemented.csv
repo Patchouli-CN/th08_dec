@@ -312,6 +312,8 @@ th08::Player::LoadShtFile
 th08::Player::OnDrawLowPrio
 th08::Player::RegisterChain
 th08::ReplayManager::StopRecording
+th08::ResultScreen::GetCharacterName
+th08::ResultScreen::GetStageName
 th08::ResultScreen::RegisterChain
 th08::Rng::GetRandomF32
 th08::Rng::GetRandomF32InRange

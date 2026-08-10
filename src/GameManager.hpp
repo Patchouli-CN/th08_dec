@@ -73,8 +73,15 @@ struct GameManager
     i32 GetTimeOrbs();
     i32 GetLastSpellTimeOrbThreshold();
 
-    i32 GetLives();
-    i32 GetBombsRemaining();
+    i32 GetLives()
+    {
+        return this->globals->livesRemaining;
+    }
+
+    i32 GetBombsRemaining()
+    {
+        return this->globals->bombsRemaining;
+    }
 
     void UpdateAntiTamper()
     {
