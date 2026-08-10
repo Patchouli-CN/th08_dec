@@ -152,6 +152,7 @@ th08::Supervisor::SetupDInput
 th08::Supervisor::EnumGameControllersCb
 th08::Supervisor::CalculateFps
 th08::Supervisor::TakeSnapshot
+th08::Supervisor::PlayAudio
 th08::Supervisor::FadeOutMusic
 th08::GameManager::IsWithinPlayfield
 th08::GameManager::OnDraw

@@ -1497,12 +1497,29 @@ ZunBool Supervisor::PlayMusic(int param_1, char *param_2)
     return 0;
 }
 
+#pragma var_order(periodLoc, wavPathBuf, midiOutput)
 ZunResult Supervisor::PlayAudio(char *path, int param_2)
 {
     char wavPathBuf[256];
     char *periodLoc;
+    MidiOutput *midiOutput;
 
-    if (g_Supervisor.cfg.musicMode == WAV)
+    if (g_Supervisor.cfg.musicMode == MIDI)
+    {
+        if (g_Supervisor.midiOutput != NULL)
+        {
+            midiOutput = g_Supervisor.midiOutput;
+            midiOutput->StopPlayback();
+            midiOutput->LoadFile(path);
+            midiOutput->Play();
+        }
+
+        if (!g_GameManager.flags.isReplay && !g_GameManager.flags.isDemoMode)
+        {
+            ((u8 *)&g_GameManager + 0x3da0c)[param_2] = 1;
+        }
+    }
+    else if (g_Supervisor.cfg.musicMode == WAV)
     {
         strcpy(wavPathBuf, path);
 
@@ -1512,6 +1529,15 @@ ZunResult Supervisor::PlayAudio(char *path, int param_2)
         periodLoc[3] = 'v';
 
         g_SoundPlayer.QueueCommand(2, -1, wavPathBuf);
+
+        if (!g_GameManager.flags.isReplay && !g_GameManager.flags.isDemoMode)
+        {
+            ((u8 *)&g_GameManager + 0x3da0c)[param_2] = 1;
+        }
+    }
+    else
+    {
+        return ZUN_ERROR;
     }
 
     return ZUN_SUCCESS;
