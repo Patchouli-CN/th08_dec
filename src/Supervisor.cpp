@@ -1896,6 +1896,22 @@ void Supervisor::FUN_0044881a()
     }
 }
 
+// FUNCTION: th08 0x453c40
+ZunBool Supervisor::IsClearBackBufferOnRefreshEnabled()
+{
+    return this->cfg.opts.clearBackBufferOnRefresh;
+}
+
+// FUNCTION: th08 0x470dd5
+void Supervisor::ResetUnknownStuff()
+{
+    this->unk0x338 = 0;
+    this->unk0x340 = 0;
+    this->unk0x34c = 0;
+    this->unk0x344 = 0;
+    this->unk0x348 = 0;
+}
+
 void Supervisor::HideLoadingVms(void)
 {
     if (this->loadingVmsHaveBeenSetup == 1)

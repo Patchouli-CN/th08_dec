@@ -478,3 +478,4 @@ th08::SoundPlayer::UnPause
 th08::AsciiManager::FUN_0042f2d0
 th08::Supervisor::FUN_0044881a
 th08::Supervisor::FUN_004489ca
+th08::Supervisor::ResetUnknownStuff

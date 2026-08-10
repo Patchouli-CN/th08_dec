@@ -174,14 +174,7 @@ struct Supervisor
 
     ZunResult ThreadStart(LPTHREAD_START_ROUTINE startFunction, void *startParam);
 
-    void ResetUnknownStuff()
-    {
-        this->unk0x338 = 0;
-        this->unk0x340 = 0;
-        this->unk0x34c = 0;
-        this->unk0x344 = 0;
-        this->unk0x348 = 0;
-    }
+    void ResetUnknownStuff();
 
     ZunBool IsShotSlowEnabled()
     {
