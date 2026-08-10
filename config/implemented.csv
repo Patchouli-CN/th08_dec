@@ -493,3 +493,9 @@ th08::AnmLoaded::GetSprite
 th08::AnmLoaded::InitializeAndSetSprite
 th08::AnmLoaded::LoadSprite
 th08::PlstPlayCounts::IncrementTotalAttempts
+th08::TitleScreen::AddedCallback
+th08::TitleScreen::DeletedCallback
+th08::TitleScreen::RegisterChain
+th08::TitleScreen::OnUpdate
+th08::TitleScreen::TitleSetupThread
+th08::TitleScreen::TitleScreen
