@@ -99,6 +99,18 @@ ChainCallbackResult AsciiManager::OnDrawLowPrio(AsciiManager *ascii)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
+// FUNCTION: th08 0x4398ff
+void AsciiManager::SetIsGuiMode(u32 isGuiMode)
+{
+    this->isGui = isGuiMode;
+}
+
+// FUNCTION: th08 0x42f2d0
+void AsciiManager::FUN_0042f2d0(i32 idx, u32 value)
+{
+    *(u32 *)((u8 *)this + 0x2254 + idx * 4) = value;
+}
+
 // STUB: th08 0x402b20
 void AsciiManager::DrawStrings()
 {

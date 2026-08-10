@@ -104,6 +104,8 @@ struct AsciiManager
         this->color.d3dColor = color;
     }
 
+    void SetIsGuiMode(u32 isGuiMode);
+    void FUN_0042f2d0(i32 idx, u32 value);
     void SetIsSelected(ZunBool selected)
     {
         this->isSelected = selected;

@@ -1869,6 +1869,33 @@ void Supervisor::SetupLoadingVms(Float3 *position)
     }
 }
 
+// FUNCTION: th08 0x4489ca
+void Supervisor::FUN_004489ca(i32 param)
+{
+    if (g_SupervisorScreenEffect == NULL)
+    {
+        g_SupervisorScreenEffect = ScreenEffect::RegisterChain((ScreenEffectType)(param + 5), 60, 0, 0, 0, 1);
+    }
+}
+
+// FUNCTION: th08 0x44881a
+void Supervisor::FUN_0044881a()
+{
+    if (this->loadingVmsHaveBeenSetup == 1)
+    {
+        g_SupervisorLoadingVms[0].SetInterrupt(1);
+        g_SupervisorLoadingVms[1].SetInterrupt(1);
+        g_SupervisorLoadingVms[2].SetInterrupt(1);
+        this->loadingVmsHaveBeenSetup = 0;
+    }
+
+    if (g_SupervisorScreenEffect != NULL)
+    {
+        g_SupervisorScreenEffect->Stop();
+        g_SupervisorScreenEffect = NULL;
+    }
+}
+
 void Supervisor::HideLoadingVms(void)
 {
     if (this->loadingVmsHaveBeenSetup == 1)
