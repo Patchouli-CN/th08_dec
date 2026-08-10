@@ -50,3 +50,6 @@
   EffectManager 加 unk0/unk8b054 字段、新增 g_EffectTemplates 全局。
 - **`ResultScreen::HandleHighScoreCharacterSelect`**（0x45567d）反编译完成（100%）。
   角色选择状态机（unk10==0 初始化、==1 MoveCursor/WAS_PRESSED 确认返回/进入成绩屏）。
+- **`ResultScreen::HandleSpellCardDifficultySelect`**（0x455a33，86%→100%）、
+  **`ResultScreen::HandleSpellCardCharacterSelect`**（0x455cb0）反编译完成。
+  同难度/角色选择状态机模式（switch this->unk10 + MoveCursor + WAS_PRESSED 确认）。

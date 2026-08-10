@@ -374,101 +374,192 @@ i32 ResultScreen::HandleHighScoreScreen()
 // FUNCTION: th08 0x455a33
 i32 ResultScreen::HandleSpellCardDifficultySelect()
 {
-    i32 state = this->unk10;
+    i32 i;
 
-    if (state == 0)
+    switch (this->unk10)
     {
-        goto case0;
-    }
-    else if (state == 1)
-    {
-        goto case1;
-    }
-    goto end;
-
-case0:
-    if (this->unk18 == 0)
-    {
-        this->unk1c = this->unk48;
-        for (i32 i = 9; i <= 0xe; i++)
+    case 0:
+        if (this->unk18 == 0)
         {
-            *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
-            g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
-            if (i - 9 == this->unk1c)
+            this->unk1c = this->unk48;
+
+            for (i = 0x9; i <= 0xe; i++)
             {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
-            }
-            else
-            {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
+                g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+
+                if (i - 0x9 == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                }
             }
         }
-    }
 
-    if (this->unk18 >= 6)
-    {
+        if (this->unk18 < 6)
+        {
+            break;
+        }
+
         this->unk10++;
         this->unk18 = 0;
-        goto case1;
-    }
-    goto end;
+        /* fallthrough */
+    case 1:
+        i = this->MoveCursor(6);
 
-case1:
-{
-    i32 ret = this->MoveCursor(6);
-    if (ret != 0)
-    {
-        for (i32 i = 9; i <= 0xe; i++)
+        if (i != 0)
         {
-            if (i - 9 == this->unk1c)
+            for (i = 0x9; i <= 0xe; i++)
             {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
-            }
-            else
-            {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                if (i - 0x9 == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                }
             }
         }
-    }
 
-    if (WAS_PRESSED(0xa))
-    {
-        this->SetState((ResultScreenState)1);
-        g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
-        this->unk48 = this->unk1c;
-        this->unk1c = 1;
-        return 1;
-    }
-
-    if (WAS_PRESSED(0x1001))
-    {
-        for (i32 i = 9; i <= 0xe; i++)
+        if (WAS_PRESSED(0xa))
         {
-            if (i - 9 == this->unk1c)
-            {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
-            }
-            else
-            {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
-            }
+            this->SetState((ResultScreenState)1);
+            g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
+            this->unk48 = this->unk1c;
+            this->unk1c = 1;
+            return 1;
         }
-        this->unk48 = this->unk1c;
-        this->SetState((ResultScreenState)7);
-        g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
-        return 1;
-    }
-    goto end;
-}
 
-end:
+        if (WAS_PRESSED(0x1001))
+        {
+            AnmVm *vmBase = (AnmVm *)((u8 *)this + 0x1a0);
+
+            for (i = 0x9; i <= 0xe; i++)
+            {
+                if (i - 0x9 == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                }
+            }
+
+            this->unk48 = this->unk1c;
+            this->SetState((ResultScreenState)7);
+            g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
+            return 1;
+        }
+        break;
+    }
+
     this->unk18++;
+
     return 0;
 }
 
-// STUB: th08 0x455cb0
+// FUNCTION: th08 0x455cb0
 i32 ResultScreen::HandleSpellCardCharacterSelect()
 {
+    i32 i;
+
+    switch (this->unk10)
+    {
+    case 0:
+        if (this->unk18 == 0)
+        {
+            this->unk1c = this->unk30;
+
+            for (i = 0x1b; i <= 0x27; i++)
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
+                g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+
+                if (i - 0x1b == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                }
+            }
+        }
+
+        if (this->unk18 < 6)
+        {
+            break;
+        }
+
+        this->unk10++;
+        this->unk18 = 0;
+        /* fallthrough */
+    case 1:
+        i = this->MoveCursor(0xd);
+
+        if (i != 0)
+        {
+            for (i = 0x1b; i <= 0x27; i++)
+            {
+                if (i - 0x1b == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                }
+            }
+        }
+
+        if (WAS_PRESSED(0xa))
+        {
+            this->SetState((ResultScreenState)6);
+            g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
+            this->unk30 = this->unk1c;
+
+            for (i = 0x1b; i <= 0x27; i++)
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+            }
+
+            return 1;
+        }
+
+        if (WAS_PRESSED(0x1001))
+        {
+            AnmVm *vmBase = (AnmVm *)((u8 *)this + 0x1a0);
+
+            for (i = 0x1b; i <= 0x27; i++)
+            {
+                if (i - 0x1b == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                }
+            }
+
+            this->unk30 = this->unk1c;
+            this->SetState((ResultScreenState)8);
+            g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
+            *(u16 *)((u8 *)this + 0x6d3e) = 0x3;
+            this->unk1c = 0;
+            this->unk40 |= 0xffffffff;
+            return 1;
+        }
+        break;
+    }
+
+    this->unk18++;
+
     return 0;
 }
 
