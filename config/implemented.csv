@@ -380,6 +380,7 @@ th08::Supervisor::AddedCallback
 th08::Supervisor::CalculateFps
 th08::Supervisor::CheckFps
 th08::Supervisor::ControllerCallback
+th08::Supervisor::DeleteCriticalSections
 th08::Supervisor::DeletedCallback
 th08::Supervisor::DisableFog
 th08::Supervisor::DrawFpsCounter
