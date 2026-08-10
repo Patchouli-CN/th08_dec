@@ -1,7 +1,12 @@
 WinMain
 th08::AddNormalizeAngle
+th08::AnmFileDesc::GetSprite
+th08::AnmFileDesc::InitializeAndSetSprite
+th08::AnmFileDesc::LoadSprite
+th08::AnmFileDesc::SetAndExecuteScriptIdx
 th08::AnmManager::AddSpriteToDrawBuffer
 th08::AnmManager::AnmManager
+th08::AnmManager::CaptureToSurface
 th08::AnmManager::CaptureToTexture
 th08::AnmManager::ClearBlendMode
 th08::AnmManager::ClearCameraSettings
@@ -10,18 +15,23 @@ th08::AnmManager::ClearSprite
 th08::AnmManager::ClearTexture
 th08::AnmManager::ClearVertexBuffer
 th08::AnmManager::ClearVertexShader
+th08::AnmManager::CopySurfaceToBackbuffer
+th08::AnmManager::CreateEmptyTexture
+th08::AnmManager::CreateTextureFromAnm
 th08::AnmManager::CreateTextureFromFile
 th08::AnmManager::Draw2D
 th08::AnmManager::Draw2DNoRound
 th08::AnmManager::DrawNoRotation
 th08::AnmManager::DrawNoRotationNoRound
 th08::AnmManager::DrawPlayerBullet
+th08::AnmManager::ExecuteScript
 th08::AnmManager::FUN_00463cf0
 th08::AnmManager::FUN_00464070
 th08::AnmManager::FlushVertexBuffer
 th08::AnmManager::GetAnm
 th08::AnmManager::LoadAnm
 th08::AnmManager::LoadExternalTextureData
+th08::AnmManager::LoadSurface
 th08::AnmManager::LoadTextureData
 th08::AnmManager::PostloadAnmEntry
 th08::AnmManager::PreloadAnm
@@ -34,6 +44,7 @@ th08::AnmManager::SetRenderStateForVm
 th08::AnmManager::SetupVertexBuffer
 th08::AnmManager::TakeScreencaptures
 th08::AnmManager::TranslateRotation
+th08::AnmPrefix::AnmPrefix
 th08::AnmVm::GetFloatVar
 th08::AnmVm::GetFloatVarPtr
 th08::AnmVm::GetIntVar
@@ -60,7 +71,9 @@ th08::AsciiManagerString::AsciiManagerString
 th08::Background::AddedCallback
 th08::Background::Background
 th08::Background::CutChain
+th08::Background::DeletedCallback
 th08::Background::LoadStageData
+th08::Background::RegisterChain
 th08::BulletManager::CutChain
 th08::BulletManager::DeletedCallback
 th08::BulletManager::RegisterChain
@@ -91,6 +104,7 @@ th08::CSound::Unpause
 th08::CSoundManager::CreateStreaming
 th08::CSoundManager::CreateStreamingFromMemory
 th08::CSoundManager::GetDirectSound
+th08::CSoundManager::Initialize
 th08::CSoundManager::SetPrimaryBufferFormat
 th08::CStreamingSound::FadeOut
 th08::CStreamingSound::HandleWaveStreamNotification
@@ -130,10 +144,14 @@ th08::Controller::ResetKeyboard
 th08::Controller::SetButtonFromControllerInputs
 th08::Controller::SetButtonFromDirectInputJoystate
 th08::EffectManager::CutChain
+th08::Ending::AddedCallback
 th08::Ending::DeletedCallback
+th08::Ending::FadingEffect
 th08::Ending::LoadEnding
 th08::Ending::OnDraw
 th08::Ending::OnUpdate
+th08::Ending::ParseEndFile
+th08::Ending::ReadEndFileParameter
 th08::Ending::RegisterChain
 th08::Enemy::FUN_0042bc90
 th08::EnemyManager::CutChain
@@ -221,6 +239,7 @@ th08::Item::CollectTimeOrb
 th08::Item::Delete
 th08::ItemManager::AutoCollectAllItems
 th08::ItemManager::CancelAutoCollect
+th08::ItemManager::ConvertAllPowerItemsToTimeOrbs
 th08::ItemManager::GetTimeOrbCount
 th08::ItemManager::OnDraw
 th08::ItemManager::OnUpdate
@@ -267,6 +286,7 @@ th08::MidiTimer::StartTimerImpl
 th08::MidiTimer::StopTimer
 th08::MidiTimer::StopTimerImpl
 th08::MidiTimer::~MidiTimer
+th08::MusicRoom::RegisterChain
 th08::PbgArchive::AllocEntries
 th08::PbgArchive::CopyFileName
 th08::PbgArchive::FindEntry
@@ -281,6 +301,7 @@ th08::PbgArchive::SeekPastString
 th08::PbgArchive::~PbgArchive
 th08::Player::AngleToPlayer
 th08::Player::CalcItemBoxCollision
+th08::Player::CutChain
 th08::Player::DeletedCallback
 th08::Player::DrawBulletVms
 th08::Player::LoadShtFile
@@ -333,6 +354,7 @@ th08::SoundPlayer::GetFmtIndexByName
 th08::SoundPlayer::GetWavFormatData
 th08::SoundPlayer::InitSoundBuffers
 th08::SoundPlayer::InitializeDSound
+th08::SoundPlayer::LoadBGM
 th08::SoundPlayer::LoadFmt
 th08::SoundPlayer::LoadSound
 th08::SoundPlayer::PlaySoundByIdx
@@ -342,6 +364,7 @@ th08::SoundPlayer::ProcessQueues
 th08::SoundPlayer::QueueCommand
 th08::SoundPlayer::Release
 th08::SoundPlayer::ReopenBGM
+th08::SoundPlayer::StartBGM
 th08::SoundPlayer::StopBGM
 th08::SoundPlayer::UpdateFades
 th08::Spellcard::CutChain
@@ -373,6 +396,7 @@ th08::Supervisor::IsVertexBufferDisabled
 th08::Supervisor::IsWindowed
 th08::Supervisor::LeaveCriticalSectionWrapper
 th08::Supervisor::LoadConfig
+th08::Supervisor::LoadDat
 th08::Supervisor::LoadMusic
 th08::Supervisor::OnDraw2
 th08::Supervisor::OnUpdate
@@ -381,6 +405,7 @@ th08::Supervisor::RegisterChain
 th08::Supervisor::SetRenderState
 th08::Supervisor::SetupDInput
 th08::Supervisor::SetupLoadingVms
+th08::Supervisor::StartupThread
 th08::Supervisor::StopAudio
 th08::Supervisor::TakeSnapshot
 th08::Supervisor::ThreadClose
@@ -402,7 +427,10 @@ th08::TextHelper::InvertAlpha
 th08::TextHelper::IsAllocated
 th08::TextHelper::ReleaseBuffer
 th08::TextHelper::ReleaseTextBuffer
+th08::TextHelper::RenderTextToTexture
+th08::TextHelper::RenderTextToTextureBold
 th08::TextHelper::TryAllocateBuffer
+th08::Title::TitleSetupThread
 th08::ZunMemory::AddToRegistry
 th08::ZunMemory::Alloc
 th08::ZunMemory::Free
