@@ -562,6 +562,15 @@ struct AnmManager
     void SetCameraMode(u8 mode);
     void FUN_0040baf0(AnmVm *vm);
     void FUN_0040bab0();
+    void FUN_00462e00();
+    void FUN_0040b9f0();
+    void FUN_0040ba50();
+    void FUN_0040ba10();
+    void FUN_0040b9d0();
+    void FUN_0040b9b0();
+    void FUN_0040ba30();
+    void FUN_0040bb20();
+    void FUN_0040ba70();
 
     void ClearZWriteSetting();
 

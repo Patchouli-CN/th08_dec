@@ -522,9 +522,151 @@ afterDispatchLoop:
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
-// STUB: th08 0x409200
+// FUNCTION: th08 0x409200 (75% FIXME: 多个 D3D 虚函数 0xa0/0x90 寄存器分配)
 ChainCallbackResult Background::OnDrawHighPrio(Background *background)
 {
+    i32 i;
+
+    *(i32 *)((u8 *)background + 0x6478) = 0;
+
+    for (i = 0; i < 0x10; i++)
+    {
+        background->unk0x6480[i] = Float3(0.0f, 0.0f, 0.0f);
+    }
+
+    *(i32 *)0x17ce820 = 0x20;
+    *(i32 *)0x17ce824 = 0x10;
+    *(i32 *)0x17ce828 = 0x180;
+    *(i32 *)0x17ce82c = 0x1c0;
+
+    g_AnmManager->FUN_00462e00();
+    g_AnmManager->FUN_0040b9f0();
+    g_AnmManager->FUN_0040ba50();
+    g_AnmManager->FUN_0040ba10();
+    g_AnmManager->FUN_0040b9d0();
+    g_AnmManager->FUN_0040b9b0();
+    g_AnmManager->FUN_0040ba30();
+    g_AnmManager->FUN_0040bb20();
+    g_AnmManager->FUN_0040ba70();
+
+    if (!g_Supervisor.IsFogDisabled())
+    {
+        g_Supervisor.DisableFog();
+    }
+
+    g_AnmManager->FlushVertexBuffer();
+
+    if (*(i32 *)((u8 *)background + 0xb2c) != 0)
+    {
+        ZunRect rect;
+
+        *(u32 *)&rect.left = 0x20;
+        *(u32 *)&rect.top = 0x10;
+        *(u32 *)&rect.right = 0x180;
+        *(u32 *)&rect.bottom = 0x1c0;
+
+        /* D3D virtual calls @ vtbl+0xa0 / vtbl+0x90 */
+        ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
+            *(void **)0x17ce760, &rect);
+        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)0x17ce760)[0x90 / 4])(
+            *(void **)0x17ce760, 0, 0, 1, 0xff000000, 0x3f800000, 0);
+
+        *(i32 *)((u8 *)background + 0xb2c) = 0;
+    }
+
+    /* D3D virtual call @ vtbl+0xa0 */
+    ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
+        *(void **)0x17ce760, (void *)0x17ce820);
+
+    if (*(u8 *)((u8 *)background + 0x646b) > 0)
+    {
+        ((void(__fastcall *)(AnmManager *, u32))0x40bad0)(g_AnmManager, *(u32 *)((u8 *)background + 0x6468));
+    }
+
+    *(u8 *)((u8 *)background + 0x646b) = 0;
+    *(u8 *)((u8 *)background + 0x646a) = 0x80;
+    *(u8 *)((u8 *)background + 0x6469) = 0x80;
+    *(u8 *)((u8 *)background + 0x6468) = 0x80;
+
+    if ((i32)background->unk0xb24 <= 1)
+    {
+        if (g_Gui.FUN_00437d87() == 0)
+        {
+            if (*(i16 *)((u8 *)background + 0x218) > 0)
+            {
+                ((void(__fastcall *)(AnmManager *, AnmVm *))0x40baf0)(g_AnmManager, (AnmVm *)((u8 *)background + 0x4));
+            }
+
+            if (*(i16 *)((u8 *)background + 0x4bc) > 0)
+            {
+                ((void(__fastcall *)(AnmManager *, AnmVm *))0x40baf0)(g_AnmManager, (AnmVm *)((u8 *)background + 0x2a8));
+            }
+
+            if (background->unk0xae8 != NULL)
+            {
+                void *p = background->unk0xae8;
+                ((void(__fastcall *)(void *)) *(u32 *)((u8 *)p + 0x34c))(p);
+            }
+        }
+    }
+
+    if ((background->unk0x830 & 0xff000000) == 0xff000000)
+    {
+        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)0x17ce760)[0x90 / 4])(
+            *(void **)0x17ce760, 0, 0, 3, background->unk0x830, 0x3f800000, 0);
+    }
+    else if (background->unk0x830 != 0)
+    {
+        ZunRect rect = {32.0f, 16.0f, 416.0f, 464.0f};
+
+        ScreenEffect::DrawSquare(&rect, background->unk0x830);
+
+        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)0x17ce760)[0x90 / 4])(
+            *(void **)0x17ce760, 0, 0, 2, background->unk0x830, 0x3f800000, 0);
+    }
+    else
+    {
+        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)0x17ce760)[0x90 / 4])(
+            *(void **)0x17ce760, 0, 0, 2, background->unk0x830, 0x3f800000, 0);
+    }
+
+    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x17, 4);
+
+    if (*(u32 *)((u8 *)g_AnmManager + 0x4) == 0)
+    {
+        g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x22, *(u32 *)((u8 *)background + 0xaf4));
+    }
+    else
+    {
+        u32 c = *(u32 *)((u8 *)background + 0xaf4);
+        u8 c0 = (u8)(c >> 24);
+        u8 c1 = (u8)(c >> 16);
+        u8 c2 = (u8)(c >> 8);
+
+        c2 = ((u8(__fastcall *)(u8, u8))0x462750)(c2, *(u8 *)((u8 *)g_AnmManager + 0x2));
+        c1 = ((u8(__fastcall *)(u8, u8))0x462750)(c1, *(u8 *)((u8 *)g_AnmManager + 0x1));
+        c0 = ((u8(__fastcall *)(u8, u8))0x462750)(c0, *(u8 *)((u8 *)g_AnmManager + 0x0));
+
+        g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x22, (c0 << 24) | (c1 << 16) | (c2 << 8) | (u8)c);
+    }
+
+    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x24, *(u32 *)((u8 *)background + 0xaec));
+    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x25, *(u32 *)((u8 *)background + 0xaf0));
+
+    if (!g_Supervisor.IsFogDisabled())
+    {
+        g_Supervisor.EnableFog();
+    }
+
+    if ((i32)background->unk0xb24 <= 1)
+    {
+        if (g_Gui.FUN_00437d87() == 0)
+        {
+            background->FUN_0040a1b0(0);
+            background->FUN_0040a1b0(1);
+        }
+    }
+
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
