@@ -150,8 +150,15 @@ ZunResult EffectManager::RegisterChain()
 }
 
 // STUB: th08 0x425430
-void EffectManager::FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c)
+AnmVm *EffectManager::FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c)
 {
+    return NULL;
+}
+
+// STUB: th08 0x425870
+AnmVm *EffectManager::FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d)
+{
+    return NULL;
 }
 
 void EffectManager::CutChain()

@@ -2,9 +2,11 @@
 
 #include "Background.hpp"
 #include "AnmManager.hpp"
+#include "EffectManager.hpp"
 
 namespace th08
 {
+void FUN_00426d10(Float3 *pos);
 DIFFABLE_STATIC(Background, g_Background);
 DIFFABLE_STATIC(ChainElem, g_BackgroundCalcChain);
 DIFFABLE_STATIC(ChainElem, g_BackgroundDrawChainHighPrio);
@@ -34,9 +36,483 @@ Background::Background()
     this->camera1 = this->camera4;
 }
 
-// STUB: th08 0x407400
+// FUNCTION: th08 0x407400
 ChainCallbackResult Background::OnUpdate(Background *background)
 {
+    Float3 pos;
+    StdRawInstr *p;
+    i32 layerIdx;
+    i32 i;
+    f32 ratio;
+    f32 t;
+    u8 *sprite;
+
+    if (background->stdData == NULL)
+    {
+        return CHAIN_CALLBACK_RESULT_CONTINUE;
+    }
+    if (g_GameManager.flags.unk10)
+    {
+        return CHAIN_CALLBACK_RESULT_CONTINUE;
+    }
+
+    // ---- Stage 7 special handling ----
+    if (g_GameManager.currentStage == 7)
+    {
+        if (background->unk0xae8 == NULL)
+        {
+            Float3 effectPos = Float3(0.0f, 0.0f, 0.0f);
+            background->unk0xae8 = g_EffectManager.FUN_00425870(0x40, &effectPos, 0xc, 1, -1);
+            background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xb);
+        }
+        else if (background->unk0x6260 == 1)
+        {
+            background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xb);
+        }
+        else if (background->unk0x6260 == 2)
+        {
+            AnmVm vmBackup = *(AnmVm *)background->unk0xae8;
+            background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xc);
+            background->unk0xae8->SetInterrupt(2);
+            background->unk0xae8->posFinal = vmBackup.posFinal;
+            background->unk0xae8->posInitial = vmBackup.posInitial;
+            background->unk0xae8->prefix.interpCurrentTimers[0] = vmBackup.prefix.interpCurrentTimers[0];
+            background->unk0xae8->prefix.interpEndTimers[0] = vmBackup.prefix.interpEndTimers[0];
+            background->unk0xae8->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
+            background->unk0xae8->prefix.color1 = vmBackup.prefix.color1;
+        }
+        else if (background->unk0x6260 == 3)
+        {
+            AnmVm vmBackup = *(AnmVm *)background->unk0xae8;
+            background->unk0xae8->SetInterrupt(3);
+            background->unk0xae8->posFinal = vmBackup.posFinal;
+            background->unk0xae8->posInitial = vmBackup.posInitial;
+            background->unk0xae8->prefix.interpCurrentTimers[0] = vmBackup.prefix.interpCurrentTimers[0];
+            background->unk0xae8->prefix.interpEndTimers[0] = vmBackup.prefix.interpEndTimers[0];
+            background->unk0xae8->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
+            background->unk0xae8->prefix.color1 = vmBackup.prefix.color1;
+        }
+        else if (background->unk0x6260 == 4)
+        {
+            AnmVm vmBackup = *(AnmVm *)background->unk0xae8;
+            background->unk0xae8->SetInterrupt(4);
+            background->unk0xae8->posFinal = vmBackup.posFinal;
+            background->unk0xae8->posInitial = vmBackup.posInitial;
+            background->unk0xae8->prefix.interpCurrentTimers[0] = vmBackup.prefix.interpCurrentTimers[0];
+            background->unk0xae8->prefix.interpEndTimers[0] = vmBackup.prefix.interpEndTimers[0];
+            background->unk0xae8->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
+            background->unk0xae8->prefix.color1 = vmBackup.prefix.color1;
+        }
+    }
+
+    // ---- Scan for current element ----
+    if (background->unk0x6260 != 0)
+    {
+        i32 index = 0;
+        p = background->beginningOfScript;
+        background->unk0x818 = 0;
+
+        while (!(p->opcode == 0x1f && background->unk0x6260 == p->args.args[0].i) && p->frame != -1)
+        {
+            p++;
+            index++;
+        }
+        if (p->frame != -1)
+        {
+            background->unk0x818 = index + 1;
+            background->timer0x80c.SetCurrent(p->frame);
+            background->unk0x6260 = 0;
+        }
+    }
+
+    // ---- Dispatch loop ----
+    for (;;)
+    {
+        p = &background->beginningOfScript[background->unk0x818];
+        if (!(background->timer0x80c >= p->frame) || p->frame == -1)
+        {
+            break;
+        }
+
+        switch (p->opcode)
+        {
+        case 0: // opcode 0
+            if (p->frame == -1)
+            {
+                background->unk0x6454 = *p->args.AsVec();
+                background->unk0x824 = background->unk0x6454;
+            }
+            else
+            {
+                pos = *p->args.AsVec();
+                background->unk0x824 = pos;
+                background->unk0x6454 = pos;
+                *(i32 *)&background->unk0x6464 = p->frame;
+                p++;
+                background->unk0x6450 = p->frame;
+                background->unk0x6444 = *p->args.AsVec();
+            }
+            break;
+        case 1: // opcode 1
+            background->fog.color.d3dColor = p->args.args[0].u;
+            background->fog.nearPlane = p->args.args[1].f;
+            background->fog.farPlane = p->args.args[2].f;
+            background->fogFadeTo = background->fog;
+            break;
+        case 2: // opcode 2
+            background->fogFadeFrom = background->fog;
+            background->unk0xb10 = p->args.args[0].u;
+            background->timer0xb14.SetCurrent(0);
+            break;
+        case 3: // opcode 3
+            if (background->unk0x6260 != 0)
+            {
+                background->unk0x6260 = 0;
+                break;
+            }
+            goto afterDispatchLoop;
+        case 4: // opcode 4
+            background->unk0x818 = p->args.args[0].i;
+            background->timer0x80c.SetCurrent(p->args.args[1].i);
+            background->unk0x63e0[0] = 0;
+            background->unk0x6464 = 1;
+            continue;
+        case 5: // opcode 5
+            if (background->unk0x6464)
+            {
+                Float3 local = *p->args.AsVec() - background->camera0.pos;
+                FUN_00426d10(&local);
+                background->unk0x6464 = 0;
+            }
+            background->camera1.pos = background->camera0.pos;
+            background->camera0.pos = *p->args.AsVec();
+            if (background->unk0x63e0[0] == 0)
+            {
+                background->camera4.pos = *p->args.AsVec();
+            }
+            break;
+        case 6: // opcode 6
+            background->unk0x63e0[0] = p->args.args[0].u;
+            background->timers0x63f4[0].SetCurrent(0);
+            background->unk0x6430[0] = p->args.args[1].i;
+            break;
+        case 7: // opcode 7
+            background->camera1.target = background->camera0.target;
+            background->camera0.target = *p->args.AsVec();
+            if (background->unk0x63e0[1] == 0)
+            {
+                background->camera4.target = *p->args.AsVec();
+            }
+            break;
+        case 8: // opcode 8
+            background->unk0x63e0[1] = p->args.args[0].u;
+            background->timers0x63f4[1].SetCurrent(0);
+            background->unk0x6430[1] = p->args.args[1].i;
+            break;
+        case 9: // opcode 9
+            background->camera1.up = background->camera0.up;
+            background->camera0.up = *p->args.AsVec();
+            if (background->unk0x63e0[2] == 0)
+            {
+                background->camera4.up = *p->args.AsVec();
+            }
+            break;
+        case 10: // opcode 10
+            background->unk0x63e0[2] = p->args.args[0].u;
+            background->timers0x63f4[2].SetCurrent(0);
+            background->unk0x6430[2] = p->args.args[1].i;
+            break;
+        case 11: // opcode 11
+            background->camera4.unk0x24.x = background->camera0.fov;
+            background->camera0.fov = p->args.args[0].f;
+            if (background->unk0x63e0[3] == 0)
+            {
+                background->camera4.fov = p->args.args[0].f;
+            }
+            break;
+        case 12: // opcode 12
+            background->unk0x63e0[3] = p->args.args[0].u;
+            background->timers0x63f4[3].SetCurrent(0);
+            background->unk0x6430[3] = p->args.args[1].i;
+            break;
+        case 13: // opcode 13
+            background->unk0x830 = p->args.args[0].i;
+            break;
+        case 14: // opcode 14
+            background->camera1.pos = *p->args.AsVec();
+            break;
+        case 15: // opcode 15
+            background->camera0.pos = *p->args.AsVec();
+            break;
+        case 16: // opcode 16
+            background->camera3.pos = *p->args.AsVec();
+            break;
+        case 17: // opcode 17
+            background->camera2.pos = *p->args.AsVec();
+            break;
+        case 18: // opcode 18
+            background->unk0x63e0[0] = p->args.args[0].u;
+            background->timers0x63f4[0].SetCurrent(0);
+            background->unk0x6430[0] = 7;
+            break;
+        case 19: // opcode 19
+            background->camera1.target = *p->args.AsVec();
+            break;
+        case 20: // opcode 20
+            background->camera0.target = *p->args.AsVec();
+            break;
+        case 21: // opcode 21
+            background->camera3.target = *p->args.AsVec();
+            break;
+        case 22: // opcode 22
+            background->camera2.target = *p->args.AsVec();
+            break;
+        case 23: // opcode 23
+            background->unk0x63e0[1] = p->args.args[0].u;
+            background->timers0x63f4[1].SetCurrent(0);
+            background->unk0x6430[1] = 7;
+            break;
+        case 24: // opcode 24
+            background->camera1.up = *p->args.AsVec();
+            break;
+        case 25: // opcode 25
+            background->camera0.up = *p->args.AsVec();
+            break;
+        case 26: // opcode 26
+            background->camera3.up = *p->args.AsVec();
+            break;
+        case 27: // opcode 27
+            background->camera2.up = *p->args.AsVec();
+            break;
+        case 28: // opcode 28
+            background->unk0x63e0[2] = p->args.args[0].u;
+            background->timers0x63f4[2].SetCurrent(0);
+            background->unk0x6430[2] = 7;
+            break;
+        case 29: // opcode 29
+            if (p->args.args[0].i >= 0)
+            {
+                background->stageAnm->ExecuteAnmIdx(&background->unk0x4, p->args.args[0].i);
+            }
+            else
+            {
+                background->unk0x4.activeSpriteIndex = -1;
+            }
+            break;
+        case 30: // opcode 30
+            if (p->args.args[0].i >= 0)
+            {
+                background->stageAnm->ExecuteAnmIdx(&background->unk0x2a8, p->args.args[0].i);
+            }
+            else
+            {
+                background->unk0x4.activeSpriteIndex = -1;
+            }
+            break;
+        case 32: // opcode 32
+            background->camera4.unk0x3c = *p->args.AsVec();
+            if (p->args.args[0].i >= 0)
+            {
+                background->stageAnm->ExecuteAnmIdx(&background->unk0x54c, p->args.args[0].i);
+            }
+            else
+            {
+                background->unk0x54c.activeSpriteIndex = -1;
+            }
+            break;
+        case 33: // opcode 33
+            background->unk0x6474 = p->args.args[0].b[0];
+            background->unk0x63f0 = 0;
+            background->timers0x63f4[4].SetCurrent(0);
+            background->unk0x6430[4] = 0;
+            break;
+        default:
+            break;
+        }
+
+        background->unk0x818++;
+    }
+
+afterDispatchLoop:
+    // ---- Layer update loop ----
+    layerIdx = 0;
+    if (background->unk0x63e0[0])
+    {
+        background->FUN_00408d60(0, &background->camera4.pos, &background->camera1.pos,
+                                 &background->camera0.pos, &background->camera3.pos,
+                                 &background->camera2.pos);
+    }
+    layerIdx = 1;
+    if (background->unk0x63e0[1])
+    {
+        background->FUN_00408d60(1, &background->camera4.target, &background->camera1.target,
+                                 &background->camera0.target, &background->camera3.target,
+                                 &background->camera2.target);
+    }
+    layerIdx = 2;
+    if (background->unk0x63e0[2])
+    {
+        background->FUN_00408d60(2, &background->camera4.up, &background->camera1.up,
+                                 &background->camera0.up, &background->camera3.up,
+                                 &background->camera2.up);
+    }
+    layerIdx = 3;
+    if (background->unk0x63e0[3])
+    {
+        if (background->timers0x63f4[3] < (i32)background->unk0x63e0[3])
+        {
+            background->timers0x63f4[3]++;
+            ratio = (f32)background->timers0x63f4[3] / (f32)background->unk0x63e0[3];
+        }
+        else
+        {
+            background->timers0x63f4[3].SetCurrent(background->unk0x63e0[3]);
+            ratio = 1.0f;
+            background->unk0x63e0[3] = 0;
+        }
+        switch (background->unk0x6430[3] - 1)
+        {
+        case 0:
+            ratio = 1.0f - (1.0f - ratio) * (1.0f - ratio);
+            break;
+        case 1:
+            ratio = 1.0f - (1.0f - ratio) * (1.0f - ratio) * (1.0f - ratio);
+            break;
+        case 2:
+            ratio = 1.0f - (1.0f - ratio) * (1.0f - ratio) * (1.0f - ratio) * (1.0f - ratio);
+            break;
+        case 3:
+            ratio = ratio * ratio;
+            break;
+        case 4:
+            ratio = ratio * ratio * ratio;
+            break;
+        case 5:
+            ratio = ratio * ratio * ratio * ratio;
+            break;
+        default:
+            break;
+        }
+        background->camera4.fov = background->camera1.fov + (background->camera0.fov - background->camera1.fov) * ratio;
+    }
+
+    // ---- Wave animation ----
+    switch (background->unk0x6474)
+    {
+    case 1:
+        t = (f32)background->timers0x63f4[4] * ZUN_PI * 2.0f / 480.0f - ZUN_PI;
+        background->camera4.unk0x3c.x = sinf(t) * 40.0f;
+        background->timers0x63f4[4]++;
+        if (background->timers0x63f4[4] >= 480)
+        {
+            background->timers0x63f4[4].SetCurrent(0);
+        }
+        break;
+    case 2:
+        t = (f32)background->timers0x63f4[4] * ZUN_PI * 2.0f / 480.0f - ZUN_PI;
+        background->camera4.unk0x3c.x = sinf(t) * 70.0f;
+        background->camera4.up.x = -sinf(t) * 0.1f;
+        background->timers0x63f4[4]++;
+        if (background->timers0x63f4[4] >= 480)
+        {
+            background->timers0x63f4[4].SetCurrent(0);
+        }
+        break;
+    case 3:
+        t = (f32)background->timers0x63f4[4] * ZUN_PI * 2.0f / 4800.0f - ZUN_PI;
+        background->camera4.up.x = sinf(t) * 1.0f;
+        background->camera4.unk0x24.x = cosf(t) * 1.0f;
+        background->timers0x63f4[4]++;
+        if (background->timers0x63f4[4] >= 4800)
+        {
+            background->timers0x63f4[4].SetCurrent(0);
+        }
+        break;
+    default:
+        break;
+    }
+
+    // ---- Fog fade ----
+    if (background->unk0xb10)
+    {
+        background->timer0xb14++;
+        t = (f32)background->timer0xb14 / (f32)background->unk0xb10;
+        if (t >= 1.0f)
+        {
+            t = 1.0f;
+        }
+        for (i = 0; i < 4; i++)
+        {
+            ((u8 *)&background->fog.color)[i] =
+                (u8)(i32)(((f32)(i32)((u8 *)&background->fogFadeTo.color)[i] - (f32)(i32)((u8 *)&background->fogFadeFrom.color)[i]) * t
+                          + (f32)(i32)((u8 *)&background->fogFadeFrom.color)[i]);
+        }
+        background->fog.nearPlane = background->fogFadeFrom.nearPlane + (background->fogFadeTo.nearPlane - background->fogFadeFrom.nearPlane) * t;
+        background->fog.farPlane = background->fogFadeFrom.farPlane + (background->fogFadeTo.farPlane - background->fogFadeFrom.farPlane) * t;
+        if (background->timer0xb14 >= (i32)background->unk0xb10)
+        {
+            background->unk0xb10 = 0;
+        }
+    }
+
+    if (p->opcode != 3)
+    {
+        background->timer0x80c++;
+    }
+    background->FUN_00409f40();
+
+    if (background->unk0xb24 >= 1)
+    {
+        if (background->unk0xb28 == 60)
+        {
+            background->unk0xb24++;
+        }
+        background->unk0xb28++;
+        for (i = 0; i < background->unk0xb30; i++)
+        {
+            g_AnmManager->ExecuteScript(&background->objectVms[i]);
+        }
+    }
+
+    if (background->unk0x4.activeSpriteIndex > 0)
+    {
+        g_AnmManager->ExecuteScript(&background->unk0x4);
+    }
+    if (background->unk0x2a8.activeSpriteIndex > 0)
+    {
+        g_AnmManager->ExecuteScript(&background->unk0x2a8);
+    }
+    if (background->unk0x54c.activeSpriteIndex > 0)
+    {
+        g_AnmManager->ExecuteScript(&background->unk0x54c);
+        background->unk0x830 = background->unk0x54c.prefix.color1.d3dColor;
+    }
+
+    if (background->unk81c % 3 == 0)
+    {
+        if (background->unk81c >= 700 || g_GameManager.flags.unk10)
+        {
+            if (background->unk0xb24 < 2)
+            {
+                for (i = 0; i < 12; i++)
+                {
+                    sprite = (u8 *)g_EffectManager.FUN_00425430(0x3e, &background->unk0x6480[i], 1, 0x20ffffff);
+                    sprite[0x354] = 4;
+                }
+            }
+        }
+    }
+
+    background->unk0x647c = 1;
+    if (background->unk0xb24 >= 2)
+    {
+        background->unk0x6478 = 0;
+    }
+    background->unk81c++;
+    if (background->unk81c % 500 == 250 && g_GameManager.IsTampered())
+    {
+        return CHAIN_CALLBACK_RESULT_EXIT_GAME_SUCCESS;
+    }
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
@@ -244,6 +720,22 @@ ZunResult Background::LoadStageData(char *stdPath)
     this->unk0x834 = 0;
     this->timer0x838 = 0;
     return ZUN_SUCCESS;
+}
+
+
+// STUB: th08 0x408d60
+void Background::FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3 *p3, Float3 *p4, Float3 *p5)
+{
+}
+
+// STUB: th08 0x409f40
+void Background::FUN_00409f40()
+{
+}
+
+// STUB: th08 0x426d10
+void FUN_00426d10(Float3 *pos)
+{
 }
 
 }; // Namespace th08

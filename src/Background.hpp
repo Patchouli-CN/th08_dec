@@ -114,6 +114,9 @@ struct Background
     {
     }
 
+    void FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3 *p3, Float3 *p4, Float3 *p5);
+    void FUN_00409f40();
+
     void *fileData;
     AnmVm unk0x4;
     AnmVm unk0x2a8;
@@ -126,18 +129,19 @@ struct Background
     StdRawInstance *objectInstances;
     StdRawInstr *beginningOfScript;
     ZunTimer timer0x80c;
-    unknown_fields(0x818, 0x4);
+    i32 unk0x818;
     u32 unk81c;
     i32 currentStage;
     Float3 unk0x824;
-    unknown_fields(0x830, 0x4);
+    i32 unk0x830;
     u8 unk0x834;
     unknown_fields(0x835, 0x3);
     ZunTimer timer0x838;
     AnmVm unk0x844;
-    unknown_fields(0xae8, 0x4);
+    AnmVm *unk0xae8;
     StageFog fog;
-    unknown_fields(0xaf8, 0x18);
+    StageFog fogFadeFrom;
+    StageFog fogFadeTo;
     u32 unk0xb10;
     ZunTimer timer0xb14;
     u8 skyFogNeedsSetup; // Leftover from earlier games. Never checked in IN
@@ -157,17 +161,21 @@ struct Background
     BackgroundCamera camera3;
     BackgroundCamera camera4;
     u32 unk0x63e0[4];
-    unknown_fields(0x63f0, 0x4);
+    u32 unk0x63f0;
     ZunTimer timers0x63f4[5];
-    unknown_fields(0x6430, 0x14);
+    i32 unk0x6430[5];
     Float3 unk0x6444;
     u32 unk0x6450;
     Float3 unk0x6454;
-    unknown_fields(0x6460, 0xc);
+    unknown_fields(0x6460, 0x4);
+    u8 unk0x6464;
+    unknown_fields(0x6465, 0x7);
     u32 unk0x646c;
     f32 unk0x6470;
     u8 unk0x6474;
-    unknown_fields(0x6475, 0x7);
+    unknown_fields(0x6475, 0x3);
+    u8 unk0x6478;
+    unknown_fields(0x6479, 0x3);
     u32 unk0x647c;
     Float3 unk0x6480[0x20];
 };
