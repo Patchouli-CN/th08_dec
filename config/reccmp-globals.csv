@@ -175,3 +175,6 @@ th08::g_PlayerShtFile2,0x18b8970,global
 th08::g_UnkTimeOrbValueFlag,0x18b8974,global
 th08::g_ItemAutoCollectTimer,0x18b89d4,global
 th08::g_UnkAutoCollectTimer,0x18b89bc,global
+th08::g_BulletPool,0xf6f710,global
+th08::g_PlayerUnknown0bb,0x164d0bb,global
+th08::g_PlayerPos,0x164d2dc,global

@@ -2,6 +2,17 @@
 
 ## 2026-08-10
 
+- **一批小函数反编译完成（100%）**：`Supervisor::PlayMusic`（MIDI/WAV 分支完整）、
+  `CStreamingSound::PartialFadeIn`（fade-type 3 + SetVolume(-1000)）、
+  `ResultScreen::LinkScoreEx`/`FreeScore`/`SetState`、`Supervisor::HideLoadingVms`。
+- **又一批 100%**：`AnmManager::SetTextureCaptureParams`、`ResultScreen::MoveCursor`/
+  `MoveShotTypeCursor`/`MoveCursorHorizontally`（`WAS_PRESSED_SCROLLING` 边沿/重复移动）、
+  `Gui::MsgWait`、`ResultScreen::DeletedCallback`（链清理 + delete）。
+- **`Spellcard::RegisterChain`** 反编译完成：0% → **100%**（ChainElem 注册 +
+  `FUN_00414590` 初始化检查）。
+- **`BulletManager::Initialize`** 反编译完成：0% → **100%**（memset + 字段初始化 +
+  子弹池 0x600 元素循环置 -1）。新增全局 `g_BulletPool`。
+- 函数实现率提升至 **82.04%**，byte acc 提升至 **13.83%**。
 - **`Supervisor::PlayAudio`** 反编译完成：16.8% → **100%**。实现了 MIDI 分支
   （通过 `MidiOutput` 停止/加载/播放）和 WAV 分支（改写扩展名为 `.wav` 后经
   `SoundPlayer` 排队播放），以及回放/演示模式下跳过音乐播放标记的逻辑。

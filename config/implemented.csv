@@ -464,3 +464,7 @@ th08::ResultScreen::MoveCursorHorizontally
 th08::ResultScreen::MoveShotTypeCursor
 th08::Gui::MsgWait
 th08::ResultScreen::DeletedCallback
+th08::Spellcard::RegisterChain
+th08::BulletManager::Initialize
+th08::ResultScreen::HandleHighScoreScreen
+th08::EffectManager::RegisterChain

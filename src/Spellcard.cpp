@@ -383,9 +383,32 @@ void SpellcardDataHolder::FreeData()
 // TODO: figure out what this chain elem actually belongs to (g_Spellcard + 0x263c in the original).
 DIFFABLE_STATIC(ChainElem *, g_SpellcardChainElem);
 
-// STUB: th08 0x417f60
+// STUB: th08 0x414590
+ZunResult Spellcard::FUN_00414590()
+{
+    return ZUN_SUCCESS;
+}
+
+// FUNCTION: th08 0x417f60
 ZunResult Spellcard::RegisterChain()
 {
+    Spellcard *obj = &g_Spellcard;
+
+    if (obj->FUN_00414590() != 0)
+    {
+        return ZUN_ERROR;
+    }
+
+    obj->unk263c = g_Chain.CreateElem((ChainCallback)0x418010);
+    obj->unk2640 = g_Chain.CreateElem((ChainCallback)0x418030);
+
+    obj->unk263c->deletedCallback = (ChainLifetimeCallback)0x418050;
+    obj->unk263c->arg = obj;
+    obj->unk2640->arg = obj;
+
+    g_Chain.AddToCalcChain(obj->unk263c, 0xc);
+    g_Chain.AddToDrawChain(obj->unk2640, 0xf);
+
     return ZUN_SUCCESS;
 }
 

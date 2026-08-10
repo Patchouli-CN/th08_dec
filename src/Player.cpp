@@ -9,6 +9,8 @@ namespace th08
 {
 
 DIFFABLE_STATIC(Player, g_Player);
+DIFFABLE_STATIC(u8, g_PlayerUnknown0bb);
+DIFFABLE_STATIC(Float2, g_PlayerPos);
 DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile);
 DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile2);
 DIFFABLE_STATIC(ChainElem *, g_PlayerCalcChain);
@@ -100,8 +102,37 @@ ChainCallbackResult Player::OnUpdate(Player *player)
 }
 
 // STUB: th08 0x44d530
+// STUB: th08 0x4512f0
+void Player::FUN_004512f0()
+{
+}
+
+// FUNCTION: th08 0x44d530
 ChainCallbackResult Player::OnDrawHighPrio(Player *player)
 {
+    player->FUN_004512f0();
+
+    if (player->unkFdc != 0)
+    {
+        (player->*player->unk_1014[player->unkFe0])();
+    }
+
+    if (g_PlayerUnknown0bb == 0)
+    {
+        player->unk_218 = g_PlayerPos.x + player->positionCenter.x;
+        player->unk_21c = g_PlayerPos.y + player->positionCenter.y;
+        player->unk_220 = 0.1f;
+        g_AnmManager->DrawNoRotation((AnmVm *)&player->unk_10);
+    }
+
+    for (u32 i = 0; i < 4; i++)
+    {
+        if (player->options[i].func != NULL)
+        {
+            (player->*player->options[i].func)();
+        }
+    }
+
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 

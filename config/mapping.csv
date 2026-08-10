@@ -428,7 +428,7 @@ th08::AsciiManager::FUN_0042f2d0,0x42f2d0,0x1d,__thiscall,,void,AsciiManager*,i3
 th08::AsciiManager::SetScale,0x42f2f0,0x25,__thiscall,,void,AsciiManager*,u32,u32
 FUN_0042f320,0x42f320,0x11,unknown,,u8
 FUN_0042f340,0x42f340,0x16,unknown,,u8,u8
-FUN_0042f360,0x42f360,0xb1,unknown,,u8
+th08::BulletManager::Initialize,0x42f360,0xb1,__thiscall,,void,BulletManager*
 th08::BulletManager::BulletManager,0x42f420,0x75,unknown,,u8
 FUN_0042f4a0,0x42f4a0,0x5c,unknown,,u8
 FUN_0042f500,0x42f500,0x73,unknown,,u8
@@ -769,7 +769,7 @@ FUN_0044d150,0x44d150,0x25,unknown,,u8
 FUN_0044d180,0x44d180,0x13a,unknown,,u8
 FUN_0044d2c0,0x44d2c0,0x152,unknown,,u8
 FUN_0044d420,0x44d420,0x10b,unknown,,u8
-FUN_0044d530,0x44d530,0xf1,unknown,,u8
+th08::Player::OnDrawHighPrio,0x44d530,0xf1,__thiscall,,u8,Player*
 th08::Player::OnDrawLowPrio,0x44d630,0x18,unknown,,u8
 th08::Player::AddedCallback,0x44d650,0x601,__fastcall,,ZunResult,Player*
 th08::Player::DeletedCallback,0x44dc60,0xa4,__fastcall,,ZunResult,u32

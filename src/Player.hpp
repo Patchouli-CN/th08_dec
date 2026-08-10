@@ -71,14 +71,28 @@ struct Player
     i8 initParam;
     i8 unk2;
     u8 isYoukaiMode;
-    unknown_fields(0x4, 0x2b0);
-    Float3 positionCenter;
+    unknown_fields(0x4, 0xc);
+    u8 unk_10[0x208];            // 0x10 (DrawNoRotation 取 &unk_10 作 AnmVm*)
+    f32 unk_218;                 // 0x218
+    f32 unk_21c;                 // 0x21c
+    f32 unk_220;                 // 0x220
+    unknown_fields(0x224, 0x90);
+    Float3 positionCenter;       // 0x2b4
     unknown_fields(0x2c0, 0xfc);
     Float3 grabItemTopLeft;
     Float3 grabItemBottomRight;
-    unknown_fields(0x3d4, 0xc08);
-    i32 unkFdc;
-    unknown_fields(0xfe0, 0xbe258);
+    unknown_fields(0x3d4, 0x38);
+    struct PlayerOption
+    {
+        u8 unk[0x2f0];
+        void (Player::*func)();  // 0x2f0
+    };
+    PlayerOption options[4];     // 0x40c
+    i32 unkFdc;                  // 0xfdc
+    i32 unkFe0;                  // 0xfe0
+    unknown_fields(0xfe4, 0x30);
+    void (Player::*unk_1014[4])(); // 0x1014
+    unknown_fields(0x1024, 0xbe214);
     PlayerBulletVm bullets[0x80];
     unknown_fields(0xe2a38, 0x3c);
     u32 unkE2a74;
@@ -103,9 +117,12 @@ struct Player
     static ZunResult LoadShtFile(PlayerRawShtFile **header, const char *path);
     ZunBool CalcItemBoxCollision(Float3 *pos, Float3 *size);
     f32 AngleToPlayer(Float3 *pos);
+    void FUN_004512f0();
 };
 
 DIFFABLE_EXTERN(Player, g_Player);
+DIFFABLE_EXTERN(u8, g_PlayerUnknown0bb);
+DIFFABLE_EXTERN(Float2, g_PlayerPos);
 DIFFABLE_EXTERN(PlayerRawShtFile *, g_PlayerShtFile);
 DIFFABLE_EXTERN(PlayerRawShtFile *, g_PlayerShtFile2);
 

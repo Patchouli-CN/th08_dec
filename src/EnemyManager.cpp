@@ -143,9 +143,34 @@ DIFFABLE_STATIC(EffectManager, g_EffectManager);
 DIFFABLE_STATIC(ChainElem, g_EffectManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_EffectManagerDrawChain);
 
-// STUB: th08 0x428620
+// STUB: th08 0x425410
+ZunResult EffectManager::FUN_00425410()
+{
+    return ZUN_SUCCESS;
+}
+
+// FUNCTION: th08 0x428620
 ZunResult EffectManager::RegisterChain()
 {
+    EffectManager *obj = &g_EffectManager;
+
+    obj->FUN_00425410();
+
+    g_EffectManagerCalcChain.SetCallback((ChainCallback)0x427bf0);
+    g_EffectManagerCalcChain.addedCallback = (ChainLifetimeCallback)0x4284b0;
+    g_EffectManagerCalcChain.deletedCallback = (ChainLifetimeCallback)0x428590;
+    g_EffectManagerCalcChain.arg = obj;
+
+    if (g_Chain.AddToCalcChain(&g_EffectManagerCalcChain, 0xd) != 0)
+    {
+        return ZUN_ERROR;
+    }
+
+    g_EffectManagerDrawChain.SetCallback((ChainCallback)0x427f00);
+    g_EffectManagerDrawChain.arg = obj;
+
+    g_Chain.AddToDrawChain(&g_EffectManagerDrawChain, 0xc);
+
     return ZUN_SUCCESS;
 }
 

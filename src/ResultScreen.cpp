@@ -79,15 +79,134 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
     return 0;
 }
 
-// STUB: th08 0x455925
+// FUNCTION: th08 0x455925
 i32 ResultScreen::HandleHighScoreScreen()
 {
+    if (this->unk3c != this->unk1c && this->unk4 == 0xa)
+    {
+        this->unk3c = this->unk1c;
+    }
+
+    if (this->unk4 < 6)
+    {
+        return 0;
+    }
+
+    i32 sel = this->unk1c;
+
+    if (this->MoveCursorHorizontally(0xc))
+    {
+        this->unk4 = 0;
+        *(u16 *)((u8 *)this + 0x6d3e) = (u16)(this->unk44 + 3);
+        *(u16 *)((u8 *)this + 0x39e + (sel + 0xf) * 0x2a4) = 0x18;
+        *(u16 *)((u8 *)this + 0x39e + (this->unk1c + 0xf) * 0x2a4) = 0x19;
+    }
+
+    if (WAS_PRESSED(0xa))
+    {
+        this->unk3c = this->unk1c;
+        this->SetState((ResultScreenState)4);
+        *(u16 *)((u8 *)this + 0x6d3e) = 1;
+        g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
+        return 1;
+    }
+
+    this->unk18++;
     return 0;
 }
 
-// STUB: th08 0x455a33
+// FUNCTION: th08 0x455a33
 i32 ResultScreen::HandleSpellCardDifficultySelect()
 {
+    i32 state = this->unk10;
+
+    if (state == 0)
+    {
+        goto case0;
+    }
+    else if (state == 1)
+    {
+        goto case1;
+    }
+    goto end;
+
+case0:
+    if (this->unk18 == 0)
+    {
+        this->unk1c = this->unk48;
+        for (i32 i = 9; i <= 0xe; i++)
+        {
+            *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
+            g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+            if (i - 9 == this->unk1c)
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+            }
+            else
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+            }
+        }
+    }
+
+    if (this->unk18 >= 6)
+    {
+        this->unk10++;
+        this->unk18 = 0;
+        goto case1;
+    }
+    goto end;
+
+case1:
+{
+    i32 ret = this->MoveCursor(6);
+    if (ret != 0)
+    {
+        for (i32 i = 9; i <= 0xe; i++)
+        {
+            if (i - 9 == this->unk1c)
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+            }
+            else
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+            }
+        }
+    }
+
+    if (WAS_PRESSED(0xa))
+    {
+        this->SetState((ResultScreenState)1);
+        g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
+        this->unk48 = this->unk1c;
+        this->unk1c = 1;
+        return 1;
+    }
+
+    if (WAS_PRESSED(0x1001))
+    {
+        for (i32 i = 9; i <= 0xe; i++)
+        {
+            if (i - 9 == this->unk1c)
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+            }
+            else
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+            }
+        }
+        this->unk48 = this->unk1c;
+        this->SetState((ResultScreenState)7);
+        g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
+        return 1;
+    }
+    goto end;
+}
+
+end:
+    this->unk18++;
     return 0;
 }
 

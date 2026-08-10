@@ -11,9 +11,26 @@ DIFFABLE_STATIC(ChainElem, g_BulletManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_BulletManagerDrawChain);
 DIFFABLE_STATIC(AnmLoaded *, g_BulletAnm);
 
-// STUB: th08 0x42f360
+DIFFABLE_STATIC_ARRAY(u8, 0x600 * 0x10b8, g_BulletPool);
+
+// FUNCTION: th08 0x42f360
 void BulletManager::Initialize()
 {
+    memset(this, 0, 0x6ba578);
+
+    this->unk_6ba56c = (i32)((u8 *)this + 0x1a880);
+    this->unk_660638 = 6;
+    this->unk_6ba570 = 6;
+
+    u8 *pool = (u8 *)g_BulletPool;
+    for (i32 i = 0; i < 0x600; i++, pool += 0x10b8)
+    {
+        *(u16 *)(pool + 0x21a) = 0xffff;
+        *(u16 *)(pool + 0xcaa) = 0xffff;
+        *(u16 *)(pool + 0x4be) = 0xffff;
+        *(u16 *)(pool + 0x762) = 0xffff;
+        *(u16 *)(pool + 0xa06) = 0xffff;
+    }
 }
 
 // STUB: th08 0x430830

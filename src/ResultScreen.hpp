@@ -68,7 +68,12 @@ struct ResultScreen
     i32 unk1c;                     // 0x1c (cursor position)
     unknown_fields(0x20, 0x10);    // 0x20
     i32 unk30;                     // 0x30 (shot type cursor)
-    unknown_fields(0x34, 0x20);    // 0x34
+    unknown_fields(0x34, 0x8);     // 0x34
+    i32 unk3c;                     // 0x3c
+    unknown_fields(0x40, 0x4);     // 0x40
+    i32 unk44;                     // 0x44
+    i32 unk48;                     // 0x48
+    unknown_fields(0x4c, 0x8);     // 0x4c
     i32 unk54;                     // 0x54
     unknown_fields(0x58, 0x113f4); // 0x58
     ScoreListNode scores[5][12];   // 0x1144c
