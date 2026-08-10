@@ -1,10 +1,21 @@
 #include "th_pch.h"
 
 #include "BulletManager.hpp"
+#include "ItemManager.hpp"
+#include "Player.hpp"
 #include "Supervisor.hpp"
+
+#include <math.h>
 
 namespace th08
 {
+
+// STUB: th08 0x433880
+void __fastcall FUN_00433880(f32 *sinOut, f32 *cosOut, f32 angle)
+{
+    *cosOut = cos(angle);
+    *sinOut = sin(angle);
+}
 
 DIFFABLE_STATIC(BulletManager, g_BulletManager);
 DIFFABLE_STATIC(ChainElem, g_BulletManagerCalcChain);
@@ -33,9 +44,92 @@ void BulletManager::Initialize()
     }
 }
 
-// STUB: th08 0x430830
-void BulletManager::RemoveAllBullets(i32)
+// FUNCTION: th08 0x430830 (99% FIXME: 浮点 <= 的 jp+jmp vs jne)
+void BulletManager::RemoveAllBullets(i32 param)
 {
+    u8 *pool = (u8 *)g_BulletPool;
+    u8 *b;
+    i32 i;
+    i32 r1;
+
+    for (i = 0; i < 0x600; i++, pool += 0x10b8)
+    {
+        if (*(u16 *)(pool + 0xdb8) == 0 || *(u16 *)(pool + 0xdb8) == 5)
+        {
+            continue;
+        }
+
+        r1 = g_Player.FUN_00449ff0(pool + 0xd44, pool + 0xd34);
+
+        if (g_Player.FUN_00449ff0(pool + 0xd44, pool + 0xd34) == 2)
+        {
+            g_ItemManager.SpawnItem((Float3 *)(pool + 0xd44), (ItemType) * (i32 *)0x18b8988, 1);
+            memset(pool, 0, 0x10b8);
+            continue;
+        }
+
+        if (param != 4)
+        {
+            g_ItemManager.SpawnItem((Float3 *)(pool + 0xd44), (ItemType)this->unk_6ba570, (ItemType)param);
+            memset(pool, 0, 0x10b8);
+        }
+        else
+        {
+            *(u16 *)(pool + 0xdb8) = 5;
+        }
+    }
+
+    b = (u8 *)this + 0x660938;
+
+    Float3 pos;
+    f32 sinX;
+    f32 cosX;
+    f32 speed;
+
+    for (i = 0; i < 0x100; i++, b += 0x59c)
+    {
+        if (*(u32 *)(b + 0x584) == 0)
+        {
+            continue;
+        }
+
+        if (*(u16 *)(b + 0x594) & 0x4 && param != 4)
+        {
+            continue;
+        }
+
+        if (*(u8 *)(b + 0x598) < 2)
+        {
+            *(u8 *)(b + 0x598) = 2;
+            ((ZunTimer *)(b + 0x588))->SetCurrent(0);
+            *(u32 *)(b + 0x564) = *(u32 *)(b + 0x568);
+
+            if (param != 4)
+            {
+                speed = *(f32 *)(b + 0x558);
+
+                for (;;)
+                {
+                    FUN_00433880(&sinX, &cosX, *(f32 *)(b + 0x554));
+
+                    if (*(f32 *)(b + 0x55c) <= speed)
+                    {
+                        break;
+                    }
+
+                    pos.x = cosX * speed + *(f32 *)(b + 0x548);
+                    pos.y = sinX * speed + *(f32 *)(b + 0x54c);
+                    pos.z = 0;
+                    g_ItemManager.SpawnItem(&pos, (ItemType)this->unk_6ba570, (ItemType)param);
+                    speed += *(f32 *)0x4b42cc;
+                }
+            }
+        }
+
+        *(u32 *)(b + 0x580) = 0;
+    }
+
+    *(i32 *)((u8 *)this + 0x6ba53c) = 0xa;
 }
 
 void BulletManager::bulletmanager_fun_00415c60()

@@ -122,6 +122,7 @@ struct Player
     ZunBool CalcItemBoxCollision(Float3 *pos, Float3 *size);
     f32 AngleToPlayer(Float3 *pos);
     void FUN_004512f0();
+    i32 FUN_00449ff0(void *unkD34, void *unkD44);
 };
 
 DIFFABLE_EXTERN(Player, g_Player);
