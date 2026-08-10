@@ -954,6 +954,12 @@ end:
     return result;
 }
 
+// FUNCTION: th08 0x43c322
+u32 GameManager::FUN_0043c322()
+{
+    return this->flags.isReplay && g_ReplayManager->unk8->isPractice != 0;
+}
+
 void GameManager::SetClockTime(u8 clockTime)
 {
     this->globals->clockTime = clockTime;

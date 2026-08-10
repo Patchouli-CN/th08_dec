@@ -221,6 +221,7 @@ struct GameManager
     }
 
     i32 FinalBCleared(i32 difficulty);
+    u32 FUN_0043c322();
 
     ZunBool IsSpellPracticeUnlockedForCharacter(i32 character)
     {

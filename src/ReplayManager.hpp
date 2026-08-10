@@ -106,7 +106,9 @@ struct ReplayManager
     static ZunResult RegisterChain(i32 param_1, char *path);
     static void StopRecording();
 
-    unknown_fields(0x0, 0x50);
+    unknown_fields(0x0, 0x8);
+    ReplayData *unk8;                    // 0x8
+    unknown_fields(0xc, 0x44);
     u8 *unk50;
     u8 *unk54[MAX_STAGES];
     unknown_fields(0x78, 0x62);
