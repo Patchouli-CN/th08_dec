@@ -65,6 +65,10 @@ th08::g_BgmNotUnlockedWarning,0x4c7aac,global
 th08::g_PlayerAnmFilenames,0x4c7cb0,global
 th08::g_Player1ShtFiles,0x4c7ce0,global
 th08::g_Player2ShtFile,0x4c7d10,global
+th08::g_PlayerShotTable1,0x4c7ee0,global
+th08::g_PlayerShotTable2,0x4c7f04,global
+th08::g_PlayerShotTable3,0x4c7f1c,global
+th08::g_PlayerShotTable4,0x4c7f24,global
 th08::g_AlphabetList,0x4c7f48,global
 th08::g_CharacterList,0x4c7f4c,global
 th08::g_ResultsStageList,0x4c7fac,global

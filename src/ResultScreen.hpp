@@ -57,7 +57,12 @@ struct ResultScreen
     static i32 MoveShotTypeCursor(ResultScreen *resultScreen, i32 length);
     static i32 MoveCursorHorizontally(ResultScreen *resultScreen, int length);
 
-    unknown_fields(0x0, 0x477b0);
+    unknown_fields(0x0, 0x8);
+    i32 screenMode; // 0x8
+    unknown_fields(0xc, 0x4645c);
+    ChainElem *calcChain; // 0x46468
+    ChainElem *drawChain; // 0x4646c
+    unknown_fields(0x46470, 0x1340);
 };
 C_ASSERT(sizeof(ResultScreen) == 0x477b0);
 }; // namespace th08

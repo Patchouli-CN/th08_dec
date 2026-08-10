@@ -130,7 +130,7 @@ FUN_0040bab0,0x40bab0,0x1e,unknown,,u8
 FUN_0040bad0,0x40bad0,0x1f,unknown,,u8,u8
 FUN_0040baf0,0x40baf0,0x21,unknown,,u8,u8
 Concurrency::details::ContextBase::ClearCancel,0x40bb20,0x33,__thiscall,,u8,ContextBase*
-FUN_0040bb60,0x40bb60,0x1a,unknown,,u8,u8
+th08::AnmManager::GetAnm,0x40bb60,0x1a,unknown,,u8,u8
 th08::GameManager::IsTampered,0x40bb80,0x91,__thiscall,,undefined8,GameManager*
 FUN_0040bc20,0x40bc20,0x17,unknown,,u8
 FUN_0040bc40,0x40bc40,0x12,unknown,,u8
@@ -774,7 +774,7 @@ th08::Player::OnDrawLowPrio,0x44d630,0x18,unknown,,u8
 th08::Player::AddedCallback,0x44d650,0x601,__fastcall,,ZunResult,Player*
 th08::Player::DeletedCallback,0x44dc60,0xa4,__fastcall,,ZunResult,u32
 th08::Player::CutChain,0x44dd10,0x55,unknown,,u8
-FUN_0044dd70,0x44dd70,0xe9,unknown,,u8
+th08::Player::LoadShtFile,0x44dd70,0xe9,unknown,,u8
 FUN_0044de60,0x44de60,0x99,unknown,,u8,u8,u8,u8,u8,u8
 FUN_0044df00,0x44df00,0x99,unknown,,u8,u8,u8,u8,u8,u8
 FUN_0044dfa0,0x44dfa0,0x99,unknown,,u8,u8,u8,u8,u8,u8

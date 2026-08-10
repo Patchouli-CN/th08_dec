@@ -15,6 +15,26 @@ enum PlayerState
     PLAYER_STATE_BORDER,
 };
 
+// A player shot behavior entry in the .sht file. The fields at 0x28-0x34 are
+// indices into the player shot callback tables, replaced with pointers on load.
+struct PlayerShotEntry
+{
+    i16 unk0; // 0x0
+    unknown_fields(0x2, 0x26);
+    i32 unk28; // 0x28
+    i32 unk2c; // 0x2c
+    i32 unk30; // 0x30
+    i32 unk34; // 0x34
+};
+C_ASSERT(sizeof(PlayerShotEntry) == 0x38);
+
+// One 8-byte slot in the .sht file's entry-pointer array.
+struct PlayerShotEntrySlot
+{
+    PlayerShotEntry *entry; // 0x0, a file-relative offset, relocated at load
+    u32 unk4;               // 0x4
+};
+
 struct PlayerRawShtFile
 {
     unknown_fields(0x0, 0x2);
@@ -26,6 +46,7 @@ struct PlayerRawShtFile
     f32 pocY;
     unknown_fields(0x20, 0x14);
     f32 unk34;
+    PlayerShotEntrySlot entries[]; // 0x38, 8-byte stride
 };
 
 // The player's 128 option/bullet sprite VMs, iterated by the draw helper.

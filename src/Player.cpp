@@ -179,9 +179,46 @@ void Player::CutChain()
     g_PlayerDrawChainLowPrio = NULL;
 }
 
-// STUB: th08 0x44dd70
+DIFFABLE_STATIC_ARRAY_ASSIGN(u32, 9, g_PlayerShotTable1) = {
+    0x00000000, 0x00450240, 0x0044fdd0, 0x0044fdd0, 0x0044fe20, 0x0044ffa0,
+    0x00450080, 0x004501b0, 0x00450110,
+};
+DIFFABLE_STATIC_ARRAY_ASSIGN(u32, 6, g_PlayerShotTable2) = {
+    0x00000000, 0x00450320, 0x00000000, 0x00450580, 0x004505d0, 0x00450840,
+};
+DIFFABLE_STATIC_ARRAY_ASSIGN(u32, 8, g_PlayerShotTable3) = {
+    0x00000000, 0x00450ad0, 0x00000000, 0x00450c50, 0x00450ee0, 0x004b704c,
+    0x004b7044, 0x004b703c,
+};
+DIFFABLE_STATIC_ARRAY_ASSIGN(u32, 8, g_PlayerShotTable4) = {
+    0x00000000, 0x00450c50, 0x00450ee0, 0x004b704c, 0x004b7044, 0x004b703c,
+    0x004b7034, 0x004b702c,
+};
+
+// FUNCTION: th08 0x44dd70
 ZunResult Player::LoadShtFile(PlayerRawShtFile **header, const char *path)
 {
+    *header = (PlayerRawShtFile *)FileSystem::OpenFile(path, NULL, FALSE);
+    if (*header == NULL)
+    {
+        return ZUN_ERROR;
+    }
+
+    for (i32 i = 0; i < (*header)->entryCount; i++)
+    {
+        (*header)->entries[i].entry = (PlayerShotEntry *)((u32)(*header)->entries[i].entry + (u32)*header);
+        PlayerShotEntry *entry = (*header)->entries[i].entry;
+
+        while (entry->unk0 >= 0)
+        {
+            entry->unk28 = (i32)g_PlayerShotTable1[entry->unk28];
+            entry->unk2c = (i32)g_PlayerShotTable2[entry->unk2c];
+            entry->unk30 = (i32)g_PlayerShotTable3[entry->unk30];
+            entry->unk34 = (i32)g_PlayerShotTable4[entry->unk34];
+            entry = (PlayerShotEntry *)((u8 *)entry + sizeof(PlayerShotEntry));
+        }
+    }
+
     return ZUN_SUCCESS;
 }
 

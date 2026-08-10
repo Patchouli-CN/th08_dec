@@ -1,6 +1,7 @@
 #include "th_pch.h"
 
 #include "ResultScreen.hpp"
+#include "ScreenEffect.hpp"
 
 namespace th08
 {
@@ -119,8 +120,49 @@ i32 ResultScreen::DrawFinalStats()
 }
 
 // STUB: th08 0x4582a0
+// FUNCTION: th08 0x4582a0
 ZunResult ResultScreen::RegisterChain(u32 unk)
 {
+    ResultScreen *resultScreen =
+        (ResultScreen *)g_ZunMemory.AddToRegistry(new ResultScreen(), sizeof(ResultScreen), "ResultSysInf");
+    g_ScreenEffectCounter = 0;
+    utils::GuiDebugPrint("Stg.PlayTimeAll = %d\r\n", g_GameManager.unk3de04);
+
+    if (unk == 1)
+    {
+        if (!g_GameManager.IsPracticeMode())
+        {
+            resultScreen->screenMode = 9;
+        }
+        else if (g_GameManager.flags.isSpellPractice)
+        {
+            resultScreen->screenMode = 0x16;
+        }
+        else
+        {
+            resultScreen->screenMode = 0x11;
+        }
+    }
+    else if (unk == 2)
+    {
+        resultScreen->screenMode = 0x12;
+        resultScreen->AddedCallback(resultScreen);
+        return ZUN_SUCCESS;
+    }
+
+    resultScreen->calcChain = g_Chain.CreateElem((ChainCallback)OnUpdate);
+    resultScreen->calcChain->addedCallback = (ChainLifetimeCallback)AddedCallback;
+    resultScreen->calcChain->deletedCallback = (ChainLifetimeCallback)DeletedCallback;
+    resultScreen->calcChain->arg = resultScreen;
+    if (g_Chain.AddToCalcChain(resultScreen->calcChain, 0x10))
+    {
+        return ZUN_ERROR;
+    }
+
+    resultScreen->drawChain = g_Chain.CreateElem((ChainCallback)OnDraw);
+    resultScreen->drawChain->arg = resultScreen;
+    g_Chain.AddToDrawChain(resultScreen->drawChain, 0x12);
+
     return ZUN_SUCCESS;
 }
 
