@@ -11,8 +11,77 @@ DIFFABLE_STATIC(AsciiManager, g_AsciiManager);
 DIFFABLE_STATIC(ChainElem, g_AsciiManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_AsciiManagerDrawChainHighPrio);
 
+// FUNCTION: th08 0x402200
 ChainCallbackResult AsciiManager::OnUpdate(AsciiManager *ascii)
 {
+    if (g_GameManager.isInGameMenu == 0 && g_GameManager.showRetryMenu == 0)
+    {
+        AsciiManagerPopup *popup = &ascii->scorePopups[0];
+        if (!g_GameManager.flags.unk10)
+        {
+            i32 i;
+            for (i = 0; i < ASCII_MAX_SCORE_POPUPS + ASCII_MAX_PLAYER_POPUPS; i++, popup++)
+            {
+                // NOTE: the empty if is needed so /Od lays the body out-of-line (jne body; jmp continue)
+                if (!popup->inUse)
+                {
+                }
+                else
+                {
+                    popup->position.y -= 0.5f * g_Supervisor.framerateMultiplier;
+                    popup->timer++;
+                    if (popup->timer > 60)
+                    {
+                        popup->inUse = false;
+                    }
+                }
+            }
+
+            popup = &ascii->timePopups[0];
+            for (i = 0; i < ASCII_MAX_TIME_POPUPS; i++, popup++)
+            {
+                if (!popup->inUse)
+                {
+                }
+                else
+                {
+                    popup->timer++;
+                    if (popup->timer > 90)
+                    {
+                        popup->inUse = false;
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        if (g_GameManager.isInGameMenu)
+        {
+            ascii->pauseMenu.OnUpdate();
+        }
+        if (g_GameManager.showRetryMenu)
+        {
+            ascii->retryMenu.OnUpdate();
+        }
+    }
+
+    ascii->UpdateVms();
+
+    if (g_GameManager.IsDemoMode())
+    {
+        if (ascii->demoIcon.scriptIndex == 0)
+        {
+            ascii->asciiAnm->SetAndExecuteScriptIdx(&ascii->demoIcon, 0xb);
+        }
+        g_AnmManager->ExecuteScript(&ascii->demoIcon);
+    }
+    else
+    {
+        ascii->demoIcon.scriptIndex = 0;
+    }
+    ascii->unk_8284++;
+
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 

@@ -60,6 +60,7 @@ th08::AsciiManager::AddedCallback
 th08::AsciiManager::CutChain
 th08::AsciiManager::DeletedCallback
 th08::AsciiManager::OnDrawHighPrio
+th08::AsciiManager::OnUpdate
 th08::AsciiManager::OnDrawLowPrio
 th08::AsciiManager::RegisterChain
 th08::AsciiManager::SetBossMarkerInterrupt

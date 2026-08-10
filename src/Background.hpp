@@ -143,10 +143,13 @@ struct Background
     u8 skyFogNeedsSetup; // Leftover from earlier games. Never checked in IN
     unknown_fields(0xb21, 0x3);
     u32 unk0xb24;
-    unknown_fields(0xb28, 0x10);
+    i32 unk0xb28;
+    unknown_fields(0xb2c, 0x4);
+    i32 unk0xb30;
+    unknown_fields(0xb34, 0x4);
     AnmVm objectVms[0x20];
     AnmVm unk0x5fb8;
-    unknown_fields(0x625c, 0x4);
+    void (*unk0x625c)(Background *background);
     u32 unk0x6260;
     BackgroundCamera camera0;
     BackgroundCamera camera1;
@@ -160,10 +163,12 @@ struct Background
     Float3 unk0x6444;
     u32 unk0x6450;
     Float3 unk0x6454;
-    unknown_fields(0x6460, 0x10);
+    unknown_fields(0x6460, 0xc);
+    u32 unk0x646c;
     f32 unk0x6470;
     u8 unk0x6474;
-    unknown_fields(0x6475, 0xb);
+    unknown_fields(0x6475, 0x7);
+    u32 unk0x647c;
     Float3 unk0x6480[0x20];
 };
 C_ASSERT(sizeof(Background) == 0x6600);
