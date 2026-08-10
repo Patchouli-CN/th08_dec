@@ -48,3 +48,5 @@
   应用效果模板（g_EffectTemplates 表 0x4c6d30）、标记回放事件。展开
   EffectManagerParticle 结构体（含 unk1f0/1f8/288/2a4/2d4/328/348/350/351/358）、
   EffectManager 加 unk0/unk8b054 字段、新增 g_EffectTemplates 全局。
+- **`ResultScreen::HandleHighScoreCharacterSelect`**（0x45567d）反编译完成（100%）。
+  角色选择状态机（unk10==0 初始化、==1 MoveCursor/WAS_PRESSED 确认返回/进入成绩屏）。

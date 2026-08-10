@@ -237,9 +237,101 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
     return 0;
 }
 
-// STUB: th08 0x45567d
+// FUNCTION: th08 0x45567d
 i32 ResultScreen::HandleHighScoreCharacterSelect()
 {
+    i32 i;
+
+    switch (this->unk10)
+    {
+    case 0:
+        if (this->unk18 == 0)
+        {
+            this->unk1c = this->unk3c;
+
+            for (i = 0xf; i <= 0x1a; i++)
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
+                g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+
+                if (i - 0xf == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                }
+            }
+        }
+
+        if (this->unk18 < 6)
+        {
+            break;
+        }
+
+        this->unk10++;
+        this->unk18 = 0;
+        /* fallthrough */
+    case 1:
+        i = this->MoveCursor(0xc);
+
+        if (i != 0)
+        {
+            for (i = 0xf; i <= 0x1a; i++)
+            {
+                if (i - 0xf == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                }
+            }
+        }
+
+        if (WAS_PRESSED(0xa))
+        {
+            this->SetState((ResultScreenState)3);
+            g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
+            this->unk3c = this->unk1c;
+
+            for (i = 0xf; i <= 0x1a; i++)
+            {
+                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+            }
+
+            return 1;
+        }
+
+        if (WAS_PRESSED(0x1001))
+        {
+            AnmVm *vmBase = (AnmVm *)((u8 *)this + 0x1a0);
+
+            for (i = 0xf; i <= 0x1a; i++)
+            {
+                if (i - 0xf == this->unk1c)
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                }
+                else
+                {
+                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                }
+            }
+
+            *(u16 *)((u8 *)this + 0x6d3e) = 0x3;
+            this->unk3c |= 0xffffffff;
+            this->SetState((ResultScreenState)5);
+            g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
+            return 1;
+        }
+        break;
+    }
+
+    this->unk18++;
+
     return 0;
 }
 
