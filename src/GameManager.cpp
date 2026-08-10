@@ -966,6 +966,17 @@ ZunBool GameManager::IsStageClearedWithRetries(i32 stage, i32 character, i32 dif
     return IS_STAGE_CLEARED(this->clrdData[character].difficultiesClearedWithRetries[difficulty], stage);
 }
 
+// FUNCTION: th08 0x40bb80
+ZunBool GameManager::IsTampered()
+{
+    // There is zero chance ZUN actually used intptr_t here, but the codegen matches and not making
+    // assumptions about pointer size is always nice
+    return this->globals->antiTamperValue !=
+               this->globals->rng1[2] + this->globals->rng8[2] * ((intptr_t)&this->globals->antiTamperValue -
+                                                                  (intptr_t)&this->globals->rng1 + 500) ||
+           this->globals->antiTamperChecksum + this->globals->rng7[3] != (i32)this->antiTamperExpectedValue;
+}
+
 // FUNCTION: th08 0x43c322
 u32 GameManager::FUN_0043c322()
 {

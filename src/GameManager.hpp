@@ -121,15 +121,7 @@ struct GameManager
         this->globals->rng4[2] = g_Rng.GetRandomF32InRange(ANTITAMPER_RNG_RANGE) + ANTITAMPER_RNG_ADD;
     }
 
-    ZunBool IsTampered()
-    {
-        // There is zero chance ZUN actually used intptr_t here, but the codegen matches and not making
-        // assumptions about pointer size is always nice
-        return this->globals->antiTamperValue !=
-                   this->globals->rng1[2] + this->globals->rng8[2] * ((intptr_t)&this->globals->antiTamperValue -
-                                                                      (intptr_t)&this->globals->rng1 + 500) ||
-               this->globals->antiTamperChecksum + this->globals->rng7[3] != (i32)this->antiTamperExpectedValue;
-    }
+    ZunBool IsTampered();
 
     static ZunResult DeletedCallback(GameManager *gameManager);
 
