@@ -446,11 +446,7 @@ struct ZunTimer
         SetCurrent(value);
     }
 
-    void SetCurrent(i32 value)
-    {
-        this->current = value;
-        this->previous = -999;
-        this->subFrame = 0.0;
-    }
+    void SetCurrent(i32 value);
+    void SetCurrentImpl(i32 value);
 };
 }; // namespace th08

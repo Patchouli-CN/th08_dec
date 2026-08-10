@@ -2575,4 +2575,9 @@ void AnmManager::ClearCameraSettings()
     this->cameraMode = 0xff;
 }
 
+void AnmManager::SetCameraMode(u8 mode)
+{
+    this->cameraMode = mode;
+}
+
 }; // Namespace th08

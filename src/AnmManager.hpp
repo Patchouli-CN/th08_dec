@@ -555,6 +555,7 @@ struct AnmManager
     void ClearTexture();
 
     void ClearCameraSettings();
+    void SetCameraMode(u8 mode);
 
     void ClearZWriteSetting();
 

@@ -1899,4 +1899,16 @@ void Supervisor::DeleteCriticalSections()
     }
 }
 
+void ZunTimer::SetCurrent(i32 value)
+{
+    this->SetCurrentImpl(value);
+}
+
+void ZunTimer::SetCurrentImpl(i32 value)
+{
+    this->current = value;
+    this->previous = -999;
+    this->subFrame = 0;
+}
+
 }; // namespace th08
