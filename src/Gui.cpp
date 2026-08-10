@@ -858,7 +858,7 @@ void Gui::DrawGameScene()
             g_AnmManager->ClearVertexShader();
             g_AnmManager->ClearColorOp();
             g_AnmManager->ClearBlendMode();
-            g_AnmManager->ClearZWrite();
+            g_AnmManager->ClearZWriteSetting();
             if (!g_Supervisor.IsColorCompositingDisabled())
             {
                 g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);

@@ -544,40 +544,19 @@ struct AnmManager
         SAFE_RELEASE(this->quadVertexBuffer);
     }
 
-    void ClearBlendMode()
-    {
-        this->currentBlendMode = 3;
-    }
+    void ClearBlendMode();
 
-    void ClearColorOp()
-    {
-        this->currentColorOp = AnmColorOp_Unset;
-    }
+    void ClearColorOp();
 
-    void ClearSprite()
-    {
-        this->currentSprite = NULL;
-    }
+    void ClearSprite();
 
-    void ClearVertexShader()
-    {
-        this->currentVertexShader = AnmVertexShader_Unset;
-    }
+    void ClearVertexShader();
 
-    void ClearTexture()
-    {
-        this->currentTexture = NULL;
-    }
+    void ClearTexture();
 
-    void ClearCameraSettings()
-    {
-        this->cameraMode = AnmCameraMode_Unset;
-    }
+    void ClearCameraSettings();
 
-    void ClearZWrite()
-    {
-        this->disableZWrite = AnmZWriteMode_Unset;
-    }
+    void ClearZWriteSetting();
 
     void ResetFrameDebugInfo()
     {

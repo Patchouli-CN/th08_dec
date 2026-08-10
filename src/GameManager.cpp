@@ -905,6 +905,33 @@ void GameManager::CutChain()
     g_Supervisor.framerateMultiplier = 1.0f;
 }
 
+
+i32 GameManager::GetLives()
+{
+    return this->globals->livesRemaining;
+}
+
+i32 GameManager::GetBombsRemaining()
+{
+    return (i32)this->globals->bombsRemaining;
+}
+
+
+i32 GameManager::GetTimeOrbs()
+{
+    return this->globals->currentTimeOrbs;
+}
+
+i32 GameManager::GetLastSpellTimeOrbThreshold()
+{
+    return this->globals->lastSpellTimeOrbThreshold;
+}
+
+i32 GameManager::GetPower()
+{
+    return this->globals->playerPower;
+}
+
 // FUNCTION: th08 0x406dd0
 i8 GameManager::GetClockTime()
 {

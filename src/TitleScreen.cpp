@@ -3826,7 +3826,7 @@ void TitleScreen::DisplayInfoImage(const char *path)
         g_AnmManager->ClearTexture();
         g_AnmManager->ClearColorOp();
         g_AnmManager->ClearBlendMode();
-        g_AnmManager->ClearZWrite();
+        g_AnmManager->ClearZWriteSetting();
 
         g_AnmManager->ResetFrameDebugInfo();
         g_AnmManager->ClearCameraSettings();

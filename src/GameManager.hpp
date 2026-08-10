@@ -70,25 +70,11 @@ struct GameManager
 
     static void InitializeAntiTamper();
 
-    i32 GetTimeOrbs()
-    {
-        return this->globals->currentTimeOrbs;
-    }
+    i32 GetTimeOrbs();
+    i32 GetLastSpellTimeOrbThreshold();
 
-    i32 GetLastSpellTimeOrbThreshold()
-    {
-        return this->globals->lastSpellTimeOrbThreshold;
-    }
-
-    i32 GetLives()
-    {
-        return this->globals->livesRemaining;
-    }
-
-    i32 GetBombsRemaining()
-    {
-        return this->globals->bombsRemaining;
-    }
+    i32 GetLives();
+    i32 GetBombsRemaining();
 
     void UpdateAntiTamper()
     {
@@ -250,10 +236,7 @@ struct GameManager
                this->flsp.unlockedLastWordSpellCards[spellCardNumber - SPELLCARD_LAST_WORD_START] == spellCardNumber;
     }
 
-    i32 GetPower()
-    {
-        return this->globals->playerPower;
-    }
+    i32 GetPower();
 
     i32 GetClockTimeIncrement();
     i8 GetClockTime();

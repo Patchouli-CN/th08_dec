@@ -94,7 +94,7 @@ void ScreenEffect::DrawSquare(ZunRect *rectDimensions, D3DCOLOR color)
     g_AnmManager->ClearTexture();
     g_AnmManager->ClearColorOp();
     g_AnmManager->ClearBlendMode();
-    g_AnmManager->ClearZWrite();
+    g_AnmManager->ClearZWriteSetting();
     g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, 4);
     g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, 4);
     g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, 2);
@@ -136,7 +136,7 @@ void ScreenEffect::DrawSquareShaded(ZunRect *rect, D3DCOLOR topLeft, D3DCOLOR to
     g_AnmManager->ClearTexture();
     g_AnmManager->ClearColorOp();
     g_AnmManager->ClearBlendMode();
-    g_AnmManager->ClearZWrite();
+    g_AnmManager->ClearZWriteSetting();
     if (!g_Supervisor.IsColorCompositingDisabled())
     {
         g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, 4);

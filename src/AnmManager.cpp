@@ -1522,7 +1522,7 @@ ZunResult AnmManager::DrawTriangleFan(AnmVm *vm, VertexDiffuseXyzrhw *vertices, 
     g_AnmManager->ClearVertexShader();
     g_AnmManager->ClearColorOp();
     g_AnmManager->ClearBlendMode();
-    g_AnmManager->ClearZWrite();
+    g_AnmManager->ClearZWriteSetting();
 
     if (!g_Supervisor.IsColorCompositingDisabled())
     {
@@ -2538,6 +2538,41 @@ void AnmManager::CaptureToSurface(i32 captureSurfaceIdx, i32 srcX, i32 srcY, i32
 
 out:
     SAFE_RELEASE(backbuffer);
+}
+
+void AnmManager::ClearColorOp()
+{
+    this->currentColorOp = 0xff;
+}
+
+void AnmManager::ClearBlendMode()
+{
+    this->currentBlendMode = 3;
+}
+
+void AnmManager::ClearVertexShader()
+{
+    this->currentVertexShader = 0xff;
+}
+
+void AnmManager::ClearZWriteSetting()
+{
+    this->disableZWrite = 0xff;
+}
+
+void AnmManager::ClearSprite()
+{
+    this->currentSprite = NULL;
+}
+
+void AnmManager::ClearTexture()
+{
+    this->currentTexture = NULL;
+}
+
+void AnmManager::ClearCameraSettings()
+{
+    this->cameraMode = 0xff;
 }
 
 }; // Namespace th08

@@ -15,6 +15,7 @@ th08::AnmManager::ClearSprite
 th08::AnmManager::ClearTexture
 th08::AnmManager::ClearVertexBuffer
 th08::AnmManager::ClearVertexShader
+th08::AnmManager::ClearZWriteSetting
 th08::AnmManager::CopySurfaceToBackbuffer
 th08::AnmManager::CreateEmptyTexture
 th08::AnmManager::CreateTextureFromAnm
@@ -60,8 +61,8 @@ th08::AsciiManager::AddedCallback
 th08::AsciiManager::CutChain
 th08::AsciiManager::DeletedCallback
 th08::AsciiManager::OnDrawHighPrio
-th08::AsciiManager::OnUpdate
 th08::AsciiManager::OnDrawLowPrio
+th08::AsciiManager::OnUpdate
 th08::AsciiManager::RegisterChain
 th08::AsciiManager::SetBossMarkerInterrupt
 th08::AsciiManager::SetBossMarkerPosition
@@ -191,14 +192,13 @@ th08::GameManager::DecreaseSubrank
 th08::GameManager::DeletedCallback
 th08::GameManager::GameplaySetupThread
 th08::GameManager::GaugeIsExtremelyHuman
-th08::GameManager::GetLastSpellTimeOrbThreshold
-th08::GameManager::GetPower
+th08::GameManager::GetBombsRemaining
 th08::GameManager::GetSpellcardBgmIsLastWord
-th08::GameManager::GetTimeOrbs
 th08::GameManager::IncreaseSubrank
 th08::GameManager::InitArcadeRegionParams
 th08::GameManager::InitRankParams
 th08::GameManager::InitializeAntiTamper
+th08::GameManager::IsTampered
 th08::GameManager::IsWithinPlayfield
 th08::GameManager::LoadScoreData
 th08::GameManager::OnDraw
@@ -222,8 +222,8 @@ th08::GameWindow::WindowProc
 th08::GetAnmFormat
 th08::Gui::AddedCallback
 th08::Gui::CutChain
-th08::Gui::DrawGameScene
 th08::Gui::DeletedCallback
+th08::Gui::DrawGameScene
 th08::Gui::FUN_00437e5d
 th08::Gui::FreeMsgFile
 th08::Gui::LoadMsg
@@ -388,8 +388,12 @@ th08::Supervisor::GetUnk164
 th08::Supervisor::GetUnk168
 th08::Supervisor::InitializeCriticalSections
 th08::Supervisor::Is16bitColorMode
+th08::Supervisor::IsColorCompositingDisabled
+th08::Supervisor::IsDepthTestDisabled
 th08::Supervisor::IsFogDisabled
+th08::Supervisor::IsHUDRedrawEnabled
 th08::Supervisor::IsHardwareBlendingDisabled
+th08::Supervisor::IsMinimumGraphicsMode
 th08::Supervisor::IsMusicPreloadEnabled
 th08::Supervisor::IsReferenceRasterizerMode
 th08::Supervisor::IsShotSlowEnabled
