@@ -72,6 +72,15 @@ struct GameManager
 
     i32 GetTimeOrbs();
     i32 GetLastSpellTimeOrbThreshold();
+    void SetClockTime(u8 clockTime);
+    i32 GetDeaths();
+    i32 GetBombsUsed();
+    void AddToDeaths(i32 deaths);
+    void AddToBombsUsed(i32 bombs);
+    i32 ScaleIntBasedOnRank(i32 min, i32 max);
+    f32 ScaleFloatBasedOnRank(f32 min, f32 max);
+    i32 IsSoloHuman();
+    i32 IsSoloYoukai();
     u32 GetFlag0();
     u32 GetFlag1();
     u32 GetFlag3();

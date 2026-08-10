@@ -918,6 +918,59 @@ i32 GameManager::GetLastSpellTimeOrbThreshold()
     return this->globals->lastSpellTimeOrbThreshold;
 }
 
+void GameManager::SetClockTime(u8 clockTime)
+{
+    this->globals->clockTime = clockTime;
+}
+
+i32 GameManager::GetDeaths()
+{
+    return (i32)this->globals->deaths;
+}
+
+i32 GameManager::GetBombsUsed()
+{
+    return (i32)this->globals->bombsUsed;
+}
+
+void GameManager::AddToDeaths(i32 deaths)
+{
+    if (IsTampered())
+    {
+        CRASH_GAME();
+    }
+    this->globals->deaths += (f32)deaths;
+}
+
+void GameManager::AddToBombsUsed(i32 bombs)
+{
+    if (IsTampered())
+    {
+        CRASH_GAME();
+    }
+    this->globals->bombsUsed += (f32)bombs;
+}
+
+i32 GameManager::ScaleIntBasedOnRank(i32 min, i32 max)
+{
+    return min + ((max - min) * this->rank + 0x1f) >> 5;
+}
+
+f32 GameManager::ScaleFloatBasedOnRank(f32 min, f32 max)
+{
+    return min + (f32)this->rank * (max - min) / 32.0f;
+}
+
+i32 GameManager::IsSoloHuman()
+{
+    return this->shotType >= 4 && (this->shotType & 1) == 0;
+}
+
+i32 GameManager::IsSoloYoukai()
+{
+    return this->shotType >= 4 && (this->shotType & 1) != 0;
+}
+
 u32 GameManager::GetFlag0()
 {
     return this->flags.isPracticeMode;
