@@ -149,9 +149,19 @@ void Gui::FreeMsgFile(void)
 
 // STUB: th08 0x433db3
 // FUNCTION: th08 0x433db3
+#pragma var_order(args, i15, args15, i17, args17, buf3, buf16, buf19, buf20, i9)
 ZunResult GuiImpl::RunMsg()
 {
-    MsgRawInstr *curInstr;
+    MsgRawInstrArgs *args;
+    u32 i15;
+    MsgRawInstrArgs *args15;
+    u32 i17;
+    MsgRawInstrArgs *args17;
+    char buf3[0x40];
+    char buf16[0x40];
+    char buf19[0x40];
+    char buf20[0x40];
+    u32 i9;
 
     if (this->msgState.currentMsgIdx < 0)
     {
@@ -180,112 +190,109 @@ ZunResult GuiImpl::RunMsg()
             return ZUN_ERROR;
         case 15: // MSG_SHOW_PORTRAIT
         {
-            MsgRawInstrArgs *args = &this->msgState.curInstr->args;
-            i32 i;
+            args15 = &this->msgState.curInstr->args;
 
-            if (this->msgState.currentPortrait != args->showPortrait.portraitIdx)
+            if (this->msgState.currentPortrait != args15->showPortrait.portraitIdx)
             {
-                for (i = 0; i < 4; i++)
+                for (i15 = 0; i15 < 4; i15++)
                 {
-                    if (this->msgState.currentPortrait == i)
+                    if (this->msgState.currentPortrait == i15)
                     {
-                        if (this->msgState.currentPortrait / 2 == args->showPortrait.portraitIdx / 2)
+                        if (this->msgState.currentPortrait / 2 != args15->showPortrait.portraitIdx / 2)
                         {
-                            this->msgState.vms[i].prefix.pendingInterrupt = 4;
+                            this->msgState.vms[i15].prefix.pendingInterrupt = 6;
                         }
                         else
                         {
-                            this->msgState.vms[i].prefix.pendingInterrupt = 6;
+                            this->msgState.vms[i15].prefix.pendingInterrupt = 4;
                         }
                     }
                     else
                     {
-                        this->msgState.vms[i].prefix.pendingInterrupt = 4;
+                        this->msgState.vms[i15].prefix.pendingInterrupt = 4;
                     }
                 }
             }
-            this->msgState.vms[args->showPortrait.portraitIdx].prefix.pendingInterrupt = 3;
-            this->msgState.currentPortrait = (u8)args->showPortrait.portraitIdx;
+            this->msgState.vms[args15->showPortrait.portraitIdx].prefix.pendingInterrupt = 3;
+            this->msgState.currentPortrait = (u8)args15->showPortrait.portraitIdx;
 
-            if (args->showPortrait.anmScriptIdx0 >= 0)
+            if (args15->showPortrait.anmScriptIdx0 >= 0)
             {
-                g_GuiPortraitAnms[0]->SetSprite(&this->msgState.vms[0], args->showPortrait.anmScriptIdx0);
+                g_GuiPortraitAnms[0]->SetSprite(&this->msgState.vms[0], args15->showPortrait.anmScriptIdx0);
             }
-            if (args->showPortrait.anmScriptIdx1 >= 0)
+            if (args15->showPortrait.anmScriptIdx1 >= 0)
             {
-                g_GuiPortraitAnms[1]->SetSprite(&this->msgState.vms[1], args->showPortrait.anmScriptIdx1);
+                g_GuiPortraitAnms[1]->SetSprite(&this->msgState.vms[1], args15->showPortrait.anmScriptIdx1);
             }
-            if (args->showPortrait.anmScriptIdx2 >= 0)
+            if (args15->showPortrait.anmScriptIdx2 >= 0)
             {
-                g_GuiPortraitAnms[2]->SetSprite(&this->msgState.vms[2], args->showPortrait.anmScriptIdx2);
+                g_GuiPortraitAnms[2]->SetSprite(&this->msgState.vms[2], args15->showPortrait.anmScriptIdx2);
             }
-            if (args->showPortrait.anmScriptIdx3 >= 0)
+            if (args15->showPortrait.anmScriptIdx3 >= 0)
             {
-                g_GuiPortraitAnms[3]->SetSprite(&this->msgState.vms[3], args->showPortrait.anmScriptIdx3);
+                g_GuiPortraitAnms[3]->SetSprite(&this->msgState.vms[3], args15->showPortrait.anmScriptIdx3);
             }
 
-            this->msgState.currentFace = (u8)args->showPortrait.portraitIdx;
+            this->msgState.currentFace = (u8)args15->showPortrait.portraitIdx;
             this->msgState.portraitVisible = 1;
             break;
         }
         case 17: // MSG_CHANGE_FACE
         {
-            MsgRawInstrArgs *args = &this->msgState.curInstr->args;
-            u32 i;
+            args17 = &this->msgState.curInstr->args;
 
-            if (this->msgState.currentPortrait != *(i32 *)&args->portrait)
+            if (this->msgState.currentPortrait != *(i32 *)&args17->portrait)
             {
-                for (i = 0; i < 4; i++)
+                for (i17 = 0; i17 < 4; i17++)
                 {
-                    if (this->msgState.currentPortrait == i)
+                    if (this->msgState.currentPortrait == i17)
                     {
-                        if (this->msgState.currentPortrait / 2 == *(i32 *)&args->portrait / 2)
+                        if (this->msgState.currentPortrait / 2 != *(i32 *)&args17->portrait / 2)
                         {
-                            this->msgState.vms[i].prefix.pendingInterrupt = 4;
+                            this->msgState.vms[i17].prefix.pendingInterrupt = 6;
                         }
                         else
                         {
-                            this->msgState.vms[i].prefix.pendingInterrupt = 6;
+                            this->msgState.vms[i17].prefix.pendingInterrupt = 4;
                         }
                     }
                     else
                     {
-                        this->msgState.vms[i].prefix.pendingInterrupt = 4;
+                        this->msgState.vms[i17].prefix.pendingInterrupt = 4;
                     }
                 }
             }
-            this->msgState.vms[*(i32 *)&args->portrait].prefix.pendingInterrupt = 3;
-            this->msgState.currentPortrait = (u8)*(i32 *)&args->portrait;
+            this->msgState.vms[*(i32 *)&args17->portrait].prefix.pendingInterrupt = 3;
+            this->msgState.currentPortrait = (u8)*(i32 *)&args17->portrait;
 
-            if (args->portrait.anmScriptIdx >= 0)
+            if (args17->showPortrait.anmScriptIdx0 >= 0)
             {
-                switch (*(i32 *)&args->portrait)
+                switch (*(i32 *)&args17->portrait)
                 {
                 case 0:
-                    g_GuiPortraitAnms[0]->SetSprite(&this->msgState.vms[0], args->portrait.anmScriptIdx);
+                    g_GuiPortraitAnms[0]->SetSprite(&this->msgState.vms[0], args17->showPortrait.anmScriptIdx0);
                     break;
                 case 1:
-                    g_GuiPortraitAnms[1]->SetSprite(&this->msgState.vms[1], args->portrait.anmScriptIdx);
+                    g_GuiPortraitAnms[1]->SetSprite(&this->msgState.vms[1], args17->showPortrait.anmScriptIdx0);
                     break;
                 case 2:
-                    g_GuiPortraitAnms[2]->SetSprite(&this->msgState.vms[2], args->portrait.anmScriptIdx);
+                    g_GuiPortraitAnms[2]->SetSprite(&this->msgState.vms[2], args17->showPortrait.anmScriptIdx0);
                     break;
                 case 3:
-                    g_GuiPortraitAnms[3]->SetSprite(&this->msgState.vms[3], args->portrait.anmScriptIdx);
+                    g_GuiPortraitAnms[3]->SetSprite(&this->msgState.vms[3], args17->showPortrait.anmScriptIdx0);
                     break;
                 }
             }
 
-            this->msgState.currentFace = (u8)*(i32 *)&args->portrait;
+            this->msgState.currentFace = (u8)*(i32 *)&args17->portrait;
             this->msgState.portraitVisible = 1;
             break;
         }
         case 1: // MSG_SHOW_PORTRAIT (single)
         {
-            MsgRawInstrArgs *args = &this->msgState.curInstr->args;
-            i32 portraitIdx = args->portrait.portraitIdx;
+            args = &this->msgState.curInstr->args;
 
-            switch (portraitIdx)
+            switch (args->portrait.portraitIdx)
             {
             case 0:
                 g_GuiPortraitAnms[0]->SetAndExecuteScriptIdx(&this->msgState.vms[0], args->portrait.anmScriptIdx);
@@ -300,22 +307,21 @@ ZunResult GuiImpl::RunMsg()
                 g_GuiPortraitAnms[3]->SetAndExecuteScriptIdx(&this->msgState.vms[3], args->portrait.anmScriptIdx);
                 break;
             }
-            if (this->msgState.vms[portraitIdx].loadedSprite->widthPx > 128.0f)
+            if (this->msgState.vms[args->portrait.portraitIdx].loadedSprite->widthPx > 128.0f)
             {
-                this->msgState.vms[portraitIdx].pos2.x = -112.0f;
+                this->msgState.vms[args->portrait.portraitIdx].pos2.x = -112.0f;
             }
             else
             {
-                this->msgState.vms[portraitIdx].pos2.x = 0.0f;
+                this->msgState.vms[args->portrait.portraitIdx].pos2.x = 0.0f;
             }
             break;
         }
         case 2: // MSG_CHANGE_FACE (single)
         {
-            MsgRawInstrArgs *args = &this->msgState.curInstr->args;
-            i32 portraitIdx = args->portrait.portraitIdx;
+            args = &this->msgState.curInstr->args;
 
-            switch (portraitIdx)
+            switch (args->portrait.portraitIdx)
             {
             case 0:
                 g_GuiPortraitAnms[0]->SetSprite(&this->msgState.vms[0], args->portrait.anmScriptIdx);
@@ -330,54 +336,53 @@ ZunResult GuiImpl::RunMsg()
                 g_GuiPortraitAnms[3]->SetSprite(&this->msgState.vms[3], args->portrait.anmScriptIdx);
                 break;
             }
-            if (this->msgState.vms[portraitIdx].loadedSprite->widthPx > 256.0f)
+            if (this->msgState.vms[args->portrait.portraitIdx].loadedSprite->widthPx > 256.0f)
             {
-                this->msgState.vms[portraitIdx].pos2.x = -208.0f;
-                this->msgState.vms[portraitIdx].pos2.y = -50.0f;
+                this->msgState.vms[args->portrait.portraitIdx].pos2.x = -208.0f;
+                this->msgState.vms[args->portrait.portraitIdx].pos2.y = -50.0f;
             }
-            else if (this->msgState.vms[portraitIdx].loadedSprite->widthPx > 128.0f)
+            else if (this->msgState.vms[args->portrait.portraitIdx].loadedSprite->widthPx > 128.0f)
             {
-                this->msgState.vms[portraitIdx].pos2.x = -80.0f;
+                this->msgState.vms[args->portrait.portraitIdx].pos2.x = -80.0f;
             }
             else
             {
-                this->msgState.vms[portraitIdx].pos2.x = 0.0f;
+                this->msgState.vms[args->portrait.portraitIdx].pos2.x = 0.0f;
             }
             break;
         }
         case 3: // MSG_DIALOGUE
         {
-            MsgRawInstrArgs *args = &this->msgState.curInstr->args;
-            i32 textLine = args->dialogue.textLine;
-            i32 textColor = args->dialogue.textColor;
-            char textBuffer[8];
+            args = &this->msgState.curInstr->args;
 
-            if (textLine == 0 && (i32)this->msgState.vms2[1].scriptIndex >= 0)
+            if (args->dialogue.textLine == 0 && (i32)this->msgState.vms2[1].scriptIndex >= 0)
             {
-                g_AnmManager->DrawTextLeft(&this->msgState.vms2[1], this->msgState.textColorsA[textColor],
-                                           this->msgState.textColorsB[textColor], " ");
+                g_AnmManager->DrawTextLeft(&this->msgState.vms2[1], this->msgState.textColorsA[args->dialogue.textColor],
+                                           this->msgState.textColorsB[args->dialogue.textColor], " ");
             }
-            g_Supervisor.textAnm->SetAndExecuteScriptIdx(&this->msgState.vms2[textLine], (i16)textLine);
-            this->msgState.vms2[textLine].fontHeight = this->msgState.fontSize;
-            this->msgState.vms2[textLine].fontWidth = this->msgState.vms2[textLine].fontHeight;
-            DecryptMsgText(textBuffer, args->dialogue.text);
-            g_AnmManager->DrawTextLeft(&this->msgState.vms2[textLine], this->msgState.textColorsA[textColor],
-                                       this->msgState.textColorsB[textColor], textBuffer);
+            g_Supervisor.textAnm->SetAndExecuteScriptIdx(&this->msgState.vms2[args->dialogue.textLine],
+                                                         args->dialogue.textLine);
+            this->msgState.vms2[args->dialogue.textLine].fontHeight = this->msgState.fontSize;
+            this->msgState.vms2[args->dialogue.textLine].fontWidth =
+                this->msgState.vms2[args->dialogue.textLine].fontHeight;
+            DecryptMsgText(buf3, args->dialogue.text);
+            g_AnmManager->DrawTextLeft(&this->msgState.vms2[args->dialogue.textLine],
+                                       this->msgState.textColorsA[args->dialogue.textColor],
+                                       this->msgState.textColorsB[args->dialogue.textColor], buf3);
             this->msgState.framesElapsedDuringPause = 0;
             break;
         }
         case 16: // MSG_DIALOGUE variant
         {
-            MsgRawInstrArgs *args = &this->msgState.curInstr->args;
-            i32 textColor = this->msgState.currentFace;
-            char textBuffer[8];
+            args = &this->msgState.curInstr->args;
 
             if (this->msgState.portraitVisible != 0)
             {
                 if ((i32)this->msgState.vms2[1].scriptIndex >= 0)
                 {
-                    g_AnmManager->DrawTextLeft(&this->msgState.vms2[1], this->msgState.textColorsA[textColor],
-                                               this->msgState.textColorsB[textColor], " ");
+                    g_AnmManager->DrawTextLeft(&this->msgState.vms2[1],
+                                               this->msgState.textColorsA[this->msgState.currentFace],
+                                               this->msgState.textColorsB[this->msgState.currentFace], " ");
                 }
                 this->msgState.currentDialogueLine = 0;
             }
@@ -386,10 +391,10 @@ ZunResult GuiImpl::RunMsg()
             this->msgState.vms2[this->msgState.currentDialogueLine].fontHeight = this->msgState.fontSize;
             this->msgState.vms2[this->msgState.currentDialogueLine].fontWidth =
                 this->msgState.vms2[this->msgState.currentDialogueLine].fontHeight;
-            DecryptMsgText(textBuffer, args->dialogue.text);
+            DecryptMsgText(buf16, (char *)args);
             g_AnmManager->DrawTextLeft(&this->msgState.vms2[this->msgState.currentDialogueLine],
-                                       this->msgState.textColorsA[textColor], this->msgState.textColorsB[textColor],
-                                       textBuffer);
+                                       this->msgState.textColorsA[this->msgState.currentFace],
+                                       this->msgState.textColorsB[this->msgState.currentFace], buf16);
             this->msgState.framesElapsedDuringPause = 0;
             this->msgState.portraitVisible = 0;
             this->msgState.currentDialogueLine++;
@@ -397,29 +402,27 @@ ZunResult GuiImpl::RunMsg()
         }
         case 19: // MSG_DIALOGUE variant
         {
-            MsgRawInstrArgs *args = &this->msgState.curInstr->args;
-            char textBuffer[8];
+            args = &this->msgState.curInstr->args;
 
             g_Supervisor.textAnm->SetAndExecuteScriptIdx(&this->msgState.vms2[0], 0);
             this->msgState.vms2[0].fontHeight = this->msgState.fontSize;
             this->msgState.vms2[0].fontWidth = this->msgState.vms2[0].fontHeight;
-            DecryptMsgText(textBuffer, args->dialogue.text);
+            DecryptMsgText(buf19, (char *)args);
             g_AnmManager->DrawTextLeft(&this->msgState.vms2[0], this->msgState.textColorsA[0],
-                                       this->msgState.textColorsB[0], textBuffer);
+                                       this->msgState.textColorsB[0], buf19);
             this->msgState.framesElapsedDuringPause = 0;
             break;
         }
         case 20: // MSG_DIALOGUE variant
         {
-            MsgRawInstrArgs *args = &this->msgState.curInstr->args;
-            char textBuffer[8];
+            args = &this->msgState.curInstr->args;
 
             g_Supervisor.textAnm->SetAndExecuteScriptIdx(&this->msgState.vms2[1], 1);
             this->msgState.vms2[1].fontHeight = this->msgState.fontSize;
             this->msgState.vms2[1].fontWidth = this->msgState.vms2[1].fontHeight;
-            DecryptMsgText(textBuffer, args->dialogue.text);
+            DecryptMsgText(buf20, (char *)args);
             g_AnmManager->DrawTextLeft(&this->msgState.vms2[1], this->msgState.textColorsA[0],
-                                       this->msgState.textColorsB[0], textBuffer);
+                                       this->msgState.textColorsB[0], buf20);
             this->msgState.framesElapsedDuringPause = 0;
             break;
         }
@@ -437,26 +440,26 @@ ZunResult GuiImpl::RunMsg()
             {
                 if (this->msgState.musicSelection == 0)
                 {
-                    g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
+                    g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
                 }
                 this->msgState.musicSelection = 1;
             }
             this->msgState.vms2[this->msgState.musicSelection].prefix.color2.d3dColor = 0xFFFFFFFF;
             this->msgState.vms2[1 - this->msgState.musicSelection].prefix.color2.d3dColor = 0xE0606060;
 
-            if (WAS_PRESSED(TH_BUTTON_SHOOT) && this->msgState.framesElapsedDuringPause >= 0x3c)
+            if (!(WAS_PRESSED(TH_BUTTON_SHOOT) && this->msgState.framesElapsedDuringPause >= 0x3c))
             {
-                g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
-                break;
+                if (this->msgState.framesElapsedDuringPause >= this->msgState.curInstr->args.pause.duration)
+                {
+                    this->msgState.portraitVisible = 1;
+                    this->msgState.pauseLimit = 0x1e;
+                    break;
+                }
+                this->msgState.framesElapsedDuringPause++;
+                goto SKIP_TIME_INCREMENT;
             }
-            if (this->msgState.framesElapsedDuringPause >= (u32)this->msgState.curInstr->args.pause.duration)
-            {
-                this->msgState.portraitVisible = 1;
-                this->msgState.pauseLimit = 0x1e;
-                break;
-            }
-            this->msgState.framesElapsedDuringPause++;
-            goto SKIP_TIME_INCREMENT;
+            g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
+            break;
         }
         case 22: // MSG_MUSIC_SELECT confirm
         {
@@ -466,28 +469,32 @@ ZunResult GuiImpl::RunMsg()
         }
         case 4: // MSG_PAUSE
         {
-            if (this->msgState.dialogueSkippable != 0 && IS_PRESSED(TH_BUTTON_SKIP))
+            if (!(this->msgState.dialogueSkippable != 0 && IS_PRESSED(TH_BUTTON_SKIP)))
             {
-                break;
-            }
-            if (WAS_PRESSED(TH_BUTTON_SHOOT) && this->msgState.framesElapsedDuringPause >= this->msgState.pauseLimit)
-            {
+                if (!(WAS_PRESSED(TH_BUTTON_SHOOT) && this->msgState.framesElapsedDuringPause >= this->msgState.pauseLimit))
+                {
+                    if (this->msgState.framesElapsedDuringPause >= this->msgState.curInstr->args.pause.duration)
+                    {
+                        this->msgState.portraitVisible = 1;
+                        this->msgState.pauseLimit = 0x1e;
+                        break;
+                    }
+                    this->msgState.framesElapsedDuringPause++;
+                    goto SKIP_TIME_INCREMENT;
+                }
+                goto CASE4_CONFIRM;
+            CASE4_CONFIRM:
                 this->msgState.portraitVisible = 1;
                 this->msgState.pauseLimit = 8;
-                break;
+                goto CASE4_BREAK;
             }
-            if (this->msgState.framesElapsedDuringPause >= (u32)this->msgState.curInstr->args.pause.duration)
-            {
-                this->msgState.portraitVisible = 1;
-                this->msgState.pauseLimit = 0x1e;
-                break;
-            }
-            this->msgState.framesElapsedDuringPause++;
-            goto SKIP_TIME_INCREMENT;
+            goto CASE4_BREAK;
+        CASE4_BREAK:
+            break;
         }
         case 5: // MSG_SWITCH
         {
-            MsgRawInstrArgs *args = &this->msgState.curInstr->args;
+            args = &this->msgState.curInstr->args;
             this->msgState.vms[args->msgSwitch.unkIdx].prefix.pendingInterrupt = args->msgSwitch.interrupt;
             break;
         }
@@ -496,58 +503,58 @@ ZunResult GuiImpl::RunMsg()
             break;
         case 7: // MSG_MUSIC
         {
-            i32 musicIdx = this->msgState.curInstr->args.music.musicIdx;
-            if (musicIdx < 0)
+            if (this->msgState.curInstr->args.music.musicIdx < 0)
             {
                 g_Supervisor.StopAudio();
             }
             else
             {
                 g_Gui.stageTextAnm->SetAndExecuteScriptIdx(&this->vmsB[3], 3);
-                g_Gui.stageTextAnm->SetSprite(&this->vmsB[3], musicIdx + 3);
-                g_Supervisor.PlayMusic(musicIdx, (char *)&g_GuiBgmPathBase[musicIdx * 0x80 + 0x290]);
+                g_Gui.stageTextAnm->SetSprite(&this->vmsB[3], this->msgState.curInstr->args.music.musicIdx + 3);
+                if (g_Supervisor.PlayMusic(this->msgState.curInstr->args.music.musicIdx,
+                                           (char *)*(i32 *)(0x4c7240 + g_GameManager.currentStage * 12 +
+                                                            this->msgState.curInstr->args.music.musicIdx * 4)))
+                {
+                    g_Supervisor.PlayAudio((char *)&g_GuiBgmPathBase[this->msgState.curInstr->args.music.musicIdx * 0x80 + 0x290],
+                                           *(i32 *)(0x4c7240 + g_GameManager.currentStage * 12 +
+                                                    this->msgState.curInstr->args.music.musicIdx * 4));
+                }
             }
             break;
         }
         case 8: // MSG_TEXT_INTRODUCE
+            args = &this->msgState.curInstr->args;
             g_GuiPortraitAnms[2]->SetAndExecuteScriptIdx(&this->msgState.vms3[0], 1);
             this->msgState.framesElapsedDuringPause = 0;
             break;
         case 9: // MSG_STAGERESULTS
         {
-            i32 i;
-            i32 *stageResults = (i32 *)((u8 *)this + 0x22dec);
-
-            stageResults[1] = g_GameManager.GetPower();
-            stageResults[2] = g_GameManager.globals->pointItemsCollectedInStage;
-            stageResults[4] = g_GameManager.GetTimeOrbs();
-            stageResults[3] = g_GameManager.globals->grazeInStage;
-            stageResults[6] = g_GameManager.GetClockTime() * 30 + 660;
-            stageResults[5] = g_GameManager.GetClockTimeIncrement();
-            g_GameManager.AddToClockTime((i8)stageResults[5]);
-            stageResults[0] = ((i32 *)0x4c7158)[g_GameManager.currentStage];
-            stageResults[7] = g_GameManager.GetClockTime() * 30 + 660;
-            stageResults[8] = stageResults[6];
-            stageResults[9] = 0;
+            *(i32 *)((u8 *)this + 0x22df0) = g_GameManager.GetPower();
+            *(i32 *)((u8 *)this + 0x22df4) = g_GameManager.globals->pointItemsCollectedInStage;
+            *(i32 *)((u8 *)this + 0x22dfc) = g_GameManager.GetTimeOrbs();
+            *(i32 *)((u8 *)this + 0x22df8) = g_GameManager.globals->grazeInStage;
+            *(i32 *)((u8 *)this + 0x22e04) = g_GameManager.GetClockTime() * 30 + 660;
+            *(i32 *)((u8 *)this + 0x22e00) = g_GameManager.GetClockTimeIncrement();
+            g_GameManager.AddToClockTime((i8)*(i32 *)((u8 *)this + 0x22e00));
+            *(i32 *)((u8 *)this + 0x22dec) = ((i32 *)0x4c7158)[g_GameManager.currentStage];
+            *(i32 *)((u8 *)this + 0x22e08) = g_GameManager.GetClockTime() * 30 + 660;
+            *(i32 *)((u8 *)this + 0x22e0c) = *(i32 *)((u8 *)this + 0x22e04);
+            *(i32 *)((u8 *)this + 0x22e10) = 0;
             this->msgState.unk1570 = 1;
             g_GameManager.flags.unk9 = 1;
-            if (g_GameManager.currentStage == 6 || g_GameManager.currentStage == 7 ||
-                g_GameManager.currentStage == 8)
+            if (g_GameManager.currentStage != 6 && g_GameManager.currentStage != 7 &&
+                g_GameManager.currentStage != 8)
+            {
+                g_GuiStageClearAnmA->SetAndExecuteScriptIdx(&this->vmJ, 3);
+                g_GuiStageClearAnmA->SetSprite(&this->vmJ, *(i32 *)((u8 *)this + 0x22e00) + 0x80);
+            }
+            else
             {
                 this->vmJ.currentInstruction = NULL;
             }
-            else
-            {
-                g_GuiStageClearAnmA->SetAndExecuteScriptIdx(&this->vmJ, 3);
-                g_GuiStageClearAnmA->SetSprite(&this->vmJ, stageResults[5] + 0x80);
-            }
             this->vmJ.SetInterrupt(1);
-            if (g_GameManager.currentStage == 6 || g_GameManager.currentStage == 7 ||
-                g_GameManager.currentStage == 8)
-            {
-                g_GameManager.globals->pointItemExtendsSoFar = -1;
-            }
-            else
+            if (g_GameManager.currentStage != 6 && g_GameManager.currentStage != 7 &&
+                g_GameManager.currentStage != 8)
             {
                 g_Gui.loadingPortraitAnm->SetAndExecuteScriptIdx(&this->vmD, 0);
                 g_GuiStageClearAnmB->SetAndExecuteScriptIdx(&this->vmF, 1);
@@ -555,20 +562,25 @@ ZunResult GuiImpl::RunMsg()
                     3, 0x20, 0x10, 0x180, 0x1c0, (i32)this->vmF.loadedSprite->startPixelInclusive.x,
                     (i32)this->vmF.loadedSprite->startPixelInclusive.y, (i32)this->vmF.loadedSprite->widthPx,
                     (i32)this->vmF.loadedSprite->heightPx);
-                for (i = 0; i < 8; i++)
+                for (i9 = 0; i9 < 8; i9++)
                 {
-                    g_GuiStageClearAnmB->SetAndExecuteScriptIdx(&this->vmsG[i], 2);
-                    this->vmsG[i].prefix.counterVar0 = i * 4 + 3;
-                    *((u8 *)&this->vmsG[i].prefix.color1.d3dColor + 3) = 0x40 - i * 2;
+                    g_GuiStageClearAnmB->SetAndExecuteScriptIdx(&this->vmsG[i9], 2);
+                    this->vmsG[i9].prefix.counterVar0 = i9 * 4 + 3;
+                    *((u8 *)&this->vmsG[i9].prefix.color1.d3dColor + 3) = 0x40 - i9 * 2;
                 }
-                if (g_GameManager.GetBombsRemaining() < 3 &&
-                    (g_GameManager.unk3dbaa == 3 || g_GameManager.unk3dbaa == 10 ||
-                     g_GameManager.unk3dbaa == 11))
-                {
-                    g_GameManager.AddToBombCount(1);
-                    g_SoundPlayer.PlaySoundByIdx(SOUND_SPELL_CAPTURE, 0);
-                    g_Gui.flags.bombDisplayUpdateFrames = 2;
-                }
+            }
+            else
+            {
+                g_GameManager.globals->pointItemExtendsSoFar = -1;
+            }
+            if (g_GameManager.currentStage != 7 && g_GameManager.currentStage != 6 &&
+                g_GameManager.currentStage != 8 && g_GameManager.GetBombsRemaining() < 3 &&
+                (g_GameManager.shotType == 3 || g_GameManager.shotType == 10 ||
+                 g_GameManager.shotType == 11))
+            {
+                g_GameManager.AddToBombCount(1);
+                g_SoundPlayer.PlaySoundByIdx(SOUND_SPELL_CAPTURE, 0);
+                g_Gui.flags.bombDisplayUpdateFrames = 2;
             }
             break;
         }
@@ -609,6 +621,11 @@ SKIP_TIME_INCREMENT:
     g_AnmManager->ExecuteScript(&this->msgState.vms2[1]);
     g_AnmManager->ExecuteScript(&this->msgState.vms3[0]);
     g_AnmManager->ExecuteScript(&this->msgState.vms3[1]);
+
+    if (this->msgState.timer < 0x3c && this->msgState.dialogueSkippable && IS_PRESSED(TH_BUTTON_SKIP))
+    {
+        this->msgState.timer = 0x3c;
+    }
 
     return ZUN_SUCCESS;
 }

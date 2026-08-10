@@ -906,9 +906,9 @@ void GameManager::CutChain()
 }
 
 // FUNCTION: th08 0x406dd0
-u8 GameManager::GetClockTime()
+i8 GameManager::GetClockTime()
 {
-    return this->globals->clockTime;
+    return (i8)this->globals->clockTime;
 }
 
 // FUNCTION: th08 0x406df0

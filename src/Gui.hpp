@@ -15,8 +15,8 @@ struct GuiMsgState
     MsgRawInstr *curInstr;
     i32 currentMsgIdx;
     ZunTimer timer;
-    u32 framesElapsedDuringPause; // 0x18
-    u32 pauseLimit;               // 0x1c
+    i32 framesElapsedDuringPause; // 0x18
+    i32 pauseLimit;               // 0x1c
     AnmVm vms[4];
     AnmVm vms2[2];
     AnmVm vms3[2];

@@ -229,6 +229,7 @@ th08::Gui::LoadMsg
 th08::Gui::OnDraw
 th08::Gui::OnUpdate
 th08::Gui::RegisterChain
+th08::GuiImpl::RunMsg
 th08::IncrementCappedAgain
 th08::IsDisableResourceReload
 th08::IsUnk164Clear
