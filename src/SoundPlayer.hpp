@@ -99,6 +99,11 @@ class SoundPlayer
                                           u32 fileSizeExcludingFormat);
 
     void QueueCommand(i32 opcode, i32 arg, char *unused);
+    void FadeIn(f32 seconds);
+    void PartialFadeIn(f32 seconds);
+    void PartialFadeOut(f32 seconds);
+    void Pause();
+    void UnPause();
     i32 ProcessQueues();
     void PlaySoundByIdx(SoundIdx idx, i32 unused);
     void PlaySoundPositionedByIdx(SoundIdx idx, f32 pan);

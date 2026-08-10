@@ -689,6 +689,18 @@ CStreamingSound::~CStreamingSound()
 }
 
 //-----------------------------------------------------------------------------
+// Name: CStreamingSound::FadeIn()
+// Desc:
+//-----------------------------------------------------------------------------
+void CStreamingSound::FadeIn(f32 seconds)
+{
+    m_iFadeType = 2;
+    m_iCurFadeProgress = (i32)(seconds * 60.0f);
+    m_iTotalFade = m_iCurFadeProgress;
+    SetVolume(-10000);
+}
+
+//-----------------------------------------------------------------------------
 // Name: CStreamingSound::PartialFadeIn()
 // Desc:
 //-----------------------------------------------------------------------------
@@ -698,6 +710,17 @@ void CStreamingSound::PartialFadeIn(f32 seconds)
     m_iCurFadeProgress = (i32)(seconds * 60.0f);
     m_iTotalFade = m_iCurFadeProgress;
     SetVolume(-1000);
+}
+
+//-----------------------------------------------------------------------------
+// Name: CStreamingSound::PartialFadeOut()
+// Desc:
+//-----------------------------------------------------------------------------
+void CStreamingSound::PartialFadeOut(f32 seconds)
+{
+    m_iFadeType = 4;
+    m_iCurFadeProgress = (i32)(seconds * 60.0f);
+    m_iTotalFade = m_iCurFadeProgress;
 }
 
 //-----------------------------------------------------------------------------

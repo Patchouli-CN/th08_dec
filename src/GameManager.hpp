@@ -72,6 +72,14 @@ struct GameManager
 
     i32 GetTimeOrbs();
     i32 GetLastSpellTimeOrbThreshold();
+    u32 GetFlag0();
+    u32 GetFlag1();
+    u32 GetFlag3();
+    u32 GetFlag14();
+    i32 GetYoukaiGauge();
+    bool GaugeIsModeratelyHuman();
+    void SetLives(i32 lives);
+    void SetYoukaiGauge(u16 gauge);
 
     i32 GetLives()
     {

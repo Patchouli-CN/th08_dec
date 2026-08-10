@@ -918,6 +918,47 @@ i32 GameManager::GetLastSpellTimeOrbThreshold()
     return this->globals->lastSpellTimeOrbThreshold;
 }
 
+u32 GameManager::GetFlag0()
+{
+    return this->flags.isPracticeMode;
+}
+
+u32 GameManager::GetFlag1()
+{
+    return this->flags.isDemoMode;
+}
+
+u32 GameManager::GetFlag3()
+{
+    return this->flags.isReplay;
+}
+
+u32 GameManager::GetFlag14()
+{
+    return this->flags.isSpellPractice;
+}
+
+i32 GameManager::GetYoukaiGauge()
+{
+    return this->globals->youkaiGauge;
+}
+
+bool GameManager::GaugeIsModeratelyHuman()
+{
+    return this->globals->youkaiGauge <= this->youkaiGaugeHumanEffectsThreshold;
+}
+
+void GameManager::SetLives(i32 lives)
+{
+    this->globals->livesRemaining = (f32)lives;
+    this->UpdateAntiTamper();
+}
+
+void GameManager::SetYoukaiGauge(u16 gauge)
+{
+    this->globals->youkaiGauge = gauge;
+}
+
 i32 GameManager::GetPower()
 {
     return this->globals->playerPower;

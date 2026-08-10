@@ -892,6 +892,40 @@ DWORD WINAPI SoundPlayer::BGMPlayerThread(LPVOID lpThreadParameter)
     return 0;
 }
 
+void SoundPlayer::FadeIn(f32 seconds)
+{
+    if (this->bgm != NULL)
+    {
+        this->bgm->FadeIn(seconds);
+    }
+}
+
+void SoundPlayer::PartialFadeIn(f32 seconds)
+{
+    if (this->bgm != NULL)
+    {
+        this->bgm->PartialFadeIn(seconds);
+    }
+}
+
+void SoundPlayer::PartialFadeOut(f32 seconds)
+{
+    if (this->bgm != NULL)
+    {
+        this->bgm->PartialFadeOut(seconds);
+    }
+}
+
+void SoundPlayer::Pause()
+{
+    this->QueueCommand(6, 0, "Pause");
+}
+
+void SoundPlayer::UnPause()
+{
+    this->QueueCommand(7, 0, "UnPause");
+}
+
 void SoundPlayer::QueueCommand(i32 opcode, i32 arg, char *unused)
 {
     i32 i;
