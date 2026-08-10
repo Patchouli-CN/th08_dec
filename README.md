@@ -110,3 +110,129 @@ invaluable contributions:
 
 - @EstexNT for porting the [`var_order` pragma](scripts/pragma_var_order.cpp) to
   MSVC7.
+
+---
+
+# 更新日志 (Changelog)
+
+## 2026-08-10
+
+- **`Supervisor::PlayAudio`** 反编译完成：16.8% → **100%**。实现了 MIDI 分支
+  （通过 `MidiOutput` 停止/加载/播放）和 WAV 分支（改写扩展名为 `.wav` 后经
+  `SoundPlayer` 排队播放），以及回放/演示模式下跳过音乐播放标记的逻辑。
+- **`Supervisor::OnDraw2`** 大幅完善：18.2% → **92.8%**。补全了加载界面
+  （loading VM）的淡入淡出逻辑——根据 `loadingVmsHaveBeenSetup` 计算 alpha
+  渐变、"Press Shot Button" 提示文字、缩放与字符串重置。
+- 进度条更新：函数实现率提升至 **43.13%**。
+
+---
+
+# 中文版
+
+# 東方永夜抄　～ Imperishable Night
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="resources/progress_dark.svg">
+  <img alt="反编译进度" src="resources/progress.svg">
+</picture>
+
+[![Discord][discord-badge]][discord]
+
+[discord]: https://discord.gg/VyGwAjrh9a
+[discord-badge]: https://img.shields.io/discord/1147558514840064030?color=%237289DA&logo=discord&logoColor=%23FFFFFF
+
+本项目旨在完美重建 [東方永夜抄　～ Imperishable Night 1.00d](https://en.touhouwiki.net/wiki/Imperishable_Night)（上海爱丽丝幻乐团）的源代码。
+
+**注意：本项目仍处于高度进行中的早期阶段。**
+
+## 安装
+
+### 可执行文件
+
+本反编译项目需要原版 `th08.exe` 1.00d 版本
+（SHA256 校验值 `330fbdbf58a710829d65277b4f312cfbb38d5448b3df523e79350b879213d924`，
+在 Windows 下可用 `certutil -hashfile <文件路径> SHA256` 校验）。
+
+将 `th08.exe` 复制到 `resources/` 目录。
+
+### 依赖
+
+构建系统需要以下软件包：
+
+- `python3` >= 3.4
+- `msiextract`（仅 Linux/macOS）
+- `wine`（仅 Linux/macOS，macOS 建议用 CrossOver 以避免 CL.EXE 堆问题）
+- `aria2c`（可选，支持 torrent 下载，Windows 下如需会自动安装）
+
+构建系统的其余部分由 Visual Studio 2002 与 DirectX 8.0（来自 Web Archive）构成。
+
+#### 配置开发环境（devenv）
+
+该步骤会下载并安装编译器、库和其他工具。
+
+如果你在 Windows 上想手动下载依赖，运行以下命令获取下载清单：
+
+```
+python scripts/create_devenv.py scripts/dls scripts/prefix --no-download
+```
+
+如果想自动下载所有内容，直接运行：
+
+```
+python scripts/create_devenv.py scripts/dls scripts/prefix
+```
+
+如果想使用 torrent 下载依赖，加 `--torrent` 参数：
+
+```
+python scripts/create_devenv.py scripts/dls scripts/prefix --torrent
+```
+
+在 Linux 和 macOS 上，运行以下脚本：
+
+```bash
+# 注意：macOS 上如果使用 CrossOver
+# export WINE=<CrossOverPath>/wine
+./scripts/create_th08_prefix
+```
+
+#### 构建
+
+运行以下脚本：
+
+```
+python3 ./scripts/build.py
+```
+
+这会自动生成 ninja 构建脚本 `build.ninja` 并执行它。
+
+### 比对（Diffing）
+
+参与反编译需要使用 reccmp（[使用说明](https://github.com/isledecomp/reccmp/tree/master?tab=readme-ov-file#getting-started)）。
+
+在项目根目录运行：
+
+```bash
+reccmp-project detect --search-path resources/
+```
+
+如果你还没编译重编译可执行文件（见上文），先编译。然后在 `build/` 目录运行：
+
+```bash
+reccmp-project detect --what recompiled
+```
+
+要生成原版与重编译二进制之间的差异报告，同样在 `build/` 目录运行：
+
+```bash
+reccmp-reccmp --target th08 --html report.html
+```
+
+这会显示与原始二进制的一致性报告，并导出为 HTML 文件 `report.html`。
+
+# 致谢
+
+我们衷心感谢以下贡献者：
+
+- @EstexNT 将 [`var_order` pragma](scripts/pragma_var_order.cpp) 移植到了
+  MSVC7。
