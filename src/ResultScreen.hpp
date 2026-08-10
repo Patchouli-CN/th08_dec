@@ -73,7 +73,8 @@ struct ResultScreen
     unknown_fields(0x40, 0x4);     // 0x40
     i32 unk44;                     // 0x44
     i32 unk48;                     // 0x48
-    unknown_fields(0x4c, 0x8);     // 0x4c
+    i32 unk4c;                     // 0x4c
+    unknown_fields(0x50, 0x4);
     i32 unk54;                     // 0x54
     unknown_fields(0x58, 0x113f4); // 0x58
     ScoreListNode scores[5][12];   // 0x1144c
