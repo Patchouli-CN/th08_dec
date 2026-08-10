@@ -484,3 +484,4 @@ th08::AsciiManager::GetGaugeInterrupt
 th08::Rng::ResetGenerationCount
 th08::Rng::GetSeed
 th08::Rng::GetRandomU16InRange
+th08::AnmManager::ExecuteScriptArray
