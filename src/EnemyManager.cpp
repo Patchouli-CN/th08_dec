@@ -5,6 +5,7 @@
 #include <string.h>
 #include "AsciiManager.hpp"
 #include "EffectManager.hpp"
+#include "ReplayManager.hpp"
 #include "Spellcard.hpp"
 #include "Supervisor.hpp"
 
@@ -142,6 +143,7 @@ void Enemy::FUN_0042bc90()
 
 // TODO: move to a dedicated EffectManager.cpp once the unit is added to the build.
 DIFFABLE_STATIC(EffectManager, g_EffectManager);
+DIFFABLE_STATIC(EffectTemplate, g_EffectTemplates[0x100]);
 DIFFABLE_STATIC(ChainElem, g_EffectManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_EffectManagerDrawChain);
 
@@ -176,16 +178,131 @@ ZunResult EffectManager::RegisterChain()
     return ZUN_SUCCESS;
 }
 
-// STUB: th08 0x425430
+// FUNCTION: th08 0x425430
 AnmVm *EffectManager::FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c)
 {
-    return NULL;
+    EffectManagerParticle *p = &this->particles[this->unk0];
+    AnmVm *result;
+    i32 i;
+
+    for (i = 0; i < 0x200; i++)
+    {
+        this->unk0 = this->unk0 + 1;
+        if (this->unk0 >= 0x200)
+        {
+            this->unk0 = 0;
+        }
+
+        if (p->unk350 != 0)
+        {
+            if (this->unk0 == 0)
+            {
+                p = &this->particles[0];
+            }
+            else
+            {
+                p = p + 1;
+            }
+            continue;
+        }
+
+        if (p->unk358 != NULL)
+        {
+            g_ZunMemory.Free(p->unk358);
+        }
+
+        memset(p, 0, sizeof(EffectManagerParticle));
+
+        p->unk350 = 1;
+        p->unk351 = (i8)a;
+        p->unk2a4 = *pos;
+        this->unk8b054->SetAndExecuteScriptIdx((AnmVm *)p, g_EffectTemplates[a].field0);
+
+        p->unk1f8 |= 0x2000;
+        p->unk1f0 = c;
+        p->unk288 = 0;
+        p->unk28c = 0;
+        p->unk290 = 0;
+        p->unk348 = g_EffectTemplates[a].field4;
+
+        if (g_EffectTemplates[a].field8 != NULL)
+        {
+            if (g_EffectTemplates[a].field8(p) != 0)
+            {
+                p->unk350 = 0;
+            }
+        }
+
+        b--;
+        if (b == 0)
+        {
+            break;
+        }
+
+        if (this->unk0 == 0)
+        {
+            p = &this->particles[0];
+        }
+        else
+        {
+            p = p + 1;
+        }
+    }
+
+    g_ReplayManager->replayEventFlags |= 0x400;
+
+    if (i >= 0x200)
+    {
+        result = (AnmVm *)((u8 *)this + 0x89bfc);
+    }
+    else
+    {
+        result = (AnmVm *)p;
+    }
+
+    return result;
 }
 
-// STUB: th08 0x425870
+// FUNCTION: th08 0x425870
 AnmVm *EffectManager::FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d)
 {
-    return NULL;
+    EffectManagerParticle *p = &this->particles[b + 0x280];
+
+    if (p->unk358 != NULL)
+    {
+        g_ZunMemory.Free(p->unk358);
+    }
+
+    memset(p, 0, sizeof(EffectManagerParticle));
+
+    p->unk328 = b;
+    p->unk350 = 1;
+    p->unk351 = (i8)a;
+    p->unk2a4 = *pos;
+
+    if (g_EffectTemplates[a].field0 >= 0)
+    {
+        this->unk8b054->SetAndExecuteScriptIdx((AnmVm *)p, g_EffectTemplates[a].field0);
+    }
+
+    p->unk1f8 |= 0x2000;
+    p->unk1f0 = d;
+    p->unk288 = 0;
+    p->unk28c = 0;
+    p->unk290 = 0;
+    p->unk348 = g_EffectTemplates[a].field4;
+
+    if (g_EffectTemplates[a].field8 != NULL)
+    {
+        if (g_EffectTemplates[a].field8(p) != 0)
+        {
+            p->unk350 = 0;
+        }
+    }
+
+    g_ReplayManager->replayEventFlags |= 0x400;
+
+    return (AnmVm *)p;
 }
 
 void EffectManager::CutChain()

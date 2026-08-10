@@ -506,3 +506,5 @@ th08::ResultScreen::FormatDate
 FUN_00426d10
 th08::AsciiManager::FUN_00407160
 th08::EffectManager::ResetEffects
+th08::EffectManager::FUN_00425430
+th08::EffectManager::FUN_00425870

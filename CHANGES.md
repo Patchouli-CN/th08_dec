@@ -42,3 +42,9 @@
   反编译完成（均 100%）。ResetEffects 即 `memset(this, 0, 0x8b05c)`（rep stos
   0x22c17 dwords），EffectManager 结构体补齐到 0x8b05c；FUN_00407160 写
   this+0x8264 = 0。
+- **`EffectManager::FUN_00425870`**（0x425870）、**`EffectManager::FUN_00425430`**
+  （0x425430）反编译完成（均 100%）。效果粒子 spawn 系列：定位粒子槽（+0x1c 起
+  512×0x360）、释放旧 sprite、memset 清零、写类型/位置、调 AnmLoaded::SetAndExecuteScriptIdx、
+  应用效果模板（g_EffectTemplates 表 0x4c6d30）、标记回放事件。展开
+  EffectManagerParticle 结构体（含 unk1f0/1f8/288/2a4/2d4/328/348/350/351/358）、
+  EffectManager 加 unk0/unk8b054 字段、新增 g_EffectTemplates 全局。
