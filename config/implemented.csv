@@ -452,3 +452,9 @@ th08::ZunTimer::Initialize
 th08::ZunTimer::operator!=
 th08::utils::DebugPrint
 th08::utils::GuiDebugPrint
+th08::Supervisor::HideLoadingVms
+th08::ResultScreen::LinkScoreEx
+th08::ResultScreen::FreeScore
+th08::ResultScreen::SetState
+th08::Supervisor::PlayMusic
+th08::CStreamingSound::PartialFadeIn

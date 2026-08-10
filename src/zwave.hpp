@@ -165,6 +165,7 @@ class CStreamingSound : public CSound
     HRESULT InitSoundBuffers();
     HRESULT UpdateFadeOut();
     HRESULT UpdateFadeIn();
+    void PartialFadeIn(f32 seconds);
     HRESULT UpdatePartialFadeIn();
     HRESULT UpdatePartialFadeOut();
     void FadeOut(f32 seconds)

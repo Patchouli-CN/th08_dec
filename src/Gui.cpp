@@ -512,8 +512,8 @@ ZunResult GuiImpl::RunMsg()
                 g_Gui.stageTextAnm->SetAndExecuteScriptIdx(&this->vmsB[3], 3);
                 g_Gui.stageTextAnm->SetSprite(&this->vmsB[3], this->msgState.curInstr->args.music.musicIdx + 3);
                 if (g_Supervisor.PlayMusic(this->msgState.curInstr->args.music.musicIdx,
-                                           (char *)*(i32 *)(0x4c7240 + g_GameManager.currentStage * 12 +
-                                                            this->msgState.curInstr->args.music.musicIdx * 4)))
+                                           *(i32 *)(0x4c7240 + g_GameManager.currentStage * 12 +
+                                                    this->msgState.curInstr->args.music.musicIdx * 4)))
                 {
                     g_Supervisor.PlayAudio((char *)&g_GuiBgmPathBase[this->msgState.curInstr->args.music.musicIdx * 0x80 + 0x290],
                                            *(i32 *)(0x4c7240 + g_GameManager.currentStage * 12 +

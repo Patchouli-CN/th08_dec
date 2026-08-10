@@ -109,8 +109,9 @@ struct AsciiManager
 
     void SetScale(float scaleX, float scaleY)
     {
-        this->scaleX = scaleX;
-        this->scaleY = scaleY;
+        /* orig stores the float params as raw u32 bit patterns (mov, not fld/fstp) */
+        *(u32 *)&this->scaleX = *(u32 *)&scaleX;
+        *(u32 *)&this->scaleY = *(u32 *)&scaleY;
     }
 
     void UpdateVms()

@@ -49,7 +49,7 @@ struct ScreenEffect
 
     static ZunResult AddedCallback(ScreenEffect *screenEffect);
     static ZunResult DeletedCallback(ScreenEffect *screenEffect);
-    static void Stop(ScreenEffect *screenEffect);
+    void Stop();
 
     ScreenEffectType effect;
     ChainElem *calcChain;

@@ -1484,17 +1484,41 @@ ZunBool Supervisor::LoadMusic(int param_1, char *path)
     return TRUE;
 }
 
-ZunBool Supervisor::PlayMusic(int param_1, char *param_2)
+ZunBool Supervisor::PlayMusic(u32 param_1, i32 param_2)
 {
     if (g_Supervisor.cfg.musicMode == MIDI)
     {
+        if (g_Supervisor.midiOutput != NULL)
+        {
+            MidiOutput *midiOutput = g_Supervisor.midiOutput;
+
+            midiOutput->StopPlayback();
+            midiOutput->ParseFile(param_1);
+            midiOutput->Play();
+        }
+
+        if (!g_GameManager.IsReplay() && !g_GameManager.IsDemoMode())
+        {
+            g_GameManager.plst.bgmUnlocked[param_2] = 1;
+        }
+
+        return FALSE;
     }
     else if (g_Supervisor.cfg.musicMode == WAV)
     {
+        if (g_Supervisor.cfg.opts.preloadMusic)
+        {
+            g_SoundPlayer.QueueCommand(4, 0, "dummy");
+        }
         g_SoundPlayer.QueueCommand(2, param_1, "dummy");
+
+        if (!g_GameManager.IsReplay() && !g_GameManager.IsDemoMode())
+        {
+            g_GameManager.plst.bgmUnlocked[param_2] = 1;
+        }
     }
 
-    return 0;
+    return FALSE;
 }
 
 #pragma var_order(periodLoc, wavPathBuf, midiOutput)
@@ -1849,10 +1873,16 @@ void Supervisor::HideLoadingVms(void)
 {
     if (this->loadingVmsHaveBeenSetup == 1)
     {
-        g_SupervisorLoadingVms[0].SetInterrupt(1);
-        g_SupervisorLoadingVms[1].SetInterrupt(1);
-        g_SupervisorLoadingVms[2].SetInterrupt(1);
-        this->loadingVmsHaveBeenSetup = 0;
+        g_SupervisorLoadingVms[0].SetInterrupt(2);
+        g_SupervisorLoadingVms[1].SetInterrupt(2);
+        g_SupervisorLoadingVms[2].SetInterrupt(2);
+        this->loadingVmsHaveBeenSetup = 2;
+    }
+
+    if (g_SupervisorScreenEffect != NULL)
+    {
+        g_SupervisorScreenEffect->Stop();
+        g_SupervisorScreenEffect = NULL;
     }
 }
 

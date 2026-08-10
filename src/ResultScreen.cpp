@@ -38,14 +38,16 @@ void ResultScreen::LogScoreDataToFile(ResultScreen *resultScreen)
 {
 }
 
-// STUB: th08 0x454c59
+// FUNCTION: th08 0x454c59
 void ResultScreen::LinkScoreEx(void *out, int difficulty, i32 character)
 {
+    ScoreDat::LinkScore(&this->scores[difficulty][character], (Hscr *)out);
 }
 
-// STUB: th08 0x454c87
+// FUNCTION: th08 0x454c87
 void ResultScreen::FreeScore(i32 difficulty, i32 character)
 {
+    ScoreDat::FreeAllScores(&this->scores[difficulty][character]);
 }
 
 // STUB: th08 0x454cb2
@@ -53,9 +55,16 @@ void ResultScreen::HandleCategorySelectScreen()
 {
 }
 
-// STUB: th08 0x4550b7
+// FUNCTION: th08 0x4550b7
 void ResultScreen::SetState(ResultScreenState state)
 {
+    this->unk14 = this->screenMode;
+    this->screenMode = state;
+    this->unk0c = state;
+    this->unk10 = 0;
+    this->unk18 = 0;
+    this->unk4 = 0;
+    this->unk54 = 0;
 }
 
 // STUB: th08 0x4550fc

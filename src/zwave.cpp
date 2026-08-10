@@ -689,6 +689,18 @@ CStreamingSound::~CStreamingSound()
 }
 
 //-----------------------------------------------------------------------------
+// Name: CStreamingSound::PartialFadeIn()
+// Desc:
+//-----------------------------------------------------------------------------
+void CStreamingSound::PartialFadeIn(f32 seconds)
+{
+    m_iFadeType = 3;
+    m_iCurFadeProgress = (i32)(seconds * 60.0f);
+    m_iTotalFade = m_iCurFadeProgress;
+    SetVolume(-1000);
+}
+
+//-----------------------------------------------------------------------------
 // Name: CStreamingSound::UpdateFadeOut()
 // Desc:
 //-----------------------------------------------------------------------------

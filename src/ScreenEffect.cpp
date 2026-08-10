@@ -462,10 +462,10 @@ ChainCallbackResult ScreenEffect::CalcShakeWithEnvelope(ScreenEffect *screenEffe
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
-void ScreenEffect::Stop(ScreenEffect *screenEffect)
+void ScreenEffect::Stop()
 {
-    screenEffect->unk24 = 1;
-    screenEffect->timer = 0;
+    this->unk24 = 1;
+    this->timer = 0;
 }
 
 ZunResult ScreenEffect::AddedCallback(ScreenEffect *screenEffect)
