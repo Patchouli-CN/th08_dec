@@ -387,11 +387,8 @@ struct ZunTimer
         Tick();
     }
 
-    void Tick()
-    {
-        this->previous = this->current;
-        g_Supervisor.TickTimer(&this->current, &this->subFrame);
-    }
+    void Tick();
+    u32 TickImpl();
 
     void operator--(int)
     {
