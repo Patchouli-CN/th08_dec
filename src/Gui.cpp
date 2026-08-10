@@ -147,6 +147,22 @@ void Gui::FreeMsgFile(void)
     }
 }
 
+// FUNCTION: th08 0x43587e
+i32 Gui::MsgWait()
+{
+    if (this->impl == NULL)
+    {
+        return 0;
+    }
+
+    if (this->impl->msgState.ignoreWaitCounter > 0)
+    {
+        return 0;
+    }
+
+    return this->impl->msgState.currentMsgIdx >= 0;
+}
+
 // STUB: th08 0x433db3
 // FUNCTION: th08 0x433db3
 #pragma var_order(args, i15, args15, i17, args17, buf3, buf16, buf19, buf20, i9)

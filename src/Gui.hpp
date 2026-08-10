@@ -151,6 +151,7 @@ struct Gui
     ZunResult ActualAddedCallback();
     ZunResult LoadMsg(const char *path);
     void FreeMsgFile();
+    i32 MsgWait();
     void FUN_00435900();
     void DrawGameScene();
     void FUN_0043741d();

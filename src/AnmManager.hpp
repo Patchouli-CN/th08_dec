@@ -526,6 +526,7 @@ struct AnmManager
     ZunResult ServicePreloadedAnims();
     void ReleaseAnm(i32 anmIdx);
     void ReleaseAnmEntry(AnmEntry *anmEntry);
+    void ReplaceSurface(i32 dstIdx, i32 srcIdx);
 
     void DrawTextInner(IDirect3DTexture8 *outTexture, i32 x, i32 y, i32 width, i32 height, i32 fontWidth,
                        i32 fontHeight, COLORREF textColor, COLORREF outlineColor, const char *buffer,

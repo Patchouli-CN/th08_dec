@@ -29,7 +29,7 @@ const char *ResultScreen::GetCharacterName(i32 character)
 }
 
 // STUB: th08 0x453d0d
-void ResultScreen::WriteScore(ResultScreen *resultScreen)
+void ResultScreen::WriteScore()
 {
 }
 
@@ -120,9 +120,48 @@ i32 ResultScreen::HandleReplaySaveKeyboard()
     return 0;
 }
 
-// STUB: th80 0x4577e2
+#pragma var_order(menuTimerField, state)
 ZunResult ResultScreen::CheckConfirmButton()
 {
+    u16 *menuTimerField;
+    i32 state;
+
+    state = this->screenMode;
+
+    if (state == 0xf)
+    {
+        goto case_f;
+    }
+    if (state == 0x10)
+    {
+        goto case_10;
+    }
+    goto end;
+
+case_f:
+    if (this->unk4 <= 0x1e)
+    {
+        menuTimerField = (u16 *)((u8 *)this + 0xbd1c);
+        menuTimerField[0xff] = 0x12;
+    }
+
+    if (this->unk4 >= 0x5a && WAS_PRESSED(0x1001))
+    {
+        menuTimerField = (u16 *)((u8 *)this + 0xbd1c);
+        menuTimerField[0xff] = 0x2;
+        this->unk4 = 0;
+        this->screenMode = 0x10;
+    }
+    goto end;
+
+case_10:
+    if (this->unk4 >= 0x1e)
+    {
+        this->unk4 = 9;
+        this->screenMode = 0xa;
+    }
+
+end:
     return ZUN_SUCCESS;
 }
 
@@ -203,27 +242,120 @@ ZunResult ResultScreen::AddedCallback(ResultScreen *resultScreen)
     return ZUN_SUCCESS;
 }
 
-// STUB: th08 0x459fd2
+// FUNCTION: th08 0x459fd2
 ZunResult ResultScreen::DeletedCallback(ResultScreen *resultScreen)
 {
+    if (resultScreen->unk0 != NULL)
+    {
+        resultScreen->WriteScore();
+        ScoreDat::ReleaseScore((ScoreDat *)resultScreen->unk0);
+    }
+    resultScreen->unk0 = NULL;
+
+    for (i32 i = 0; i < 5; i++)
+    {
+        for (i32 j = 0; j < 12; j++)
+        {
+            resultScreen->FreeScore(i, j);
+        }
+    }
+
+    g_AnmManager->ReleaseAnm(0x15);
+    g_AnmManager->ReleaseAnm(0x16);
+    g_AnmManager->ReplaceSurface(8, 0);
+
+    g_Chain.Cut(resultScreen->drawChain);
+    resultScreen->drawChain = NULL;
+
+    g_ZunMemory.RemoveFromRegistry(resultScreen);
+
+    delete resultScreen;
+    resultScreen = NULL;
+
     return ZUN_SUCCESS;
 }
 
-// STUB: th08 0x45a0f4
-i32 ResultScreen::MoveCursor(ResultScreen *resultScreen, i32 length)
+// FUNCTION: th08 0x45a0f4
+i32 ResultScreen::MoveCursor(i32 length)
 {
+    if (WAS_PRESSED_SCROLLING(0x10))
+    {
+        this->unk1c--;
+        if (this->unk1c < 0)
+        {
+            this->unk1c += length;
+        }
+        g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
+        return -1;
+    }
+
+    if (WAS_PRESSED_SCROLLING(0x20))
+    {
+        this->unk1c++;
+        if (this->unk1c >= length)
+        {
+            this->unk1c -= length;
+        }
+        g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
+        return 1;
+    }
+
     return 0;
 }
 
-// STUB: th08 0x45a1f3
-i32 ResultScreen::MoveShotTypeCursor(ResultScreen *resultScreen, i32 length)
+// FUNCTION: th08 0x45a1f3
+i32 ResultScreen::MoveShotTypeCursor(i32 length)
 {
+    if (WAS_PRESSED_SCROLLING(0x10))
+    {
+        this->unk30--;
+        if (this->unk30 < 0)
+        {
+            this->unk30 += length;
+        }
+        g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
+        return -1;
+    }
+
+    if (WAS_PRESSED_SCROLLING(0x20))
+    {
+        this->unk30++;
+        if (this->unk30 >= length)
+        {
+            this->unk30 -= length;
+        }
+        g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
+        return 1;
+    }
+
     return 0;
 }
 
-// STUB: th08 0x45a2f2
-i32 ResultScreen::MoveCursorHorizontally(ResultScreen *resultScreen, int length)
+// FUNCTION: th08 0x45a2f2
+i32 ResultScreen::MoveCursorHorizontally(i32 length)
 {
+    if (WAS_PRESSED_SCROLLING(0x40))
+    {
+        this->unk1c--;
+        if (this->unk1c < 0)
+        {
+            this->unk1c += length;
+        }
+        g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
+        return -1;
+    }
+
+    if (WAS_PRESSED_SCROLLING(0x80))
+    {
+        this->unk1c++;
+        if (this->unk1c >= length)
+        {
+            this->unk1c -= length;
+        }
+        g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
+        return 1;
+    }
+
     return 0;
 }
 

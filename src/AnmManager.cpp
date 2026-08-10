@@ -2055,6 +2055,19 @@ ZunResult AnmManager::ServicePreloadedAnims()
     return ZUN_SUCCESS;
 }
 
+void AnmManager::ReplaceSurface(i32 dstIdx, i32 srcIdx)
+{
+    if (this->surfaces[srcIdx] != NULL)
+    {
+        this->ReleaseSurface(dstIdx);
+        this->surfaces[dstIdx] = this->surfaces[srcIdx];
+        this->surfacesBis[dstIdx] = this->surfacesBis[srcIdx];
+        this->surfaces[srcIdx] = NULL;
+        this->surfacesBis[srcIdx] = NULL;
+        this->surfaceInfo[dstIdx] = this->surfaceInfo[srcIdx];
+    }
+}
+
 void AnmManager::ReleaseAnm(i32 anmIdx)
 {
     if (anmIdx < 0 || anmIdx >= ARRAY_SIZE(this->anmFiles))
@@ -2137,24 +2150,24 @@ void AnmManager::DrawTextInner(IDirect3DTexture8 *outTexture, i32 x, i32 y, i32 
 
 #pragma var_order(buf, fontWidth)
 // FUNCTION: th08 0x406a30
-ZunResult AnmManager::SetTextureCaptureParams(i32 a, i32 b, i32 c, i32 d, i32 e, i32 f, i32 g, i32 h, i32 i)
+ZunResult AnmManager::SetTextureCaptureParams(i32 captureAnmIdx, i32 srcX, i32 srcY, i32 srcW, i32 srcH, i32 dstX,
+                                             i32 dstY, i32 dstW, i32 dstH)
 {
-    i32 *params = (i32 *)((u8 *)this + 0x2a252c);
-
-    if (params[0] < 0)
+    if (this->captureAnmIdx >= 0)
     {
-        params[0] = a;
-        params[1] = b;
-        params[2] = c;
-        params[3] = d;
-        params[4] = e;
-        params[5] = f;
-        params[6] = g;
-        params[7] = h;
-        params[8] = i;
-        return ZUN_SUCCESS;
+        return ZUN_ERROR;
     }
-    return ZUN_ERROR;
+
+    this->captureAnmIdx = captureAnmIdx;
+    this->textureCaptureSrcX = srcX;
+    this->textureCaptureSrcY = srcY;
+    this->textureCaptureSrcW = srcW;
+    this->textureCaptureSrcH = srcH;
+    this->textureCaptureDstX = dstX;
+    this->textureCaptureDstY = dstY;
+    this->textureCaptureDstW = dstW;
+    this->textureCaptureDstH = dstH;
+    return ZUN_SUCCESS;
 }
 
 void AnmManager::DrawTextLeft(AnmVm *vm, COLORREF textColor, COLORREF shadowColor, const char *fmt, ...)

@@ -26,7 +26,7 @@ struct ResultScreen
 
     static const char *GetStageName(i32 stage);
     static const char *GetCharacterName(i32 character);
-    static void WriteScore(ResultScreen *resultScreen);
+    void WriteScore();
     static void LogScoreDataToFile(ResultScreen *resultScreen);
     void LinkScoreEx(void *out, int difficulty, i32 character);
     void FreeScore(i32 difficulty, i32 character);
@@ -52,11 +52,11 @@ struct ResultScreen
     static ChainCallbackResult OnUpdate(ResultScreen *resultScreen);
     static ChainCallbackResult OnDraw(ResultScreen *resultScreen);
     static ZunResult AddedCallback(ResultScreen *resultScreen);
-    static ZunResult DeletedCallback(ResultScreen *resultScreen);
+    static ZunResult __fastcall DeletedCallback(ResultScreen *resultScreen);
 
-    static i32 MoveCursor(ResultScreen *resultScreen, i32 length);
-    static i32 MoveShotTypeCursor(ResultScreen *resultScreen, i32 length);
-    static i32 MoveCursorHorizontally(ResultScreen *resultScreen, int length);
+    i32 __fastcall MoveCursor(i32 length);
+    i32 __fastcall MoveShotTypeCursor(i32 length);
+    i32 __fastcall MoveCursorHorizontally(i32 length);
 
     i32 unk0;                      // 0x0
     i32 unk4;                      // 0x4
@@ -65,7 +65,10 @@ struct ResultScreen
     i32 unk10;                     // 0x10
     i32 unk14;                     // 0x14
     i32 unk18;                     // 0x18
-    unknown_fields(0x1c, 0x38);    // 0x1c
+    i32 unk1c;                     // 0x1c (cursor position)
+    unknown_fields(0x20, 0x10);    // 0x20
+    i32 unk30;                     // 0x30 (shot type cursor)
+    unknown_fields(0x34, 0x20);    // 0x34
     i32 unk54;                     // 0x54
     unknown_fields(0x58, 0x113f4); // 0x58
     ScoreListNode scores[5][12];   // 0x1144c

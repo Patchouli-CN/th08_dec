@@ -458,3 +458,9 @@ th08::ResultScreen::FreeScore
 th08::ResultScreen::SetState
 th08::Supervisor::PlayMusic
 th08::CStreamingSound::PartialFadeIn
+th08::AnmManager::SetTextureCaptureParams
+th08::ResultScreen::MoveCursor
+th08::ResultScreen::MoveCursorHorizontally
+th08::ResultScreen::MoveShotTypeCursor
+th08::Gui::MsgWait
+th08::ResultScreen::DeletedCallback
