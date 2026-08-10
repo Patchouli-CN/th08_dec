@@ -8,6 +8,14 @@
 namespace th08
 {
 
+// FUNCTION: th08 0x45a4dc
+ScoreListNode::ScoreListNode()
+{
+    this->prev = NULL;
+    this->next = NULL;
+    this->data = NULL;
+}
+
 // FUNCTION: th08 0x405280
 void PlstPlayCounts::IncrementTotalAttempts(u32 param)
 {

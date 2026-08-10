@@ -221,6 +221,8 @@ struct Vrsm
 
 struct ScoreListNode
 {
+    ScoreListNode();
+
     ScoreListNode *prev;
     ScoreListNode *next;
     Hscr *data;
