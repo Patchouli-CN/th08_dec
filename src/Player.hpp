@@ -49,6 +49,8 @@ struct PlayerRawShtFile
     PlayerShotEntrySlot entries[]; // 0x38, 8-byte stride
 };
 
+struct Player;
+
 // The player's 128 option/bullet sprite VMs, iterated by the draw helper.
 struct PlayerBulletVm
 {
@@ -61,7 +63,9 @@ struct PlayerBulletVm
     i16 state;
     unknown_fields(0x464, 0xc);
     i8 hasCustomColor;
-    unknown_fields(0x471, 0x13);
+    unknown_fields(0x471, 0x7);
+    u32 unk478;                       // 0x478
+    unknown_fields(0x47c, 0x8);
 };
 C_ASSERT(sizeof(PlayerBulletVm) == 0x484);
 

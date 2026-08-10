@@ -101,9 +101,40 @@ ChainCallbackResult Player::OnUpdate(Player *player)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
-// STUB: th08 0x4512f0
+// FUNCTION: th08 0x4512f0 (97% FIXME: if 下沉布局 + unk478 冗余 edx)
 void Player::FUN_004512f0()
 {
+    PlayerBulletVm *p = this->bullets;
+
+    for (i32 i = 0; i < 0x80; i++, p++)
+    {
+        if (p->state == 1)
+        {
+            if (*(i16 *)((u8 *)&p->vm + 0x1fc) != 0)
+            {
+                p->vm.SetZRotation(p->rotation);
+            }
+
+            *(f32 *)((u8 *)&p->vm + 0x208) = g_PlayerPos.x + p->offsetX;
+            *(f32 *)((u8 *)&p->vm + 0x20c) = g_PlayerPos.y + p->offsetY;
+            *(u32 *)((u8 *)&p->vm + 0x210) = 0x3ecccccd;
+
+            if (p->hasCustomColor != 0)
+            {
+                *(u8 *)((u8 *)&p->vm + 0x1f2) = 0xff;
+                *(u8 *)((u8 *)&p->vm + 0x1f1) = 0x40;
+                *(u8 *)((u8 *)&p->vm + 0x1f0) = 0x40;
+            }
+
+            g_AnmManager->Draw2D(&p->vm);
+
+            if (p->unk478 != NULL)
+            {
+                /* thiscall callback: ecx=this, call [p+0x478] */
+                ((void (__fastcall *)(Player *))p->unk478)(this);
+            }
+        }
+    }
 }
 
 // FUNCTION: th08 0x44d530
