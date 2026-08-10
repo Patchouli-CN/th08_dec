@@ -10,15 +10,15 @@ DIFFABLE_STATIC(ChainElem, g_BackgroundCalcChain);
 DIFFABLE_STATIC(ChainElem, g_BackgroundDrawChainHighPrio);
 DIFFABLE_STATIC(ChainElem, g_BackgroundDrawChainLowPrio);
 
-DIFFABLE_STATIC_ARRAY_ASSIGN(const char *, 9, g_StageAnmPaths) = {
+DIFFABLE_STATIC_ARRAY_ASSIGN(const char *, 9, g_StageAnmFiles) = {
     "stg1bg.anm", "stg2bg.anm", "stg3bg.anm", "stg4abg.anm", "stg4abg.anm",
     "stg5bg.anm", "stg6bg.anm", "stg7bg.anm", "stg8bg.anm",
 };
-DIFFABLE_STATIC_ARRAY_ASSIGN(const char *, 9, g_StageStdPaths) = {
+DIFFABLE_STATIC_ARRAY_ASSIGN(const char *, 9, g_StageStdFiles) = {
     "stage1.std", "stage2.std", "stage3.std", "stage4a.std", "stage4b.std",
     "stage5.std", "stage6.std", "stage7.std", "stage8.std",
 };
-DIFFABLE_STATIC_ARRAY_ASSIGN(const char *, 9, g_StageStdPathsSpellPractice) = {
+DIFFABLE_STATIC_ARRAY_ASSIGN(const char *, 9, g_StageStdFilesSpellPractice) = {
     "stage1_s.std", "stage2_s.std", "stage3_s.std", "stage4a_s.std", "stage4b_s.std",
     "stage5_s.std", "stage6_s.std", "stage7_s.std", "stage8_s.std",
 };
@@ -52,10 +52,79 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
-// STUB: th08 0x409850
+// FUNCTION: th08 0x409850
 ZunResult Background::AddedCallback(Background *background)
 {
-    return ZUN_ERROR;
+    background->timer0x80c = 0;
+    *(u32 *)&background->unk0x818 = 0;
+    background->unk0x824.x = 0.0f;
+    background->unk0x824.y = 0.0f;
+    background->unk0x824.z = 0.0f;
+    background->unk0xb24 = 0;
+    background->unk0xb10 = 0;
+
+    if (!IsDisableResourceReload())
+    {
+        background->stageAnm = g_AnmManager->PreloadAnm(4, g_StageAnmFiles[g_GameManager.currentStage]);
+        if (background->stageAnm == NULL)
+        {
+            return ZUN_ERROR;
+        }
+    }
+    else
+    {
+        background->stageAnm = g_AnmManager->GetAnm(4);
+    }
+
+    if (!g_GameManager.IsSpellPractice())
+    {
+        if (background->LoadStageData((char *)g_StageStdFiles[g_GameManager.currentStage]))
+        {
+            return ZUN_ERROR;
+        }
+    }
+    else
+    {
+        if (background->LoadStageData((char *)g_StageStdFilesSpellPractice[g_GameManager.currentStage]))
+        {
+            return ZUN_ERROR;
+        }
+    }
+
+    background->fog.color.d3dColor = 0xff000000;
+    background->fog.nearPlane = 200.0f;
+    background->fog.farPlane = 500.0f;
+
+    background->camera4.pos = Float3(0.0f, 0.0f, 1000.0f);
+    background->camera4.target = Float3(0.0f, 0.0f, 0.0f);
+    background->camera4.unk0x3c = Float3(0.0f, 0.0f, 0.0f);
+    background->camera4.up = Float3(0.0f, 1.0f, 0.0f);
+    background->camera4.fov = ZUN_PI / 6.0f;
+
+    background->camera0 = background->camera4;
+    background->camera1 = background->camera4;
+
+    background->unk0x6474 = 0;
+
+    for (i32 i = 0; i < 4; i++)
+    {
+        background->unk0x63e0[i] = 0;
+        background->timers0x63f4[i] = 0;
+    }
+
+    background->unk0x6260 = 0;
+    *(u32 *)&background->unk0x6470 = 0x49a17020;
+
+    if (g_GameManager.currentStage == 5)
+    {
+        *(u32 *)&background->unk0x6470 = 0x49de7920;
+    }
+    else if (g_GameManager.currentStage == 6 || g_GameManager.currentStage == 7)
+    {
+        *(u32 *)&background->unk0x6470 = 0x4a45c100;
+    }
+
+    return ZUN_SUCCESS;
 }
 
 ZunResult Background::RegisterChain(i32 stage)

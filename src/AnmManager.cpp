@@ -1850,6 +1850,12 @@ AnmLoaded *AnmManager::PreloadAnm(i32 anmIdx, const char *filename)
     return g_Supervisor.subthreadCloseRequestActive ? NULL : anmLoaded;
 }
 
+// FUNCTION: th08 0x40bb60
+AnmLoaded *AnmManager::GetAnm(i32 anmIdx)
+{
+    return &this->anmFiles[anmIdx];
+}
+
 #pragma var_order(result, entry, path, dataSize, data)
 i32 AnmManager::LoadExternalTextureData(AnmLoaded *anmLoaded, i32 entryNumber, i32 *sprites, i32 *scripts,
                                         AnmRawEntry *rawEntry)

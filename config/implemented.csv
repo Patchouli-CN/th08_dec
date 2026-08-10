@@ -142,6 +142,7 @@ th08::ScreenEffect::DrawPlayAreaPulse
 th08::ScreenEffect::DrawArcadeFade
 th08::ScreenEffect::CalcShake
 th08::ScreenEffect::CalcShakeWithEnvelope
+th08::Background::AddedCallback
 th08::ScreenEffect::AddedCallback
 th08::ScreenEffect::DeletedCallback
 th08::Supervisor::DrawFpsCounter
