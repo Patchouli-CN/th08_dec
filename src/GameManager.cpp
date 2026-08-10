@@ -918,6 +918,42 @@ i32 GameManager::GetLastSpellTimeOrbThreshold()
     return this->globals->lastSpellTimeOrbThreshold;
 }
 
+// FUNCTION: th08 0x43c15f
+i32 GameManager::FinalBCleared(i32 difficulty)
+{
+    i32 result;
+
+    if (difficulty > 3)
+    {
+        goto set1;
+    }
+    if (this->clrdData[difficulty].difficultiesClearedWithoutRetries[0] & EXTRA_UNLOCKED_FLAG)
+    {
+        goto set1;
+    }
+    if (this->clrdData[difficulty].difficultiesClearedWithoutRetries[1] & EXTRA_UNLOCKED_FLAG)
+    {
+        goto set1;
+    }
+    if (this->clrdData[difficulty].difficultiesClearedWithoutRetries[2] & EXTRA_UNLOCKED_FLAG)
+    {
+        goto set1;
+    }
+    if (this->clrdData[difficulty].difficultiesClearedWithoutRetries[3] & EXTRA_UNLOCKED_FLAG)
+    {
+        goto set1;
+    }
+
+    result = 0;
+    goto end;
+
+set1:
+    result = 1;
+
+end:
+    return result;
+}
+
 void GameManager::SetClockTime(u8 clockTime)
 {
     this->globals->clockTime = clockTime;

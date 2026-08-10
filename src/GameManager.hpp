@@ -220,6 +220,8 @@ struct GameManager
                this->IsExtraUnlockedForCharacter(SHOT_YOUMU_YUYUKO);
     }
 
+    i32 FinalBCleared(i32 difficulty);
+
     ZunBool IsSpellPracticeUnlockedForCharacter(i32 character)
     {
         return (character > SHOT_YOUMU_YUYUKO) ||
