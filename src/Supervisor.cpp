@@ -336,22 +336,52 @@ ChainCallbackResult Supervisor::DrawFpsCounter(Supervisor *s)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
+#pragma var_order(pos, fadeIf, fadeElse, surface)
 ChainCallbackResult Supervisor::OnDraw2(Supervisor *s)
 {
-    if (s->loadingVmsHaveBeenSetup > 2)
+    Float3 pos;
+    i32 fadeIf;
+    i32 fadeElse;
+    IDirect3DSurface8 *surface;
+
+    if (s->loadingVmsHaveBeenSetup >= 2)
     {
         s->loadingVmsHaveBeenSetup++;
-        if (s->loadingVmsHaveBeenSetup > 5)
+        if (s->loadingVmsHaveBeenSetup >= 5)
         {
-            if (s->loadingVmsHaveBeenSetup > 35)
+            pos.x = 288.0f;
+            pos.y = 454.0f;
+            pos.z = 0.0f;
+
+            g_AsciiManager.scaleX = 0.5f;
+            g_AsciiManager.scaleY = 0.5f;
+
+            if (s->loadingVmsHaveBeenSetup < 35)
             {
+                fadeIf = 0xff - (s->loadingVmsHaveBeenSetup - 5) * 128 / 30;
+                g_AsciiManager.color.a = (u8)fadeIf;
             }
-            if (s->loadingVmsHaveBeenSetup > 64)
+            else
+            {
+                fadeElse = 0xff - (65 - s->loadingVmsHaveBeenSetup) * 128 / 30;
+                g_AsciiManager.color.a = (u8)fadeElse;
+            }
+
+            g_AsciiManager.AddFormatText(&pos, "Press Shot Button");
+
+            g_AsciiManager.scaleX = 1.0f;
+            g_AsciiManager.scaleY = 1.0f;
+
+            g_AsciiManager.OnDrawLowPrioImpl();
+            g_AsciiManager.numStrings = 0;
+
+            if (s->loadingVmsHaveBeenSetup >= 65)
             {
                 s->loadingVmsHaveBeenSetup = 5;
             }
         }
     }
+
     if (s->loadingVmsHaveBeenSetup != 0)
     {
         g_AnmManager->CopySurfaceToBackbuffer(8, 0, 0, 0, 0);
@@ -359,7 +389,12 @@ ChainCallbackResult Supervisor::OnDraw2(Supervisor *s)
     else
     {
         /* ZUN bloat: no need to check because ReleaseSurface does that already. */
-        if (g_AnmManager->surfaces[8] != NULL)
+        // FIXME: The original indexes surfaces[8] by pre-scaling the constant
+        // (push 8; pop eax; shl eax, 2; mov eax, [ecx+eax+0x2038]) instead of
+        // folding it into the displacement. This seems to be a compiler quirk
+        // that also appears in TitleScreen::OnUpdateSpellCardSelect.
+        surface = g_AnmManager->surfaces[8];
+        if (surface != NULL)
         {
             g_AnmManager->ReleaseSurface(8);
         }
