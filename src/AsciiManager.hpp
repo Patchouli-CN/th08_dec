@@ -132,20 +132,9 @@ struct AsciiManager
         g_AnmManager->ExecuteScript(&this->unk_1520);
     }
 
-    void SetGaugeInterrupt(i32 interrupt)
-    {
-        this->youkaiGauge.SetInterrupt(interrupt);
-        this->youkaiGaugeHumanIcon.SetInterrupt(interrupt);
-        this->youkaiGaugeYoukaiIcon.SetInterrupt(interrupt);
-        this->youkaiGaugeCursor.SetInterrupt(interrupt);
+    void SetGaugeInterrupt(i32 interrupt);
 
-        this->gaugeInterrupt = interrupt;
-    }
-
-    i32 GetGaugeInterrupt()
-    {
-        return this->gaugeInterrupt;
-    }
+    i32 GetGaugeInterrupt();
 
     void ResetStrings()
     {

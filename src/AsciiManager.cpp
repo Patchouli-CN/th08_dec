@@ -99,6 +99,23 @@ ChainCallbackResult AsciiManager::OnDrawLowPrio(AsciiManager *ascii)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
+// FUNCTION: th08 0x4070b0
+void AsciiManager::SetGaugeInterrupt(i32 interrupt)
+{
+    this->youkaiGauge.SetInterrupt(interrupt);
+    this->youkaiGaugeHumanIcon.SetInterrupt(interrupt);
+    this->youkaiGaugeYoukaiIcon.SetInterrupt(interrupt);
+    this->youkaiGaugeCursor.SetInterrupt(interrupt);
+
+    this->gaugeInterrupt = interrupt;
+}
+
+// FUNCTION: th08 0x407140
+i32 AsciiManager::GetGaugeInterrupt()
+{
+    return this->gaugeInterrupt;
+}
+
 // FUNCTION: th08 0x4398ff
 void AsciiManager::SetIsGuiMode(u32 isGuiMode)
 {
