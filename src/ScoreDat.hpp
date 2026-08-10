@@ -88,6 +88,8 @@ C_ASSERT(sizeof(Th8k) == 0xC);
 
 struct PlstPlayCounts
 {
+    void __fastcall IncrementTotalAttempts(u32 param);
+
     u32 attemptsTotal;
     u32 attemptsPerCharacter[12];
     u32 unk0x34;
@@ -132,6 +134,8 @@ struct CatkHistory
 
 struct Catk
 {
+    i32 WasAttemptedWithShot(i32 shotType);
+
     Th8k base;
     u16 spellcardNumber;
     u16 unk0xe;

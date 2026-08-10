@@ -8,6 +8,21 @@
 namespace th08
 {
 
+// FUNCTION: th08 0x405280
+void PlstPlayCounts::IncrementTotalAttempts(u32 param)
+{
+    if (this->attemptsTotal < param)
+    {
+        this->attemptsTotal++;
+    }
+}
+
+// FUNCTION: th08 0x45a4a0
+i32 Catk::WasAttemptedWithShot(i32 shotType)
+{
+    return this->inGameHistory.attempts[shotType] > 0 || this->spellPracticeHistory.attempts[shotType] != 0;
+}
+
 i32 ScoreDat::LinkScore(ScoreListNode *node, Hscr *newScore)
 {
     i32 i;

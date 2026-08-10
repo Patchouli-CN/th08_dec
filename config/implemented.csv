@@ -492,3 +492,4 @@ th08::AnmLoaded::SetAndExecuteScript
 th08::AnmLoaded::GetSprite
 th08::AnmLoaded::InitializeAndSetSprite
 th08::AnmLoaded::LoadSprite
+th08::PlstPlayCounts::IncrementTotalAttempts
