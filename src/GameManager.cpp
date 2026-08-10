@@ -905,6 +905,18 @@ void GameManager::CutChain()
     g_Supervisor.framerateMultiplier = 1.0f;
 }
 
+// FUNCTION: th08 0x406dd0
+u8 GameManager::GetClockTime()
+{
+    return this->globals->clockTime;
+}
+
+// FUNCTION: th08 0x406df0
+void GameManager::AddToClockTime(i8 value)
+{
+    this->globals->clockTime = (u8)((i8)this->globals->clockTime + value);
+}
+
 i32 GameManager::GetClockTimeIncrement()
 {
     // ZUN bloat: Why not use switch case fallthrough?

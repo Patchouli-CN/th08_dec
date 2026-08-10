@@ -256,6 +256,8 @@ struct GameManager
     }
 
     i32 GetClockTimeIncrement();
+    u8 GetClockTime();
+    void AddToClockTime(i8 value);
     static ZunResult LoadScoreData();
     static i32 GetSpellcardBgmIsLastWord(i32 spellcardNumber);
     void AdvanceToNextStage();

@@ -531,6 +531,7 @@ struct AnmManager
                        i32 fontHeight, COLORREF textColor, COLORREF outlineColor, const char *buffer,
                        float scaleFactorX, float scaleFactorY);
     void DrawTextLeft(AnmVm *vm, COLORREF textColor, COLORREF shadowColor, const char *fmt, ...);
+    ZunResult SetTextureCaptureParams(i32 a, i32 b, i32 c, i32 d, i32 e, i32 f, i32 g, i32 h, i32 i);
     void DrawTextCentered(AnmVm *vm, COLORREF textColor, COLORREF shadowColor, const char *fmt, ...);
     ZunResult LoadSurface(i32 surfaceIdx, const char *path);
     ZunResult PreloadSurface(i32 surfaceIdx, const char *path);

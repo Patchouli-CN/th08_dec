@@ -2136,6 +2136,27 @@ void AnmManager::DrawTextInner(IDirect3DTexture8 *outTexture, i32 x, i32 y, i32 
 }
 
 #pragma var_order(buf, fontWidth)
+// FUNCTION: th08 0x406a30
+ZunResult AnmManager::SetTextureCaptureParams(i32 a, i32 b, i32 c, i32 d, i32 e, i32 f, i32 g, i32 h, i32 i)
+{
+    i32 *params = (i32 *)((u8 *)this + 0x2a252c);
+
+    if (params[0] < 0)
+    {
+        params[0] = a;
+        params[1] = b;
+        params[2] = c;
+        params[3] = d;
+        params[4] = e;
+        params[5] = f;
+        params[6] = g;
+        params[7] = h;
+        params[8] = i;
+        return ZUN_SUCCESS;
+    }
+    return ZUN_ERROR;
+}
+
 void AnmManager::DrawTextLeft(AnmVm *vm, COLORREF textColor, COLORREF shadowColor, const char *fmt, ...)
 {
     char buf[128];

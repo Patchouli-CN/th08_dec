@@ -15,18 +15,25 @@ struct GuiMsgState
     MsgRawInstr *curInstr;
     i32 currentMsgIdx;
     ZunTimer timer;
-    unknown_fields(0x18, 0x8);
+    u32 framesElapsedDuringPause; // 0x18
+    u32 pauseLimit;               // 0x1c
     AnmVm vms[4];
     AnmVm vms2[2];
     AnmVm vms3[2];
-    unknown_fields(0x1540, 0x24);
+    i32 textColorsA[4];          // 0x1540
+    i32 textColorsB[4];          // 0x1550
+    u8 fontSize;                 // 0x1560
+    unknown_fields(0x1561, 0x3);
     u32 ignoreWaitCounter; // 0x1564
     u8 dialogueSkippable;  // 0x1568
     u8 currentFace;        // 0x1569
     u8 portraitVisible;    // 0x156a
-    unknown_fields(0x156b, 0x1);
-    i32 currentPortrait; // 0x156c
-    i32 unk1570;
+    u8 currentDialogueLine; // 0x156b
+    u8 currentPortrait;    // 0x156c
+    u8 unk156d;            // 0x156d
+    u8 musicSelection;     // 0x156e
+    u8 unk156f;            // 0x156f
+    i32 unk1570;           // 0x1570
     unknown_fields(0x1574, 0x4);
 };
 C_ASSERT(sizeof(GuiMsgState) == 0x1578);
@@ -92,6 +99,7 @@ struct MsgRawInstr
 struct GuiImpl
 {
     ZunResult RunMsg();
+    void FUN_0043396d(i32 arg);
     void DrawDialogue();
 
     AnmVm vmsA[16];
@@ -130,6 +138,7 @@ struct GuiFlags
 
 struct Gui
 {
+    void FUN_00439810(i32 arg);
     static ChainCallbackResult OnUpdate(Gui *gui);
     static ChainCallbackResult OnDraw(Gui *gui);
 
