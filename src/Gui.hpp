@@ -22,8 +22,10 @@ struct GuiMsgState
     unknown_fields(0x1540, 0x24);
     u32 ignoreWaitCounter; // 0x1564
     u8 dialogueSkippable;  // 0x1568
-    unknown_fields(0x1569, 0x3);
-    i32 unk156c; // 0x156c
+    u8 currentFace;        // 0x1569
+    u8 portraitVisible;    // 0x156a
+    unknown_fields(0x156b, 0x1);
+    i32 currentPortrait; // 0x156c
     i32 unk1570;
     unknown_fields(0x1574, 0x4);
 };
@@ -50,6 +52,14 @@ union MsgRawInstrArgs {
         i16 portraitIdx;
         i16 anmScriptIdx;
     } portrait;
+    struct
+    {
+        i16 portraitIdx;
+        i16 anmScriptIdx0;
+        i16 anmScriptIdx1;
+        i16 anmScriptIdx2;
+        i16 anmScriptIdx3;
+    } showPortrait;
     struct
     {
         i16 textColor;
