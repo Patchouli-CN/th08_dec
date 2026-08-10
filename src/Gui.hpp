@@ -61,11 +61,11 @@ union MsgRawInstrArgs {
     } portrait;
     struct
     {
-        i16 portraitIdx;
-        i16 anmScriptIdx0;
-        i16 anmScriptIdx1;
-        i16 anmScriptIdx2;
-        i16 anmScriptIdx3;
+        i32 portraitIdx;
+        i32 anmScriptIdx0;
+        i32 anmScriptIdx1;
+        i32 anmScriptIdx2;
+        i32 anmScriptIdx3;
     } showPortrait;
     struct
     {

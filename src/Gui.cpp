@@ -183,14 +183,20 @@ ZunResult GuiImpl::RunMsg()
             MsgRawInstrArgs *args = &this->msgState.curInstr->args;
             i32 i;
 
-            if (this->msgState.currentPortrait != *(i32 *)&args->showPortrait)
+            if (this->msgState.currentPortrait != args->showPortrait.portraitIdx)
             {
                 for (i = 0; i < 4; i++)
                 {
                     if (this->msgState.currentPortrait == i)
                     {
-                        this->msgState.vms[i].prefix.pendingInterrupt =
-                            (this->msgState.currentPortrait / 2 == *(i32 *)&args->showPortrait / 2) ? 4 : 6;
+                        if (this->msgState.currentPortrait / 2 == args->showPortrait.portraitIdx / 2)
+                        {
+                            this->msgState.vms[i].prefix.pendingInterrupt = 4;
+                        }
+                        else
+                        {
+                            this->msgState.vms[i].prefix.pendingInterrupt = 6;
+                        }
                     }
                     else
                     {
@@ -198,8 +204,8 @@ ZunResult GuiImpl::RunMsg()
                     }
                 }
             }
-            this->msgState.vms[*(i32 *)&args->showPortrait].prefix.pendingInterrupt = 3;
-            this->msgState.currentPortrait = (u8)*(i32 *)&args->showPortrait;
+            this->msgState.vms[args->showPortrait.portraitIdx].prefix.pendingInterrupt = 3;
+            this->msgState.currentPortrait = (u8)args->showPortrait.portraitIdx;
 
             if (args->showPortrait.anmScriptIdx0 >= 0)
             {
@@ -218,25 +224,29 @@ ZunResult GuiImpl::RunMsg()
                 g_GuiPortraitAnms[3]->SetSprite(&this->msgState.vms[3], args->showPortrait.anmScriptIdx3);
             }
 
-            this->msgState.currentFace = (u8)*(i32 *)&args->showPortrait;
+            this->msgState.currentFace = (u8)args->showPortrait.portraitIdx;
             this->msgState.portraitVisible = 1;
             break;
         }
         case 17: // MSG_CHANGE_FACE
         {
             MsgRawInstrArgs *args = &this->msgState.curInstr->args;
-            i32 i;
-            i32 portraitIdx = args->portrait.portraitIdx;
-            i32 currentPortrait = this->msgState.currentPortrait;
+            u32 i;
 
-            if (currentPortrait != portraitIdx)
+            if (this->msgState.currentPortrait != *(i32 *)&args->portrait)
             {
                 for (i = 0; i < 4; i++)
                 {
-                    if (currentPortrait == i)
+                    if (this->msgState.currentPortrait == i)
                     {
-                        this->msgState.vms[i].prefix.pendingInterrupt =
-                            (currentPortrait / 2 == portraitIdx / 2) ? 4 : 6;
+                        if (this->msgState.currentPortrait / 2 == *(i32 *)&args->portrait / 2)
+                        {
+                            this->msgState.vms[i].prefix.pendingInterrupt = 4;
+                        }
+                        else
+                        {
+                            this->msgState.vms[i].prefix.pendingInterrupt = 6;
+                        }
                     }
                     else
                     {
@@ -244,12 +254,12 @@ ZunResult GuiImpl::RunMsg()
                     }
                 }
             }
-            this->msgState.vms[portraitIdx].prefix.pendingInterrupt = 3;
-            this->msgState.currentPortrait = (u8)portraitIdx;
+            this->msgState.vms[*(i32 *)&args->portrait].prefix.pendingInterrupt = 3;
+            this->msgState.currentPortrait = (u8)*(i32 *)&args->portrait;
 
             if (args->portrait.anmScriptIdx >= 0)
             {
-                switch (portraitIdx)
+                switch (*(i32 *)&args->portrait)
                 {
                 case 0:
                     g_GuiPortraitAnms[0]->SetSprite(&this->msgState.vms[0], args->portrait.anmScriptIdx);
@@ -266,7 +276,7 @@ ZunResult GuiImpl::RunMsg()
                 }
             }
 
-            this->msgState.currentFace = (u8)portraitIdx;
+            this->msgState.currentFace = (u8)*(i32 *)&args->portrait;
             this->msgState.portraitVisible = 1;
             break;
         }
