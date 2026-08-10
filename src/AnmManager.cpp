@@ -936,6 +936,12 @@ void AnmManager::TakeScreencaptures()
 }
 
 // FUNCTION: th08 0x443af0
+// FUNCTION: th08 0x406700
+void AnmVm::ClearVisible()
+{
+    this->prefix.visible = false;
+}
+
 void AnmManager::ReleaseSurfaces()
 {
     i32 i;

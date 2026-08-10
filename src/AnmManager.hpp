@@ -393,6 +393,8 @@ struct AnmVm
         return this->prefix.visible;
     }
 
+    void ClearVisible();
+
     void SetInterrupt(i16 interrupt)
     {
         this->prefix.pendingInterrupt = interrupt;

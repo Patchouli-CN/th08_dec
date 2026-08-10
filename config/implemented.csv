@@ -486,3 +486,9 @@ th08::Rng::GetSeed
 th08::Rng::GetRandomU16InRange
 th08::AnmManager::ExecuteScriptArray
 th08::AnmManager::SpriteHasTexture
+th08::AnmVm::ClearVisible
+th08::AnmLoaded::SetSprite
+th08::AnmLoaded::SetAndExecuteScript
+th08::AnmLoaded::GetSprite
+th08::AnmLoaded::InitializeAndSetSprite
+th08::AnmLoaded::LoadSprite
