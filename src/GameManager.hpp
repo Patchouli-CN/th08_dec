@@ -29,10 +29,8 @@ struct GameManagerFlags
     u32 unk2 : 1;
     u32 isReplay : 1;
     u32 unk4 : 1;
-    u32 unk5 : 1;
-    u32 unk6 : 1;
-    u32 unk7 : 1;
-    u32 unk8 : 1;
+    u32 unk5 : 2;
+    u32 unk7 : 2;
     u32 unk9 : 1;
     u32 unk10 : 1;
     u32 isGoingToFinalB : 2; // why 2 bits?
@@ -55,7 +53,7 @@ struct GameManager
 {
     GameManager();
 
-    ZunBool IsWithinPlayfield();
+    ZunBool IsWithinPlayfield(f32 x, f32 y, f32 width, f32 height);
     i32 CalcAntiTamperChecksum();
     static i32 CalcChecksum(u8 *address, i32 size);
     void CollectExtend();
@@ -66,11 +64,9 @@ struct GameManager
     static ZunResult RegisterChain();
 
     static ZunResult AddedCallback(GameManager *gameManager);
-    static void GameplaySetupThread();
+    static void GameplaySetupThread(void *param);
 
-    void InitRankParams()
-    {
-    }
+    void InitRankParams();
 
     static void InitializeAntiTamper();
 
@@ -131,7 +127,26 @@ struct GameManager
 
     void IncreaseSubrank(int amount);
     void DecreaseSubrank(int amount);
-    void AddToYoukaiGauge(u16 param_1, i32 param_2);
+    void AddToYoukaiGauge(i32 param_1, i32 param_2);
+    void AddTimeOrbs(i32 orbs)
+    {
+        if (orbs >= 0 || this->globals->currentTimeOrbs >= -orbs)
+        {
+            this->globals->currentTimeOrbs += orbs;
+            this->globals->totalTimeOrbs += orbs;
+            this->hscr.numTimeOrbsCollected += orbs;
+            this->UpdateAntiTamper();
+            if (orbs > 0)
+            {
+                orbs += this->globals->totalTimeOrbs & 1;
+                this->globals->pointItemValue += (orbs / 2) * 10;
+            }
+        }
+        else
+        {
+            this->globals->currentTimeOrbs = 0;
+        }
+    }
 
     ZunBool IsPhantasmUnlocked();
 
@@ -161,6 +176,11 @@ struct GameManager
     ZunBool IsDemoMode()
     {
         return this->flags.isDemoMode;
+    }
+
+    ZunBool GaugeIsExtremelyHuman()
+    {
+        return this->globals->youkaiGauge <= this->youkaiGaugeHumanEffectsThreshold;
     }
 
     ZunBool IsStageClearedWithRetries(i32 stage, i32 character, i32 difficulty)
@@ -236,6 +256,8 @@ struct GameManager
     }
 
     i32 GetClockTimeIncrement();
+    static ZunResult LoadScoreData();
+    static i32 GetSpellcardBgmIsLastWord(i32 spellcardNumber);
     void AdvanceToNextStage();
 
     void AddLives(int lives)
@@ -258,6 +280,17 @@ struct GameManager
         this->UpdateAntiTamper();
     }
 
+    void SetPower(i32 power)
+    {
+        this->globals->playerPower = (f32)power;
+        this->UpdateAntiTamper();
+    }
+
+    void AddScore(i32 score)
+    {
+        this->globals->score += score / 10;
+    }
+
     void AddToBombCount(int amount)
     {
         if (this->IsTampered())
@@ -268,6 +301,14 @@ struct GameManager
         this->UpdateAntiTamper();
     }
 
+    void SetBombCount(i32 bombs)
+    {
+        this->globals->bombsRemaining = (f32)bombs;
+        this->globals->antiTamperValue = this->globals->rng1[2];
+        this->globals->antiTamperChecksum = this->CalcAntiTamperChecksum();
+        this->antiTamperExpectedValue = (f32)(this->globals->antiTamperChecksum + this->globals->rng7[3]);
+    }
+
     void InitArcadeRegionParams();
 
     ZunBool IsUnknown()
@@ -275,7 +316,7 @@ struct GameManager
         return this->unk2D;
     }
 
-    i32 unk0x0;
+    void *unk0x0;
     GameConfiguration *cfg;
     ZunGlobals *globals;
     Flsp flsp;
@@ -286,7 +327,8 @@ struct GameManager
     i32 difficultyMask;
     u32 unk38;
     i32 unk3c;
-    Catk catkData[SPELLCARD_COUNT_SPELLCARDS * 2];
+    Catk catkData[SPELLCARD_COUNT_SPELLCARDS];
+    Catk catkDataBackup[SPELLCARD_COUNT_SPELLCARDS];
     Clrd clrdData[SHOT_ALL + 1];
     Pscr pscrData[SHOT_ALL];
     Plst plst;
@@ -311,7 +353,8 @@ struct GameManager
 
     i32 demoFrameCount;
     char replayFilename[512];
-    u32 unk3ddbc;
+    u16 stageRngSeed;
+    u16 unk3ddbe;
     u32 unk3ddc0;
     i32 currentStage;
     i32 currentStage2;

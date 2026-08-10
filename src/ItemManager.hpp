@@ -84,5 +84,9 @@ struct ItemManager
 C_ASSERT(sizeof(ItemManager) == 0x17b094);
 
 DIFFABLE_EXTERN(ItemManager, g_ItemManager);
+DIFFABLE_EXTERN(AnmLoaded *, g_EffectAnmLoaded);
+DIFFABLE_EXTERN(i32, g_UnkTimeOrbValueFlag);
+DIFFABLE_EXTERN(ZunTimer, g_ItemAutoCollectTimer);
+DIFFABLE_EXTERN(ZunTimer, g_UnkAutoCollectTimer);
 
 }; // namespace th08

@@ -1,5 +1,6 @@
 #include "th_pch.h"
 
+#include "Global.hpp"
 #include "ScoreDat.hpp"
 #include "Spellcard.hpp"
 #include "utils.hpp"
@@ -366,5 +367,54 @@ i32 Spellcard::GetDifficultyFromSpellCard(i32 spellCardNumber)
         }
     }
     return MAX_DIFFICULTIES;
+}
+
+DIFFABLE_STATIC(Spellcard, g_Spellcard);
+
+void SpellcardDataHolder::FreeData()
+{
+    if (this->dataPtr != NULL)
+    {
+        g_ZunMemory.RemoveFromRegistry(this->dataPtr);
+    }
+    this->dataPtr = NULL;
+}
+
+// TODO: figure out what this chain elem actually belongs to (g_Spellcard + 0x263c in the original).
+DIFFABLE_STATIC(ChainElem *, g_SpellcardChainElem);
+
+// STUB: th08 0x417f60
+ZunResult Spellcard::RegisterChain()
+{
+    return ZUN_SUCCESS;
+}
+
+i32 Spellcard::spellcard_fun_004178a0()
+{
+    return this->flags & 1;
+}
+
+void Spellcard::spellcard_fun_00416b10(i32 arg)
+{
+    if (((this->flags >> 0xb) & 1) == 0)
+    {
+        this->unk0xfc += arg;
+        if (this->unk0xfc >= this->unk0x2638)
+        {
+            this->unk0xfc = this->unk0x2638;
+        }
+        else
+        {
+            this->unk0x100 += arg / 0x78;
+        }
+    }
+}
+
+void Spellcard::CutChain()
+{
+    if (g_SpellcardChainElem != NULL)
+    {
+        g_Chain.Cut(g_SpellcardChainElem);
+    }
 }
 } /* namespace th08 */

@@ -117,6 +117,13 @@ enum SupervisorState
 /* This forward declaration is to prevent including AnmManager.hpp */
 struct AnmLoaded;
 
+/* Same layout as LARGE_INTEGER, but with 4-byte alignment so the Supervisor layout stays intact. */
+struct SupervisorPerfFrequency
+{
+    DWORD LowPart;
+    LONG HighPart;
+};
+
 struct Supervisor
 {
     Supervisor();
@@ -144,6 +151,9 @@ struct Supervisor
     ZunResult StopAudio();
     ZunBool IsSlowModeEnabled();
     ZunResult FadeOutMusic(float param_1);
+
+    static i32 GetUnk164();
+    static i32 GetUnk168();
 
     void ThreadClose();
     void SetupLoadingVms(Float3 *position);
@@ -290,7 +300,8 @@ struct Supervisor
     MidiOutput *midiOutput;
     float lagNumerator;
     float lagDenominator;
-    u32 unk198;
+    i16 curFps;
+    i16 unk19a;
     AnmLoaded *textAnm;
     AnmLoaded *loadingAnm;
     SupervisorFlags flags;
@@ -306,7 +317,8 @@ struct Supervisor
     u8 lockCounts[4];
     i32 loadingVmsHaveBeenSetup;
 
-    unknown_fields(0x300, 0x38);
+    SupervisorPerfFrequency perfFrequency;
+    unknown_fields(0x308, 0x30);
 
     u32 unk0x338;
     u32 unk0x33c;
@@ -324,6 +336,16 @@ struct Supervisor
 };
 C_ASSERT(sizeof(Supervisor) == 0x364);
 DIFFABLE_EXTERN(Supervisor, g_Supervisor);
+
+inline i32 Supervisor::GetUnk164()
+{
+    return g_Supervisor.unk164;
+}
+
+inline i32 Supervisor::GetUnk168()
+{
+    return g_Supervisor.unk168;
+}
 
 #define CRASH_GAME() memset(&g_Supervisor, -1, sizeof(g_Supervisor))
 
@@ -374,6 +396,11 @@ struct ZunTimer
     ZunBool operator==(int value)
     {
         return this->current == value;
+    }
+
+    ZunBool operator!=(int value)
+    {
+        return this->current != value;
     }
 
     ZunBool operator+=(int value)

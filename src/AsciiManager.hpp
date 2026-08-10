@@ -94,6 +94,8 @@ struct AsciiManager
 
     void Reset();
     void InitializeVms();
+    void SetBossMarkerInterrupt(i32 idx, i16 interrupt);
+    void SetBossMarkerPosition(i32 idx, Float3 *pos);
 
     void SetColor(D3DCOLOR color)
     {

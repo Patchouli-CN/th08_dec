@@ -104,6 +104,7 @@ th08::g_EnemyManagerCalcChain,0xf54e30,global
 th08::g_EnemyManagerDrawChainLowPrio,0xf54e50,global
 th08::g_BulletManagerDrawChain,0xf54e70,global
 th08::g_BulletManager,0xf54e90,global
+th08::g_BulletAnm,0x160f404,global
 th08::g_BulletManagerCalcChain,0x160f408,global
 th08::g_Gui,0x160f428,global
 th08::g_GuiDrawChain,0x160f4c4,global
@@ -138,6 +139,7 @@ th08::g_ScreenEffect,0x18b8a30,global
 th08::g_SoundPlayer,0x18b8a68,global
 th08::g_AnmManager,0x18bdc90,global
 th08::g_QuadVertices,0x18bdc98,global
+th08::g_TextureQuadVertices,0x18bdd08,global
 g_BackgroundQuadVertices,0x18bdd68,global
 th08::g_FullWidthNumberBuffer,0x18bddc8,global
 th08::g_TitleScreen,0x18bde08,global
@@ -152,3 +154,19 @@ FLOAT_3.0_018da228,0x18da228,global
 FLOAT_near_0_018da22c,0x18da22c,global
 FLOAT_0.5_018da230,0x18da230,global
 FLOAT_3.0_018da234,0x18da234,global
+th08::g_PerformanceCounter,0x17cf2b0,global
+th08::g_ReplayFpsBuffer,0x17cf2b8,global
+th08::g_FpsCounterBuffer,0x17cf3b8,global
+th08::g_NumFramesSinceLastTime,0x17cf4b8,global
+th08::g_FpsUpdateCounter,0x17cf4bc,global
+g_LastTime,0x17cf4c0,global
+GUID_SysKeyboard,0x4bd620,global
+c_dfDIKeyboard,0x4b9d9c,global
+c_dfDIJoystick2,0x4b9b94,global
+th08::g_SpellcardBgmTable,0x4c7670,global
+th08::g_SpellcardBgmOverride,0x4e4b64,global
+th08::g_PlayerShtFile,0x18b896c,global
+th08::g_PlayerShtFile2,0x18b8970,global
+th08::g_UnkTimeOrbValueFlag,0x18b8974,global
+th08::g_ItemAutoCollectTimer,0x18b89d4,global
+th08::g_UnkAutoCollectTimer,0x18b89bc,global

@@ -89,11 +89,11 @@ C_ASSERT(sizeof(Th8k) == 0xC);
 struct PlstPlayCounts
 {
     u32 attemptsTotal;
-    i32 attemptsPerCharacter[12];
-    unknown_fields(0x34, 0x4);
+    u32 attemptsPerCharacter[12];
+    u32 unk0x34;
     i32 clears;
     i32 continues;
-    i32 practices;
+    u32 practices;
 };
 C_ASSERT(sizeof(PlstPlayCounts) == 0x44);
 

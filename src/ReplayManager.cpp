@@ -1,6 +1,7 @@
 #include "th_pch.h"
 
 #include "Global.hpp"
+#include "GameManager.hpp"
 #include "ReplayManager.hpp"
 
 #include "pbg/Lzss.hpp"
@@ -11,6 +12,24 @@ namespace th08
 {
 
 DIFFABLE_STATIC(ReplayManager *, g_ReplayManager);
+
+void ReplayManager::StopRecording()
+{
+    ReplayManager *replayManager = g_ReplayManager;
+
+    if (replayManager != NULL)
+    {
+        replayManager->unk50 += 2;
+        *(u16 *)replayManager->unk50 = 0;
+        replayManager->unk54[g_GameManager.currentStage] = replayManager->unk50 + 6;
+    }
+}
+
+// STUB: th08 0x451f90
+ZunResult ReplayManager::RegisterChain(i32 param_1, char *path)
+{
+    return ZUN_SUCCESS;
+}
 
 // STUB: th08 0x4531f0
 void ReplayManager::SaveReplay(const char *replayPath, const char *replayName)

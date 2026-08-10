@@ -12,6 +12,8 @@ namespace th08
 {
 DIFFABLE_STATIC(AnmManager *, g_AnmManager);
 DIFFABLE_STATIC_ARRAY(VertexTex1DiffuseXyzrhw, 4, g_QuadVertices);
+DIFFABLE_STATIC_ARRAY(VertexTex1Xyzrhw, 4, g_TextureQuadVertices);
+DIFFABLE_STATIC_ARRAY(VertexTex1Xyzrhw, 4, g_BackgroundQuadVertices);
 
 D3DFORMAT g_TextureFormatD3D8Mapping[] = {D3DFMT_UNKNOWN, D3DFMT_A8R8G8B8, D3DFMT_A1R5G5B5,
                                           D3DFMT_R5G6B5,  D3DFMT_R8G8B8,   D3DFMT_A4R4G4B4};
@@ -1141,6 +1143,181 @@ ZunResult AnmManager::AddSpriteToDrawBuffer(VertexTex1DiffuseXyzrhw *vertices)
     return ZUN_SUCCESS;
 }
 
+void AnmVm::SetZRotation(f32 zRotation)
+{
+    this->prefix.rotation.z = zRotation;
+    this->prefix.flags |= 4;
+}
+
+void AnmManager::DrawPlayerBullet(AnmVm *vm)
+{
+    switch (vm->prefix.playerBulletHitAnimationType)
+    {
+    case 0:
+        this->DrawNoRotation(vm);
+        break;
+    case 1:
+        this->DrawNoRotationNoRound(vm);
+        break;
+    case 2:
+        this->Draw2D(vm);
+        break;
+    case 3:
+        this->Draw2DNoRound(vm);
+        break;
+    case 4:
+        this->FUN_00463cf0(vm);
+        break;
+    case 5:
+        this->FUN_00464070(vm);
+        break;
+    }
+}
+
+#pragma var_order(sine, rotation, cosine, x, y, yOffset, xOffset, spriteHalfWidth, spriteHalfHeight)
+ZunResult AnmManager::Draw2DNoRound(AnmVm *vm)
+{
+    float sine, rotation, cosine, x, y, yOffset, xOffset, spriteHalfWidth, spriteHalfHeight;
+
+    if (!vm->IsVisible())
+    {
+        return ZUN_ERROR;
+    }
+
+    if (!vm->prefix.flag1)
+    {
+        return ZUN_ERROR;
+    }
+
+    if (vm->prefix.color1.a == 0)
+    {
+        return ZUN_ERROR;
+    }
+
+    rotation = vm->prefix.rotation.z;
+    if (rotation != 0.0f)
+    {
+        sincos(rotation, sine, cosine);
+
+        xOffset = vm->pos.x;
+        yOffset = vm->pos.y;
+
+        x = (vm->prefix.spriteSize.x * vm->prefix.scale.x) / 2.0f;
+        y = (vm->prefix.spriteSize.y * vm->prefix.scale.y) / 2.0f;
+
+        this->TranslateRotation(&g_QuadVertices[0], -x, -y, sine, cosine, xOffset, yOffset);
+        this->TranslateRotation(&g_QuadVertices[1], x, -y, sine, cosine, xOffset, yOffset);
+        this->TranslateRotation(&g_QuadVertices[2], -x, y, sine, cosine, xOffset, yOffset);
+        this->TranslateRotation(&g_QuadVertices[3], x, y, sine, cosine, xOffset, yOffset);
+
+        g_QuadVertices[0].pos.z = g_QuadVertices[1].pos.z = g_QuadVertices[2].pos.z = g_QuadVertices[3].pos.z =
+            vm->pos.z;
+
+        if (vm->prefix.anchor & 1)
+        {
+            g_QuadVertices[0].pos.x += x;
+            g_QuadVertices[1].pos.x += x;
+            g_QuadVertices[2].pos.x += x;
+            g_QuadVertices[3].pos.x += x;
+        }
+
+        if (vm->prefix.anchor & 2)
+        {
+            g_QuadVertices[0].pos.y += y;
+            g_QuadVertices[1].pos.y += y;
+            g_QuadVertices[2].pos.y += y;
+            g_QuadVertices[3].pos.y += y;
+        }
+    }
+    else
+    {
+        spriteHalfWidth = (vm->prefix.spriteSize.x * vm->prefix.scale.x) / 2.0f;
+        spriteHalfHeight = (vm->prefix.spriteSize.y * vm->prefix.scale.y) / 2.0f;
+
+        if ((vm->prefix.anchor & 1) == 0)
+        {
+            g_QuadVertices[0].pos.x = g_QuadVertices[2].pos.x = vm->pos.x - spriteHalfWidth;
+            g_QuadVertices[1].pos.x = g_QuadVertices[3].pos.x = spriteHalfWidth + vm->pos.x;
+        }
+        else
+        {
+            g_QuadVertices[0].pos.x = g_QuadVertices[2].pos.x = vm->pos.x;
+            g_QuadVertices[1].pos.x = g_QuadVertices[3].pos.x = spriteHalfWidth + vm->pos.x + spriteHalfWidth;
+        }
+
+        if ((vm->prefix.anchor & 2) == 0)
+        {
+            g_QuadVertices[0].pos.y = g_QuadVertices[1].pos.y = vm->pos.y - spriteHalfHeight;
+            g_QuadVertices[2].pos.y = g_QuadVertices[3].pos.y = spriteHalfHeight + vm->pos.y;
+        }
+        else
+        {
+            g_QuadVertices[0].pos.y = g_QuadVertices[1].pos.y = vm->pos.y;
+            g_QuadVertices[2].pos.y = g_QuadVertices[3].pos.y = spriteHalfHeight + vm->pos.y + spriteHalfHeight;
+        }
+    }
+
+    return this->DrawInner(vm, 0);
+}
+
+// STUB: th08 0x4639e0
+i32 AnmManager::FUN_004639e0(AnmVm *vm)
+{
+    return 0;
+}
+
+ZunResult AnmManager::FUN_00463cf0(AnmVm *vm)
+{
+    if (!vm->IsVisible())
+    {
+        return ZUN_ERROR;
+    }
+
+    if (!vm->prefix.flag1)
+    {
+        return ZUN_ERROR;
+    }
+
+    if (vm->prefix.color1.a == 0)
+    {
+        return ZUN_ERROR;
+    }
+
+    if (this->FUN_004639e0(vm) != 0)
+    {
+        return ZUN_ERROR;
+    }
+
+    return this->DrawInner(vm, 0);
+}
+
+// STUB: th08 0x463d60
+void AnmManager::FUN_00463d60(AnmVm *vm)
+{
+}
+
+ZunResult AnmManager::FUN_00464070(AnmVm *vm)
+{
+    if (!vm->IsVisible())
+    {
+        return ZUN_ERROR;
+    }
+
+    if (!vm->prefix.flag1)
+    {
+        return ZUN_ERROR;
+    }
+
+    if (vm->prefix.color1.a == 0)
+    {
+        return ZUN_ERROR;
+    }
+
+    this->FUN_00463d60(vm);
+
+    return this->DrawInner(vm, 0);
+}
+
 #pragma var_order(spriteHalfWidth, spriteHalfHeight)
 ZunResult AnmManager::DrawNoRotation(AnmVm *vm)
 {
@@ -1359,17 +1536,86 @@ ZunResult AnmManager::DrawTriangleFan(AnmVm *vm, VertexDiffuseXyzrhw *vertices, 
     return ZUN_SUCCESS;
 }
 
-// STUB: th08 0x465070
 AnmManager::AnmManager()
 {
     memset((void *)this, 0, sizeof(AnmManager));
 
+    g_TextureQuadVertices[0].w = g_TextureQuadVertices[1].w = g_TextureQuadVertices[2].w =
+        g_TextureQuadVertices[3].w = 1.0f;
+    g_TextureQuadVertices[0].textureUV.x = 0.0f;
+    g_TextureQuadVertices[0].textureUV.y = 0.0f;
+    g_TextureQuadVertices[1].textureUV.x = 1.0f;
+    g_TextureQuadVertices[1].textureUV.y = 0.0f;
+    g_TextureQuadVertices[2].textureUV.x = 0.0f;
+    g_TextureQuadVertices[2].textureUV.y = 1.0f;
+    g_TextureQuadVertices[3].textureUV.x = 1.0f;
+    g_TextureQuadVertices[3].textureUV.y = 1.0f;
     g_QuadVertices[0].w = g_QuadVertices[1].w = g_QuadVertices[2].w = g_QuadVertices[3].w = 1.0f;
+    g_QuadVertices[0].textureUV.x = 0.0f;
+    g_QuadVertices[0].textureUV.y = 0.0f;
+    g_QuadVertices[1].textureUV.x = 1.0f;
+    g_QuadVertices[1].textureUV.y = 0.0f;
+    g_QuadVertices[2].textureUV.x = 0.0f;
+    g_QuadVertices[2].textureUV.y = 1.0f;
+    g_QuadVertices[3].textureUV.x = 1.0f;
+    g_QuadVertices[3].textureUV.y = 1.0f;
+    this->quadVertexBuffer = NULL;
+    this->currentTexture = NULL;
+    this->currentBlendMode = 0;
+    this->currentColorOp = 0;
+    this->unk0x24b8 = 1;
+    this->currentVertexShader = 0;
+    this->cameraMode = AnmCameraMode_Unset;
+    this->disableZWrite = 0;
+    this->captureAnmIdx = -1;
+    this->captureSurfaceIdx = -1;
 }
 
-// STUB: th08 0x465250
 void AnmManager::SetupVertexBuffer()
 {
+    VertexTex1Xyz *vertexData;
+
+    this->untexturedVector[2].pos.x = -128.0f;
+    this->untexturedVector[0].pos.x = -128.0f;
+    this->untexturedVector[3].pos.x = 128.0f;
+    this->untexturedVector[1].pos.x = 128.0f;
+    this->untexturedVector[1].pos.y = -128.0f;
+    this->untexturedVector[0].pos.y = -128.0f;
+    this->untexturedVector[3].pos.y = 128.0f;
+    this->untexturedVector[2].pos.y = 128.0f;
+    this->untexturedVector[3].pos.z = 0.0f;
+    this->untexturedVector[2].pos.z = 0.0f;
+    this->untexturedVector[1].pos.z = 0.0f;
+    this->untexturedVector[0].pos.z = 0.0f;
+    this->untexturedVector[2].textureUV.x = 0.0f;
+    this->untexturedVector[0].textureUV.x = 0.0f;
+    this->untexturedVector[3].textureUV.x = 1.0f;
+    this->untexturedVector[1].textureUV.x = 1.0f;
+    this->untexturedVector[1].textureUV.y = 0.0f;
+    this->untexturedVector[0].textureUV.y = 0.0f;
+    this->untexturedVector[3].textureUV.y = 1.0f;
+    this->untexturedVector[2].textureUV.y = 1.0f;
+    g_BackgroundQuadVertices[0].pos = this->untexturedVector[0].pos;
+    g_BackgroundQuadVertices[1].pos = this->untexturedVector[1].pos;
+    g_BackgroundQuadVertices[2].pos = this->untexturedVector[2].pos;
+    g_BackgroundQuadVertices[3].pos = this->untexturedVector[3].pos;
+    g_BackgroundQuadVertices[0].textureUV.x = this->untexturedVector[0].textureUV.x;
+    g_BackgroundQuadVertices[0].textureUV.y = this->untexturedVector[0].textureUV.y;
+    g_BackgroundQuadVertices[1].textureUV.x = this->untexturedVector[1].textureUV.x;
+    g_BackgroundQuadVertices[1].textureUV.y = this->untexturedVector[1].textureUV.y;
+    g_BackgroundQuadVertices[2].textureUV.x = this->untexturedVector[2].textureUV.x;
+    g_BackgroundQuadVertices[2].textureUV.y = this->untexturedVector[2].textureUV.y;
+    g_BackgroundQuadVertices[3].textureUV.x = this->untexturedVector[3].textureUV.x;
+    g_BackgroundQuadVertices[3].textureUV.y = this->untexturedVector[3].textureUV.y;
+    if (!g_Supervisor.IsVertexBufferDisabled())
+    {
+        g_Supervisor.d3dDevice->CreateVertexBuffer(sizeof(this->untexturedVector), 0, D3DFVF_XYZ | D3DFVF_TEX1,
+                                                   D3DPOOL_MANAGED, &this->quadVertexBuffer);
+        this->quadVertexBuffer->Lock(0, 0, (u8 **)&vertexData, 0);
+        memcpy(vertexData, this->untexturedVector, sizeof(this->untexturedVector));
+        this->quadVertexBuffer->Unlock();
+        g_Supervisor.d3dDevice->SetStreamSource(0, g_AnmManager->quadVertexBuffer, sizeof(VertexTex1Xyz));
+    }
 }
 
 static i32 GetAnmFormat(i32 format)
@@ -1390,10 +1636,16 @@ static i32 GetAnmFormat(i32 format)
     return format;
 }
 
-// STUB: th08 0x465570
 ZunResult AnmManager::CreateTextureFromFile(IDirect3DTexture8 **outTexture, i32 format, i32 colorKey)
 {
-    return ZUN_ERROR;
+    format = GetAnmFormat(format);
+    if (D3DXCreateTextureFromFileInMemoryEx(g_Supervisor.d3dDevice, (void *)outTexture[1], (u32)outTexture[2], 0, 0, 0,
+                                            0, g_TextureFormatD3D8Mapping[format], D3DPOOL_MANAGED, D3DX_FILTER_LINEAR,
+                                            D3DX_DEFAULT, colorKey, NULL, NULL, outTexture) != 0)
+    {
+        return ZUN_ERROR;
+    }
+    return ZUN_SUCCESS;
 }
 
 #pragma var_order(surface, textureSurfaceLevel, header, lockedRect, currentY, textureSrc, textureDest)
@@ -1598,11 +1850,44 @@ AnmLoaded *AnmManager::PreloadAnm(i32 anmIdx, const char *filename)
     return g_Supervisor.subthreadCloseRequestActive ? NULL : anmLoaded;
 }
 
-// STUB: th08 0x465ac0
+#pragma var_order(result, entry, path, dataSize, data)
 i32 AnmManager::LoadExternalTextureData(AnmLoaded *anmLoaded, i32 entryNumber, i32 *sprites, i32 *scripts,
                                         AnmRawEntry *rawEntry)
 {
-    return 0;
+    i32 result;
+    AnmRawEntry *entry;
+    char *path;
+    i32 dataSize;
+    u8 *data;
+
+    result = 0;
+    if (rawEntry == NULL)
+    {
+        g_GameErrorContext.Log("\x83" "A\x83j\x83\x81\x82\xaa\x93\xc7\x82\xdd\x8d\x9e\x82\xdf\x82\xdc\x82\xb9\x82\xf1\x81" "B\x83" "f\x81[\x83^\x82\xaa\x8e\xb8\x82\xed\x82\xea\x82\xc4\x82\xe9\x82\xa9\x89\xf3\x82\xea\x82\xc4\x82\xa2\x82\xdc\x82\xb7\x0d\x0a");
+        return -1;
+    }
+    entry = rawEntry;
+    if (entry->version != 3)
+    {
+        g_GameErrorContext.Log("\x83" "A\x83j\x83\x81\x82\xcc\x83o\x81[\x83W\x83\x87\x83\x93\x82\xaa\x88\xe1\x82\xa2\x82\xdc\x82\xb7\x0d\x0a");
+        return -1;
+    }
+    if (entry->hasData == 0)
+    {
+        path = (char *)entry + entry->nameOffset;
+        if (*path != '@')
+        {
+            data = FileSystem::OpenFile(path, &dataSize, TRUE);
+            if (data == NULL)
+            {
+                g_GameErrorContext.Log("\x83" "e\x83N\x83X\x83`\x83\x83 %s \x82\xaa\x93\xc7\x82\xdd\x8d\x9e\x82\xdf\x82\xdc\x82\xb9\x82\xf1\x81" "B\x83" "f\x81[\x83^\x82\xaa\x8e\xb8\x82\xed\x82\xea\x82\xc4\x82\xe9\x82\xa9\x89\xf3\x82\xea\x82\xc4\x82\xa2\x82\xdc\x82\xb7\x0d\x0a", path);
+                return -1;
+            }
+            anmLoaded->textures[entryNumber].size = dataSize;
+            anmLoaded->textures[entryNumber].rawData = data;
+        }
+    }
+    return result + 1;
 }
 
 #pragma var_order(currentEntryNumber, currentNumSprites, entryLoadNumber, data, result, currentNumScripts, rawEntry)
@@ -1864,9 +2149,31 @@ void AnmManager::DrawTextLeft(AnmVm *vm, COLORREF textColor, COLORREF shadowColo
     vm->prefix.visible = true;
 }
 
-// STUB: th08 0x466650
 void AnmManager::DrawTextCentered(AnmVm *vm, COLORREF textColor, COLORREF shadowColor, const char *fmt, ...)
 {
+    char buf[64];
+    i32 fontWidth;
+    i32 x;
+    va_list args;
+    u32 textLength;
+
+    fontWidth = vm->fontWidth <= 0 ? 0xf : vm->fontWidth;
+
+    va_start(args, fmt);
+    vsprintf(buf, fmt, args);
+    va_end(args);
+
+    textLength = strlen(buf);
+
+    x = (i32)(vm->loadedSprite->widthPx * vm->loadedSprite->scaleFactor.x / 2.0f +
+              vm->loadedSprite->startPixelInclusive.x -
+              (f32)textLength * fontWidth * vm->loadedSprite->scaleFactor.x / 4.0f);
+
+    this->DrawTextInner(vm->loadedSprite->texture, x, vm->loadedSprite->startPixelInclusive.y,
+                        vm->loadedSprite->width, vm->loadedSprite->height, fontWidth, vm->fontHeight, textColor,
+                        shadowColor, buf, vm->loadedSprite->scaleFactor.x, vm->loadedSprite->scaleFactor.y);
+
+    vm->prefix.visible = true;
 }
 
 #pragma var_order(surface, fileSize, fileData)
@@ -2100,10 +2407,44 @@ void AnmManager::CopySurfaceToBackbuffer2(i32 surfaceIdx, i32 rectX, i32 rectY, 
     backbuffer->Release();
 }
 
-// STUB: th08 0x466f20
 void AnmManager::CaptureToTexture(i32 captureAnmIdx, i32 srcX, i32 srcY, i32 srcW, i32 srcH, i32 dstX, i32 dstY,
                                   i32 dstW, i32 dstH)
 {
+    IDirect3DSurface8 *backBuffer;
+    IDirect3DSurface8 *surface;
+    RECT srcRect;
+    RECT dstRect;
+
+    if (this->anmFiles[captureAnmIdx].textures->texture == NULL)
+    {
+        return;
+    }
+    this->FlushVertexBuffer();
+    if (g_Supervisor.d3dDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &backBuffer) != 0)
+    {
+        return;
+    }
+    if (this->anmFiles[captureAnmIdx].textures->texture->GetSurfaceLevel(0, &surface) != 0)
+    {
+        backBuffer->Release();
+        return;
+    }
+    srcRect.left = srcX;
+    srcRect.top = srcY;
+    srcRect.right = srcX + srcW;
+    srcRect.bottom = srcY + srcH;
+    dstRect.left = dstX;
+    dstRect.top = dstY;
+    dstRect.right = dstX + dstW;
+    dstRect.bottom = dstY + dstH;
+    if (D3DXLoadSurfaceFromSurface(surface, NULL, &dstRect, backBuffer, NULL, &srcRect, D3DX_DEFAULT, 0) != 0)
+    {
+        surface->Release();
+        backBuffer->Release();
+        return;
+    }
+    surface->Release();
+    backBuffer->Release();
 }
 
 #pragma var_order(srcRect, backbuffer, dstRect)

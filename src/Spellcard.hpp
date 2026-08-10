@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ZunBool.hpp"
+#include "ZunResult.hpp"
 #include "diffbuild.hpp"
 #include "inttypes.hpp"
 
@@ -251,13 +252,35 @@ enum SpellcardNumber
     SPELLCARD_COUNT_LAST_WORD_SPELLCARDS = SPELLCARD_COUNT_SPELLCARDS - SPELLCARD_COUNT_IN_GAME_SPELLCARDS,
 };
 
+struct SpellcardDataHolder
+{
+    void *dataPtr;
+
+    void FreeData();
+};
+
 struct Spellcard
 {
     static i32 GetDifficultyFromSpellCard(i32 spellcardNumber);
+    static ZunResult RegisterChain();
+    static void CutChain();
+
+    i32 spellcard_fun_004178a0();
+    void spellcard_fun_00416b10(i32 arg);
+
+    u32 flags;
+    unknown_fields(0x4, 0xf8);
+    u32 unk0xfc;
+    u32 unk0x100;
+    unknown_fields(0x104, 0x2534);
+    u32 unk0x2638;
+    unknown_fields(0x263c, 0xc);
+    SpellcardDataHolder unk2648;
 };
 
 DIFFABLE_EXTERN_ARRAY(i32 *, 6, g_SpellcardNumbersPerDifficulty);
 DIFFABLE_EXTERN_ARRAY(i32, 6, g_SpellcardCountsPerDifficulty);
+DIFFABLE_EXTERN(Spellcard, g_Spellcard);
 DIFFABLE_EXTERN_ARRAY(i32, 43, g_LastSpellNumbers);
 DIFFABLE_EXTERN(i32, g_LastSpellCount);
 DIFFABLE_EXTERN_ARRAY(i32 *, 10, g_SpellcardNumbersPerStage)

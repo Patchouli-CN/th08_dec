@@ -29,6 +29,18 @@ struct VertexTex1DiffuseXyzrhw
     Float2 textureUV;
 };
 
+struct VertexTex1Xyzrhw
+{
+    Float3 pos;
+    f32 w;
+    Float2 textureUV;
+};
+
+struct VertexTex1Xyz
+{
+    Float3 pos;
+    Float2 textureUV;
+};
 // Touhou 8 uses DirectX 8.1, but evidently Zun used some mismatched DirectX 8 headers as well
 // D3DXIMAGE_INFO changed from 20 to 28 bytes between DX8 and DX8.1, but somehow IN uses the the DX8 version
 // This struct is a redefinition of the DX8 D3DXIMAGE_INFO for that
@@ -386,6 +398,8 @@ struct AnmVm
         this->prefix.pendingInterrupt = interrupt;
     }
 
+    void SetZRotation(f32 zRotation);
+
     f32 GetFloatVar(f32 varId);
     i32 GetIntVar(i32 varId);
     f32 *GetFloatVarPtr(f32 *varPtr, u16 varMask, u32 variableNumber);
@@ -486,6 +500,12 @@ struct AnmManager
     void SetRenderStateForVm(AnmVm *vm);
     ZunResult DrawInner(AnmVm *vm, i32 flags);
     ZunResult AddSpriteToDrawBuffer(VertexTex1DiffuseXyzrhw *vertices);
+    void DrawPlayerBullet(AnmVm *vm);
+    ZunResult Draw2DNoRound(AnmVm *vm);
+    i32 FUN_004639e0(AnmVm *vm);
+    void FUN_00463d60(AnmVm *vm);
+    ZunResult FUN_00463cf0(AnmVm *vm);
+    ZunResult FUN_00464070(AnmVm *vm);
     ZunResult DrawNoRotation(AnmVm *vm);
     void TranslateRotation(VertexTex1DiffuseXyzrhw *vertex, float x, float y, float sine, float cosine, float xOffset,
                            float yOffset);
@@ -498,6 +518,7 @@ struct AnmManager
     AnmLoaded *LoadAnm(i32 anmIdx, const char *filename);
     AnmLoaded *ReadAnmEntries(i32 anmIdx, const char *filename);
     AnmLoaded *PreloadAnm(i32 anmIdx, const char *filename);
+    AnmLoaded *GetAnm(i32 anmIdx);
     i32 LoadExternalTextureData(AnmLoaded *anmLoaded, i32 entryNumber, i32 *sprites, i32 *scripts,
                                 AnmRawEntry *rawEntry);
     AnmLoaded *PostloadAnmEntry(AnmLoaded *anm);
@@ -674,7 +695,7 @@ struct AnmManager
     u32 surfaceDataSizes[32];
     ZunImageInfo surfaceInfo[32];
 
-    unknown_fields(0x24b8, 0x4);
+    i32 unk0x24b8;
 
     IDirect3DTexture8 *currentTexture;
     u8 currentBlendMode;
@@ -685,7 +706,7 @@ struct AnmManager
     unknown_fields(0x24c5, 3); // Padding?
     void *currentSprite;
     IDirect3DVertexBuffer8 *quadVertexBuffer;
-    VertexDiffuseXyzrhw untexturedVector[4];
+    VertexTex1Xyz untexturedVector[4];
     u32 spritesToDraw;
     VertexTex1DiffuseXyzrhw vertexBuffer[0x18000];
     VertexTex1DiffuseXyzrhw *vertexBufferEndPtr;
@@ -711,5 +732,7 @@ struct AnmManager
 C_ASSERT(sizeof(AnmManager) == 0x2a2570);
 
 DIFFABLE_EXTERN(AnmManager *, g_AnmManager);
+DIFFABLE_EXTERN_ARRAY(VertexTex1Xyzrhw, 4, g_TextureQuadVertices);
+DIFFABLE_EXTERN_ARRAY(VertexTex1Xyzrhw, 4, g_BackgroundQuadVertices);
 
 }; // namespace th08

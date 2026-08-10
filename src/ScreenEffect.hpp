@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Global.hpp"
+#include "Supervisor.hpp"
 #include "inttypes.hpp"
 #include "utils.hpp"
 #include <d3dx8.h>
@@ -22,6 +23,8 @@ enum ScreenEffectType
 
 struct ScreenEffect
 {
+    ScreenEffect();
+
     static void Clear(D3DCOLOR color);
     static void SetViewport(D3DCOLOR clearColor);
 
@@ -30,20 +33,35 @@ struct ScreenEffect
     static void DrawSquareShaded(ZunRect *rect, D3DCOLOR topLeft, D3DCOLOR topRight, D3DCOLOR bottomLeft,
                                  D3DCOLOR bottomRight);
     static ChainCallbackResult CalcFadeOut(ScreenEffect *screenEffect);
+    static ChainCallbackResult CalcPartialFadeOut(ScreenEffect *screenEffect);
+    static ChainCallbackResult CalcPulse(ScreenEffect *screenEffect);
 
     static ScreenEffect *RegisterChain(ScreenEffectType effect, i32 ticks, i32 param_3, i32 param_4, i32 param_5,
                                        i32 param_6);
 
     static ChainCallbackResult DrawFullFade(ScreenEffect *screenEffect);
+    static ChainCallbackResult DrawPartialFade(ScreenEffect *screenEffect);
+    static ChainCallbackResult DrawPlayAreaPulse(ScreenEffect *screenEffect);
 
     static ChainCallbackResult DrawArcadeFade(ScreenEffect *screenEffect);
     static ChainCallbackResult CalcShake(ScreenEffect *screenEffect);
+    static ChainCallbackResult CalcShakeWithEnvelope(ScreenEffect *screenEffect);
 
     static ZunResult AddedCallback(ScreenEffect *screenEffect);
     static ZunResult DeletedCallback(ScreenEffect *screenEffect);
+    static void Stop(ScreenEffect *screenEffect);
 
-    unknown_fields(0x0, 0x34);
+    ScreenEffectType effect;
+    ChainElem *calcChain;
+    ChainElem *drawChain;
+    i32 unk0c;
+    i32 alpha;
+    i32 duration;
+    u32 args[3];
+    i32 unk24;
+    ZunTimer timer;
 };
+C_ASSERT(sizeof(ScreenEffect) == 0x34);
 
 DIFFABLE_EXTERN(i32, g_ScreenEffectCounter);
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ZunBool.hpp"
 #include "ZunResult.hpp"
 #include "diffbuild.hpp"
 #include "inttypes.hpp"
@@ -227,7 +228,7 @@ class Rng
         return GetRandomF32Signed() * range;
     }
 
-  private:
+  public:
     u16 seed, seedBackup;
     u32 generationCount;
 };
@@ -367,4 +368,6 @@ DIFFABLE_EXTERN(Chain, g_Chain);
 DIFFABLE_EXTERN(PbgArchive, g_PbgArchive);
 DIFFABLE_EXTERN(ZunMemory, g_ZunMemory);
 DIFFABLE_EXTERN(ControllerMapping, g_ControllerMapping);
+
+ZunBool IsDisableResourceReload();
 }; // namespace th08

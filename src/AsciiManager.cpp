@@ -69,6 +69,16 @@ void AsciiManager::Reset()
     this->SetSpaceWidth(13);
 }
 
+void AsciiManager::SetBossMarkerInterrupt(i32 idx, i16 interrupt)
+{
+    this->bossMarkers[idx].SetInterrupt(interrupt);
+}
+
+void AsciiManager::SetBossMarkerPosition(i32 idx, Float3 *pos)
+{
+    this->bossMarkers[idx].pos = *pos;
+}
+
 void AsciiManager::InitializeVms()
 {
     this->asciiAnm->SetAndExecuteScriptIdx(&this->youkaiGauge, 5);

@@ -1257,4 +1257,9 @@ GameErrorContext::~GameErrorContext()
 {
 }
 
+ZunBool IsDisableResourceReload()
+{
+    return g_Supervisor.unk16c;
+}
+
 }; // namespace th08
