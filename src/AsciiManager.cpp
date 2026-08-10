@@ -133,9 +133,10 @@ void AsciiManager::DrawStrings()
 {
 }
 
-// STUB: th08 0x407160
+// FUNCTION: th08 0x407160
 void AsciiManager::FUN_00407160()
 {
+    *(u32 *)((u8 *)this + 0x8264) = 0;
 }
 
 ChainCallbackResult AsciiManager::OnDrawHighPrio(AsciiManager *ascii)

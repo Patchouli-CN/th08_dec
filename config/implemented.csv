@@ -504,3 +504,5 @@ th08::GameManager::IsStageClearedWithoutRetries
 th08::GameManager::IsStageClearedWithRetries
 th08::ResultScreen::FormatDate
 FUN_00426d10
+th08::AsciiManager::FUN_00407160
+th08::EffectManager::ResetEffects

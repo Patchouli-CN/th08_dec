@@ -23,13 +23,16 @@ struct EffectManager
     static ZunResult RegisterChain();
     static void CutChain();
 
-    ZunResult FUN_00425410();
+    void ResetEffects();
     AnmVm *FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c);
     AnmVm *FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d);
 
     unknown_fields(0x0, 0x1c);
     EffectManagerParticle particles[512]; // 0x1c
+    unknown_fields(0x6c01c, 0x1f040);    // 补齐到 sizeof == 0x8b05c
 };
+
+C_ASSERT(sizeof(EffectManager) == 0x8b05c);
 
 DIFFABLE_EXTERN(EffectManager, g_EffectManager);
 

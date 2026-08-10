@@ -1,6 +1,8 @@
 #include "th_pch.h"
 
 #include "EnemyManager.hpp"
+
+#include <string.h>
 #include "AsciiManager.hpp"
 #include "EffectManager.hpp"
 #include "Spellcard.hpp"
@@ -143,10 +145,10 @@ DIFFABLE_STATIC(EffectManager, g_EffectManager);
 DIFFABLE_STATIC(ChainElem, g_EffectManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_EffectManagerDrawChain);
 
-// STUB: th08 0x425410
-ZunResult EffectManager::FUN_00425410()
+// FUNCTION: th08 0x425410
+void EffectManager::ResetEffects()
 {
-    return ZUN_SUCCESS;
+    memset(this, 0, sizeof(EffectManager));
 }
 
 // FUNCTION: th08 0x428620
@@ -154,7 +156,7 @@ ZunResult EffectManager::RegisterChain()
 {
     EffectManager *obj = &g_EffectManager;
 
-    obj->FUN_00425410();
+    obj->ResetEffects();
 
     g_EffectManagerCalcChain.SetCallback((ChainCallback)0x427bf0);
     g_EffectManagerCalcChain.addedCallback = (ChainLifetimeCallback)0x4284b0;

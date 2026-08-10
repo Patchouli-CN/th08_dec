@@ -38,3 +38,7 @@
   中 512 个粒子（+0x351 标记 == '3' 时对 +0x2d4 的 Float3 做 `+=`）；
   `Float3::operator+=` 由 hpp 内联改为 out-of-line（原版 0x410a70 是独立函数，
   调用处 `call`）。func 88.73% / size 14.3%。
+- **`EffectManager::ResetEffects`**（0x425410）、**`AsciiManager::FUN_00407160`**
+  反编译完成（均 100%）。ResetEffects 即 `memset(this, 0, 0x8b05c)`（rep stos
+  0x22c17 dwords），EffectManager 结构体补齐到 0x8b05c；FUN_00407160 写
+  this+0x8264 = 0。

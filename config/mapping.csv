@@ -320,7 +320,7 @@ FUN_004251b0,0x4251b0,0xd5,unknown,,u8
 FUN_00425290,0x425290,0xff,unknown,,u8
 FUN_00425390,0x425390,0x4a,unknown,,u8
 FUN_004253e0,0x4253e0,0x22,unknown,,u8,u8
-FUN_00425410,0x425410,0x19,unknown,,u8
+th08::EffectManager::ResetEffects,0x425410,0x19,__thiscall,,void
 FUN_00425430,0x425430,0x211,__thiscall,,u8,void*,u8,u8,u8,u8
 FUN_00425650,0x425650,0x215,unknown,,u8,u8,u8,u8,u8,u8
 FUN_00425870,0x425870,0x16d,unknown,,u8,u8,u8,u8,u8,u8
