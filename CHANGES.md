@@ -53,3 +53,5 @@
 - **`ResultScreen::HandleSpellCardDifficultySelect`**（0x455a33，86%→100%）、
   **`ResultScreen::HandleSpellCardCharacterSelect`**（0x455cb0）反编译完成。
   同难度/角色选择状态机模式（switch this->unk10 + MoveCursor + WAS_PRESSED 确认）。
+- **`EnemyManager::Initialize`**（0x429e00）反编译完成（100%）。初始化 EnemyManager
+  （0x9cef10 清零 + 各数组/标志位/定时器/Float3 初始化，p 变量复用 this）。

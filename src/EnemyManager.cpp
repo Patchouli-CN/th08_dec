@@ -17,9 +17,83 @@ DIFFABLE_STATIC(ChainElem, g_EnemyManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_EnemyManagerDrawChainHighPrio);
 DIFFABLE_STATIC(ChainElem, g_EnemyManagerDrawChainLowPrio);
 
-// STUB: th08 0x429e00
+// FUNCTION: th08 0x429e00
 void EnemyManager::Initialize()
 {
+    u8 *p = (u8 *)this + 0x53d0;
+    i32 i;
+
+    memset(this, 0, 0x9cef10);
+
+    for (i = 0; i < 4u; i++)
+    {
+        *(i32 *)((u8 *)this + 0x9dcefc + i * 4) = -1;
+    }
+
+    p = (u8 *)this;
+    memset(p, 0, 0x53d0);
+
+    for (i = 0; i < 2; i++)
+    {
+        *(u16 *)(p + i * 0x2a4 + 0x4ca) = 0xffff;
+    }
+
+    for (i = 0; i < 0x60; i++)
+    {
+        *(f32 *)(p + 0x3394 + i * 0x1c) = -1000.0f;
+    }
+
+    *(u32 *)(p + 0x3324) |= 0x1;
+    ((ZunTimer *)(p + 0x2e14))->SetCurrent(0);
+    *(u32 *)(p + 0x3324) &= 0xfeffffff;
+    *(Float3 *)(p + 0x2d70) = Float3(24.0f, 24.0f, 24.0f);
+    *(Float3 *)(p + 0x2d4c) = Float3(0.0f, 0.0f, 0.0f);
+    *(u32 *)(p + 0x2d98) = 0;
+    *(u32 *)(p + 0x2d94) = 0;
+    *(u32 *)(p + 0x2dac) = 0;
+    *(u32 *)(p + 0x2da8) = 0;
+    *(u32 *)(p + 0x3324) &= 0xffffcfff;
+    *(u32 *)(p + 0x3324) &= 0xfffdffff;
+    *(u32 *)(p + 0x3324) &= 0xfffbffff;
+    *(u32 *)(p + 0x3324) &= 0xfffffffd;
+    *(u16 *)(p + 0x2cea) = 0;
+    *(u32 *)(p + 0x2dfc) = 1;
+    *(u32 *)(p + 0x2e08) = 0x64;
+    *(u8 *)(p + 0x3310) = 0;
+    *(u8 *)(p + 0x3311) = 0;
+    *(u8 *)(p + 0x3312) = 0;
+    *(u32 *)(p + 0x3060) = 0;
+    ((ZunTimer *)(p + 0x3064))->SetCurrent(0);
+    *(Float3 *)(p + 0x2db8) = Float3(0.0f, 0.0f, 0.0f);
+    *(u16 *)(p + 0x3338) = 0xffff;
+    *(u16 *)(p + 0x333a) = 0xffff;
+    *(u16 *)(p + 0x3332) = 0xffff;
+    *(u32 *)(p + 0x3324) |= 0x4;
+    *(u32 *)(p + 0x3324) |= 0x8;
+    *(u32 *)(p + 0x3324) &= 0xffffffef;
+    *(u32 *)(p + 0x3324) |= 0x40;
+    *(u32 *)(p + 0x3324) &= 0xffffff7f;
+    *(u32 *)(p + 0x3324) &= 0xff8fffff;
+    *(u16 *)(p + 0x2cee) = 0xffff;
+    *(u32 *)(p + 0x3324) &= 0xfff7ffff;
+    *(i32 *)(p + 0x53c0) = 0;
+    *(u16 *)(p + 0x2d30) = 0xffff;
+
+    for (i = 0; i < 4; i++)
+    {
+        *(i32 *)(p + 0x3358 + i * 4) = -1;
+    }
+
+    *(i32 *)(p + 0x3378) = -1;
+    *(i32 *)(p + 0x3300) = 0;
+    *(u8 *)(p + 0x3314) = 0;
+    *(u32 *)(p + 0x3324) &= 0xfdffffff;
+    *(f32 *)(p + 0x2dec) = -0.15f;
+    *(f32 *)(p + 0x2df0) = 0.15f;
+    *(i32 *)(p + 0x3024) = 7;
+    *(i32 *)(p + 0x3028) = 0x19;
+    *(f32 *)(p + 0x3350) = 1024.0f;
+    *(i32 *)(p + 0x2e10) = *(i32 *)0x18b8a24;
 }
 
 ZunResult EnemyManager::RegisterChain()
