@@ -954,6 +954,18 @@ end:
     return result;
 }
 
+// FUNCTION: th08 0x439829
+ZunBool GameManager::IsStageClearedWithoutRetries(i32 stage, i32 character, i32 difficulty)
+{
+    return IS_STAGE_CLEARED(this->clrdData[character].difficultiesClearedWithoutRetries[difficulty], stage);
+}
+
+// FUNCTION: th08 0x439856
+ZunBool GameManager::IsStageClearedWithRetries(i32 stage, i32 character, i32 difficulty)
+{
+    return IS_STAGE_CLEARED(this->clrdData[character].difficultiesClearedWithRetries[difficulty], stage);
+}
+
 // FUNCTION: th08 0x43c322
 u32 GameManager::FUN_0043c322()
 {

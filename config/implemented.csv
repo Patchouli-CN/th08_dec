@@ -500,3 +500,5 @@ th08::TitleScreen::OnUpdate
 th08::TitleScreen::TitleSetupThread
 th08::TitleScreen::TitleScreen
 th08::GameManager::FUN_0043c322
+th08::GameManager::IsStageClearedWithoutRetries
+th08::GameManager::IsStageClearedWithRetries

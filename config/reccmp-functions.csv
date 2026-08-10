@@ -2219,3 +2219,4 @@ DESTROY_GAME_ERROR_CONTEXT,0x4b3b30,library
 FUN_004b3b40,0x4b3b40,library
 FUN_004b3b50,0x4b3b50,library
 FUN_004b3b60,0x4b3b60,library
+th08::GameManager::IsStageClearedWithRetries,0x439856,function

@@ -513,8 +513,8 @@ th08::AnmVm::FUN_004396f8,0x4396f8,0x18,__thiscall,,u32,AnmVm*
 th08::Gui::LoadMsg,0x439710,0xc5,__thiscall,,ZunResult,Gui*,char*
 th08::Gui::FreeMsgFile,0x4397d5,0x3b,__thiscall,,void,Gui*
 FUN_00439810,0x439810,0x19,unknown,,u8,u8
-th08::GameManager::FUN_00439829,0x439829,0x2d,__thiscall,,u32,GameManager*,u8,i32,i32
-th08::GameManager::FUN_00439856,0x439856,0x2d,__thiscall,,u32,GameManager*,u8,i32,i32
+th08::GameManager::IsStageClearedWithoutRetries,0x439829,0x2d,__thiscall,,u32,GameManager*,i32,i32,i32
+th08::GameManager::IsStageClearedWithRetries,0x439856,0x2d,__thiscall,,u32,GameManager*,i32,i32,i32
 th08::GameManager::AddToBombCount,0x439883,0x4b,__thiscall,,void,GameManager*,i32
 th08::GameManager::GetBombsRemaining,0x4398ce,0x1a,__thiscall,,ulonglong,GameManager*
 th08::AsciiManager::SetColor,0x4398e8,0x17,__thiscall,,void,AsciiManager*,u32
