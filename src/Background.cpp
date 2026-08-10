@@ -65,11 +65,11 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             background->unk0xae8 = g_EffectManager.FUN_00425870(0x40, &effectPos, 0xc, 1, -1);
             background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xb);
         }
-        else if (background->unk0x6260 == 1)
+        if (background->unk0x6260 == 1)
         {
             background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xb);
         }
-        else if (background->unk0x6260 == 2)
+        if (background->unk0x6260 == 2)
         {
             AnmVm vmBackup = *(AnmVm *)background->unk0xae8;
             background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xc);
@@ -81,7 +81,7 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             background->unk0xae8->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
             background->unk0xae8->prefix.color1 = vmBackup.prefix.color1;
         }
-        else if (background->unk0x6260 == 3)
+        if (background->unk0x6260 == 3)
         {
             AnmVm vmBackup = *(AnmVm *)background->unk0xae8;
             background->unk0xae8->SetInterrupt(3);
@@ -92,7 +92,7 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             background->unk0xae8->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
             background->unk0xae8->prefix.color1 = vmBackup.prefix.color1;
         }
-        else if (background->unk0x6260 == 4)
+        if (background->unk0x6260 == 4)
         {
             AnmVm vmBackup = *(AnmVm *)background->unk0xae8;
             background->unk0xae8->SetInterrupt(4);
@@ -144,9 +144,8 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             }
             else
             {
-                pos = *p->args.AsVec();
-                background->unk0x824 = pos;
-                background->unk0x6454 = pos;
+                background->unk0x824 = *p->args.AsVec();
+                background->unk0x6454 = *p->args.AsVec();
                 *(i32 *)&background->unk0x6464 = p->frame;
                 p++;
                 background->unk0x6450 = p->frame;
