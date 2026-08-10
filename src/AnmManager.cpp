@@ -956,6 +956,16 @@ void AnmManager::ReleaseSurfaces()
     }
 }
 
+// FUNCTION: th08 0x446f0b
+void AnmManager::FUN_00446f0b()
+{
+    if (this->quadVertexBuffer != NULL)
+    {
+        this->quadVertexBuffer->Release();
+        this->quadVertexBuffer = NULL;
+    }
+}
+
 // FUNCTION: th08 0x4622c0
 ZunBool AnmManager::SpriteHasTexture(AnmVm *vm)
 {
