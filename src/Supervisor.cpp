@@ -1978,7 +1978,7 @@ void Supervisor::DeleteCriticalSections()
     }
 }
 
-void ZunTimer::Tick()
+void ZunTimer::Tick(i32 unused)
 {
     this->TickImpl();
 }

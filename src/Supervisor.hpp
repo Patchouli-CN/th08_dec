@@ -381,7 +381,7 @@ struct ZunTimer
         Tick();
     }
 
-    void Tick();
+    void Tick(i32 unused = 0);
     u32 TickImpl();
 
     void operator--(int)

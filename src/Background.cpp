@@ -7,6 +7,11 @@
 namespace th08
 {
 void __fastcall FUN_00426d10(Float3 *pos);
+
+Float3 *__fastcall FUN_004090d0(Float3 *self, Float3 *out, Float3 *p2);
+Float3 *__fastcall FUN_00409120(Float3 *self, Float3 *tmp3, f32 f, Float3 *tmp2, Float3 *p2);
+Float3 *__fastcall FUN_00409080(Float3 *self);
+f32 __stdcall FUN_00408fc0(f32 a, f32 b, f32 c, f32 d, f32 e);
 DIFFABLE_STATIC(Background, g_Background);
 DIFFABLE_STATIC(ChainElem, g_BackgroundCalcChain);
 DIFFABLE_STATIC(ChainElem, g_BackgroundDrawChainHighPrio);
@@ -722,9 +727,61 @@ ZunResult Background::LoadStageData(char *stdPath)
 }
 
 
-// STUB: th08 0x408d60
-void Background::FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3 *p3, Float3 *p4, Float3 *p5)
+// FUNCTION: th08 0x408d60 (89.67% FIXME: *p1=*r 拷贝寄存器 ecx/edx)
+void __fastcall Background::FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3 *p3, Float3 *p4, Float3 *p5)
 {
+    f32 f;
+
+    if (this->timers0x63f4[idx] < (i32)this->unk0x63e0[idx])
+    {
+        this->timers0x63f4[idx].Tick();
+        f = (f32)this->timers0x63f4[idx] / (i32)this->unk0x63e0[idx];
+    }
+    else
+    {
+        this->timers0x63f4[idx].SetCurrent(this->unk0x63e0[idx]);
+        f = 1.0f;
+        this->unk0x63e0[idx] = 0;
+    }
+
+    switch (this->unk0x6430[idx])
+    {
+    case 1:
+        f = 1.0f - f;
+        f = 1.0f - f * f;
+        break;
+    case 2:
+        f = 1.0f - f;
+        f = 1.0f - f * f * f;
+        break;
+    case 3:
+        f = 1.0f - f;
+        f = 1.0f - f * f * f * f;
+        break;
+    case 4:
+        f = f * f;
+        break;
+    case 5:
+        f = f * f * f;
+        break;
+    case 6:
+        f = f * f * f * f;
+        break;
+    }
+
+    if (this->unk0x6430[idx] != 7)
+    {
+        f32 tmp1[3], tmp2[3], tmp3[3];
+
+        *p1 = *FUN_004090d0(p3, (Float3 *)tmp1, p2);
+        *p1 = *FUN_00409080(FUN_00409120(p1, (Float3 *)tmp3, f, (Float3 *)tmp2, p2));
+    }
+    else
+    {
+        p1->x = FUN_00408fc0(p2->x, p3->x, p4->x, p5->x, f);
+        p1->y = FUN_00408fc0(p2->y, p3->y, p4->y, p5->y, f);
+        p1->z = FUN_00408fc0(p2->z, p3->z, p4->z, p5->z, f);
+    }
 }
 
 // STUB: th08 0x409f40
@@ -744,6 +801,30 @@ void __fastcall FUN_00426d10(Float3 *pos)
             p->unk2d4 += *pos;
         }
     }
+}
+
+// STUB: th08 0x4090d0
+Float3 *__fastcall FUN_004090d0(Float3 *self, Float3 *out, Float3 *p2)
+{
+    return NULL;
+}
+
+// STUB: th08 0x409120
+Float3 *__fastcall FUN_00409120(Float3 *self, Float3 *tmp3, f32 f, Float3 *tmp2, Float3 *p2)
+{
+    return NULL;
+}
+
+// STUB: th08 0x409080
+Float3 *__fastcall FUN_00409080(Float3 *self)
+{
+    return NULL;
+}
+
+// STUB: th08 0x408fc0
+f32 __stdcall FUN_00408fc0(f32 a, f32 b, f32 c, f32 d, f32 e)
+{
+    return 0.0f;
 }
 
 // FUNCTION: th08 0x410a70
