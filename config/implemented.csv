@@ -485,3 +485,4 @@ th08::Rng::ResetGenerationCount
 th08::Rng::GetSeed
 th08::Rng::GetRandomU16InRange
 th08::AnmManager::ExecuteScriptArray
+th08::AnmManager::SpriteHasTexture

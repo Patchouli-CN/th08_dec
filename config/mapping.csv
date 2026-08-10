@@ -947,7 +947,7 @@ FUN_00462210,0x462210,0x15,unknown,,u8,u8
 FUN_00462230,0x462230,0x15,unknown,,u8,u8
 FUN_00462250,0x462250,0x15,unknown,,u8,u8
 FUN_00462270,0x462270,0x4a,unknown,,u8,u8,u8,u8
-th08::AnmManager::FUN_004622c0,0x4622c0,0x4c,__thiscall,,bool,AnmManager*,AnmVm*
+th08::AnmManager::SpriteHasTexture,0x4622c0,0x4c,__thiscall,,u32,AnmManager*,AnmVm*
 th08::AnmManager::ExecuteScriptArray,0x462310,0x46,__thiscall,,void,AnmManager*,AnmVm*,i32
 FUN_00462360,0x462360,0x56,unknown,,u8,u8,u8,u8
 th08::AnmManager::FUN_004623c0,0x4623c0,0x390,__thiscall,,void,AnmManager*,AnmVm*

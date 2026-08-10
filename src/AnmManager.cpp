@@ -915,6 +915,22 @@ void AnmManager::SetInterruptArray(AnmVm *vm, int count, i16 interrupt)
     }
 }
 
+// FUNCTION: th08 0x4622c0
+ZunBool AnmManager::SpriteHasTexture(AnmVm *vm)
+{
+    if (vm->loadedSprite == NULL)
+    {
+        return FALSE;
+    }
+
+    if (vm->loadedSprite->anmIdx < 0)
+    {
+        return FALSE;
+    }
+
+    return this->anmFiles[vm->loadedSprite->anmIdx].textures != NULL;
+}
+
 void AnmManager::ExecuteScriptArray(AnmVm *sprite, int count)
 {
     while (count != 0)
