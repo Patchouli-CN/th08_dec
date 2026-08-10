@@ -572,38 +572,9 @@ struct AnmManager
 
     ZunBool SpriteHasTexture(AnmVm *vm);
 
-    void ReleaseSurfaces()
-    {
-        i32 i;
+    void ReleaseSurfaces();
 
-        for (i = 0; i < ARRAY_SIZE_SIGNED(this->surfaces); i++)
-        {
-            if (this->surfaces[i] != NULL)
-            {
-                this->surfaces[i]->Release();
-                this->surfaces[i] = NULL;
-            }
-        }
-    }
-
-    void TakeScreencaptures()
-    {
-        if (this->captureAnmIdx >= 0)
-        {
-            CaptureToTexture(this->captureAnmIdx, this->textureCaptureSrcX, this->textureCaptureSrcY,
-                             this->textureCaptureSrcW, this->textureCaptureSrcH, this->textureCaptureDstX,
-                             this->textureCaptureDstY, this->textureCaptureDstW, this->textureCaptureDstH);
-            this->captureAnmIdx = -1;
-        }
-
-        if (this->captureSurfaceIdx >= 0)
-        {
-            CaptureToSurface(this->captureSurfaceIdx, this->surfaceCaptureSrcX, this->surfaceCaptureSrcY,
-                             this->surfaceCaptureSrcW, this->surfaceCaptureSrcH, this->surfaceCaptureDstX,
-                             this->surfaceCaptureDstY, this->surfaceCaptureDstW, this->surfaceCaptureDstH);
-            this->captureSurfaceIdx = -1;
-        }
-    }
+    void TakeScreencaptures();
 
     void SetMixColorDefault()
     {

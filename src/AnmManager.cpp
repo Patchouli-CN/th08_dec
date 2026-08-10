@@ -915,6 +915,41 @@ void AnmManager::SetInterruptArray(AnmVm *vm, int count, i16 interrupt)
     }
 }
 
+// FUNCTION: th08 0x443b60
+void AnmManager::TakeScreencaptures()
+{
+    if (this->captureAnmIdx >= 0)
+    {
+        CaptureToTexture(this->captureAnmIdx, this->textureCaptureSrcX, this->textureCaptureSrcY,
+                         this->textureCaptureSrcW, this->textureCaptureSrcH, this->textureCaptureDstX,
+                         this->textureCaptureDstY, this->textureCaptureDstW, this->textureCaptureDstH);
+        this->captureAnmIdx = -1;
+    }
+
+    if (this->captureSurfaceIdx >= 0)
+    {
+        CaptureToSurface(this->captureSurfaceIdx, this->surfaceCaptureSrcX, this->surfaceCaptureSrcY,
+                         this->surfaceCaptureSrcW, this->surfaceCaptureSrcH, this->surfaceCaptureDstX,
+                         this->surfaceCaptureDstY, this->surfaceCaptureDstW, this->surfaceCaptureDstH);
+        this->captureSurfaceIdx = -1;
+    }
+}
+
+// FUNCTION: th08 0x443af0
+void AnmManager::ReleaseSurfaces()
+{
+    i32 i;
+
+    for (i = 0; i < ARRAY_SIZE_SIGNED(this->surfaces); i++)
+    {
+        if (this->surfaces[i] != NULL)
+        {
+            this->surfaces[i]->Release();
+            this->surfaces[i] = NULL;
+        }
+    }
+}
+
 // FUNCTION: th08 0x4622c0
 ZunBool AnmManager::SpriteHasTexture(AnmVm *vm)
 {

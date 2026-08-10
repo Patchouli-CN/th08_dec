@@ -1896,6 +1896,12 @@ void Supervisor::FUN_0044881a()
     }
 }
 
+// FUNCTION: th08 0x406580
+ZunBool Supervisor::IsFogDisabled()
+{
+    return this->cfg.opts.disableFog;
+}
+
 // FUNCTION: th08 0x453c40
 ZunBool Supervisor::IsClearBackBufferOnRefreshEnabled()
 {

@@ -218,10 +218,7 @@ struct Supervisor
         return this->cfg.opts.disableColorCompositing;
     }
 
-    ZunBool IsFogDisabled()
-    {
-        return this->cfg.opts.disableFog;
-    }
+    ZunBool IsFogDisabled();
 
     ZunBool Supervisor::IsHUDRedrawEnabled()
     {
