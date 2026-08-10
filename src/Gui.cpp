@@ -163,7 +163,6 @@ i32 Gui::MsgWait()
     return this->impl->msgState.currentMsgIdx >= 0;
 }
 
-// STUB: th08 0x433db3
 // FUNCTION: th08 0x433db3
 #pragma var_order(args, i15, args15, i17, args17, buf3, buf16, buf19, buf20, i9)
 ZunResult GuiImpl::RunMsg()

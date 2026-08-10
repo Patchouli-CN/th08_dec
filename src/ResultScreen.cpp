@@ -3,6 +3,8 @@
 #include "ResultScreen.hpp"
 #include "ScreenEffect.hpp"
 
+#include <time.h>
+
 namespace th08
 {
 
@@ -228,9 +230,15 @@ i32 ResultScreen::HandleResultKeyboard()
     return 0;
 }
 
-// STUB: th08 0x456938
+// FUNCTION: th08 0x456938
 void ResultScreen::FormatDate(char *buffer)
 {
+    time_t seconds;
+    tm *timeinfo;
+
+    time(&seconds);
+    timeinfo = localtime(&seconds);
+    strftime(buffer, 6, "%m/%d", timeinfo);
 }
 
 // STUB: th08 0x45696f

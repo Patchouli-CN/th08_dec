@@ -32,3 +32,9 @@
   byte acc 提升至 **9.31%**。
 - **`AsciiManager::OnUpdate`** 反编译完成：0% → **100%**。实现分数/时间弹幕的
   位置漂移与计时过期、暂停/重试菜单路由、demoIcon VM 驱动。byte acc 提升至 **9.5%**。
+- **`ResultScreen::FormatDate`**（0x456938）、**`FUN_00426d10`**（0x426d10）、
+  **`Float3::operator+=`**（0x410a70）反编译完成（均 100%）。FormatDate 即
+  `strftime(buf, 6, "%m/%d", localtime(&t))`；FUN_00426d10 遍历 `g_EffectManager`
+  中 512 个粒子（+0x351 标记 == '3' 时对 +0x2d4 的 Float3 做 `+=`）；
+  `Float3::operator+=` 由 hpp 内联改为 out-of-line（原版 0x410a70 是独立函数，
+  调用处 `call`）。func 88.73% / size 14.3%。

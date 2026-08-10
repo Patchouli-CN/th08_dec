@@ -101,7 +101,6 @@ ChainCallbackResult Player::OnUpdate(Player *player)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
-// STUB: th08 0x44d530
 // STUB: th08 0x4512f0
 void Player::FUN_004512f0()
 {

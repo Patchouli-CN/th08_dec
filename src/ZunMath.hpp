@@ -71,14 +71,7 @@ struct Float3
         return Float3(inv * this->x, inv * this->y, inv * this->z);
     }
 
-    Float3 *operator+=(const Float3 &other)
-    {
-        this->x += other.x;
-        this->y += other.y;
-        this->z += other.z;
-
-        return this;
-    }
+    Float3 *operator+=(const Float3 &other); /* out-of-line @ 0x410a70 */
 
     Float3 *operator-=(const Float3 &other)
     {

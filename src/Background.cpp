@@ -6,7 +6,7 @@
 
 namespace th08
 {
-void FUN_00426d10(Float3 *pos);
+void __fastcall FUN_00426d10(Float3 *pos);
 DIFFABLE_STATIC(Background, g_Background);
 DIFFABLE_STATIC(ChainElem, g_BackgroundCalcChain);
 DIFFABLE_STATIC(ChainElem, g_BackgroundDrawChainHighPrio);
@@ -732,9 +732,28 @@ void Background::FUN_00409f40()
 {
 }
 
-// STUB: th08 0x426d10
-void FUN_00426d10(Float3 *pos)
+// FUNCTION: th08 0x426d10
+void __fastcall FUN_00426d10(Float3 *pos)
 {
+    EffectManagerParticle *p = &g_EffectManager.particles[0];
+
+    for (i32 i = 0; i < 512; i++, p++)
+    {
+        if (p->unk351 == 0x33)
+        {
+            p->unk2d4 += *pos;
+        }
+    }
+}
+
+// FUNCTION: th08 0x410a70
+Float3 *Float3::operator+=(const Float3 &other)
+{
+    this->x += other.x;
+    this->y += other.y;
+    this->z += other.z;
+
+    return this;
 }
 
 }; // Namespace th08

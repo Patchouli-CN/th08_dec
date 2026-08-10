@@ -177,7 +177,7 @@ FUN_0040fcb0,0x40fcb0,0x18,unknown,,u8
 FUN_0040fcd0,0x40fcd0,0x625,unknown,,u8
 FUN_00410300,0x410300,0xe1,unknown,,u8
 FUN_004103f0,0x4103f0,0x677,unknown,,u8
-FUN_00410a70,0x410a70,0x43,unknown,,u8,u8
+th08::Float3::operator+=,0x410a70,0x43,unknown,,u8,u8
 FUN_00410ac0,0x410ac0,0xe1,unknown,,u8
 FUN_00410bb0,0x410bb0,0x4c,unknown,,u8
 th08::Rng::GetRandomU16InRange,0x410c00,0x39,__thiscall,,u16,Rng*,u16
