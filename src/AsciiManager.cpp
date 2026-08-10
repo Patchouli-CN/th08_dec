@@ -87,8 +87,8 @@ ChainCallbackResult AsciiManager::OnUpdate(AsciiManager *ascii)
 
 ChainCallbackResult AsciiManager::OnDrawLowPrio(AsciiManager *ascii)
 {
-    ascii->OnDrawLowPrioImpl();
-    ascii->ResetStrings();
+    ascii->DrawStrings();
+    ascii->FUN_00407160();
     ascii->pauseMenu.OnDraw();
     ascii->retryMenu.OnDraw();
     if (ascii->demoIcon.scriptIndex != 0)
@@ -97,6 +97,16 @@ ChainCallbackResult AsciiManager::OnDrawLowPrio(AsciiManager *ascii)
     }
 
     return CHAIN_CALLBACK_RESULT_CONTINUE;
+}
+
+// STUB: th08 0x402b20
+void AsciiManager::DrawStrings()
+{
+}
+
+// STUB: th08 0x407160
+void AsciiManager::FUN_00407160()
+{
 }
 
 ChainCallbackResult AsciiManager::OnDrawHighPrio(AsciiManager *ascii)
