@@ -563,9 +563,80 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
     return 0;
 }
 
-// STUB: th08 0x455f6b
+// FUNCTION: th08 0x455f6b (93% FIXME: esi 缓存除数/or 展开/分支布局)
 i32 ResultScreen::HandleSpellCardScreen()
 {
+    i32 unkC;
+    i32 unk8;
+    i32 unk4;
+
+    if (this->unk54 != 0 && this->unk4 >= 0xa)
+    {
+        this->SetState((ResultScreenState)7);
+    }
+
+    unkC = *(u32 *)(this->unk48 * 4 + 0x4c67e8);
+
+    if (this->unk40 != this->unk1c || this->unk34 != this->unk30)
+    {
+        if (this->unk4 == 0xa)
+        {
+            this->unk40 = this->unk1c;
+            this->unk34 = this->unk30;
+
+            for (unk8 = this->unk40 * 0xa; unk8 < this->unk40 * 0xa + 0xa; unk8++)
+            {
+                if (unk8 < unkC)
+                {
+                    unk4 = *(u32 *)(*(u32 *)(this->unk48 * 4 + 0x4c67d0) + unk8 * 4);
+
+                    if (*(u32 *)(unk4 * 0x22c + 0x160f69c) == 0)
+                    {
+                        g_AnmManager->DrawTextLeft((AnmVm *)((u8 *)this + (unk8 % 0xa) * 0x2a4 + 0xbfc0), 0xffffff, 0, (const char *)0x4b77d8);
+                    }
+                    else
+                    {
+                        g_AnmManager->DrawTextLeft((AnmVm *)((u8 *)this + (unk8 % 0xa) * 0x2a4 + 0xbfc0), 0xffffff, 0, (const char *)(unk4 * 0x22c + 0x160f558));
+                    }
+                }
+
+                *(u8 *)((u8 *)this + (unk8 % 0xa) * 0x2a4 + 0xc1b3) |= 0xff;
+            }
+
+            g_AnmManager->DrawTextLeft((AnmVm *)((u8 *)this + 0xda28), 0xffffff, 0, (const char *)0x4b795c, *(u32 *)((u8 *)this + this->unk48 * 0x34 + 0x64 + this->unk30 * 4), unkC);
+            *(u8 *)((u8 *)this + 0xdc1b) |= 0xff;
+        }
+    }
+
+    if (this->unk4 < 6)
+    {
+        return 0;
+    }
+
+    if (this->MoveCursorHorizontally((unkC + 9) / 0xa))
+    {
+        this->unk4 = 0;
+        *(u16 *)((u8 *)this + 0x6d3e) = 0xa;
+    }
+    else if (this->MoveShotTypeCursor(0xd))
+    {
+        this->unk4 = 0;
+        this->unk38 = 1;
+        *(u16 *)((u8 *)this + 0x39e + (this->unk34 + 0x1b) * 0x2a4) = 0x18;
+        *(u16 *)((u8 *)this + 0x39e + (this->unk30 + 0x1b) * 0x2a4) = 0x19;
+    }
+
+    if (WAS_PRESSED(0xa))
+    {
+        this->unk54 = 1;
+        this->unk4 = 0;
+        g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
+        *(u16 *)((u8 *)this + 0x6d3e) = 0x1;
+        return 1;
+    }
+
+    this->unk18++;
+
     return 0;
 }
 

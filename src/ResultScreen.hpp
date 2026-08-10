@@ -68,7 +68,8 @@ struct ResultScreen
     i32 unk1c;                     // 0x1c (cursor position)
     unknown_fields(0x20, 0x10);    // 0x20
     i32 unk30;                     // 0x30 (shot type cursor)
-    unknown_fields(0x34, 0x8);     // 0x34
+    i32 unk34;                     // 0x34
+    i32 unk38;                     // 0x38
     i32 unk3c;                     // 0x3c
     i32 unk40;                     // 0x40
     i32 unk44;                     // 0x44
