@@ -20,7 +20,7 @@ namespace th08
 struct PauseMenu
 {
     i32 OnUpdate();
-    i32 OnDraw();
+    void OnDrawPauseMenu();
 
     u32 curState;
     i32 numFrames;
@@ -33,7 +33,7 @@ C_ASSERT(sizeof(PauseMenu) == 0x1d14);
 struct RetryMenu
 {
     i32 OnUpdate();
-    i32 OnDraw();
+    void OnDrawRetryMenu();
 
     u32 curState;
     i32 numFrames;

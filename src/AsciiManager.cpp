@@ -89,8 +89,8 @@ ChainCallbackResult AsciiManager::OnDrawLowPrio(AsciiManager *ascii)
 {
     ascii->DrawStrings();
     ascii->FUN_00407160();
-    ascii->pauseMenu.OnDraw();
-    ascii->retryMenu.OnDraw();
+    ascii->pauseMenu.OnDrawPauseMenu();
+    ascii->retryMenu.OnDrawRetryMenu();
     if (ascii->demoIcon.scriptIndex != 0)
     {
         g_AnmManager->DrawNoRotation(&ascii->demoIcon);
@@ -700,10 +700,44 @@ i32 PauseMenu::OnUpdate()
     return 0;
 }
 
-// STUB: th08 0x404750
-i32 PauseMenu::OnDraw()
+// FUNCTION: th08 0x404750 (94.74% FIXME: D3D 虚函数寄存器分配)
+void PauseMenu::OnDrawPauseMenu()
 {
-    return 0;
+    u32 i;
+
+    if (*(u8 *)0x164d0ba != 0)
+    {
+        g_AnmManager->FlushVertexBuffer();
+
+        *(i32 *)0x17ce820 = (i32)*(f32 *)0x164d2dc;
+        *(i32 *)0x17ce824 = (i32)*(f32 *)0x164d2e0;
+        *(i32 *)0x17ce828 = (i32)*(f32 *)0x164d2e4;
+        *(i32 *)0x17ce82c = (i32)*(f32 *)0x164d2e8;
+
+        /* D3D viewport-set virtual call @ vtbl+0xa0 */
+        ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
+            *(void **)0x17ce760, (void *)0x17ce820);
+
+        if ((*(u32 *)0x17ce8fc >> 1) & 1)
+        {
+            if (this->curState != 0)
+            {
+                u8 local[0x2a4];
+
+                memcpy(local, (u8 *)this + 0x1a70, 0x2a4);
+                *(u32 *)(local + 0xb8) |= 0x2000;
+                g_AnmManager->DrawNoRotation((AnmVm *)local);
+            }
+        }
+
+        for (i = 0; i < 0xa; i++)
+        {
+            if (((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4))->IsVisible())
+            {
+                g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4));
+            }
+        }
+    }
 }
 
 // STUB: th08 0x404890
@@ -712,10 +746,53 @@ i32 RetryMenu::OnUpdate()
     return 0;
 }
 
-// STUB: th08 0x4052b0
-i32 RetryMenu::OnDraw()
+// FUNCTION: th08 0x4052b0 (93.81% FIXME: D3D 虚函数寄存器分配)
+void RetryMenu::OnDrawRetryMenu()
 {
-    return 0;
+    u32 i;
+
+    if (*(u8 *)0x164d0bb != 0)
+    {
+        g_AnmManager->FlushVertexBuffer();
+
+        *(i32 *)0x17ce820 = (i32)*(f32 *)0x164d2dc;
+        *(i32 *)0x17ce824 = (i32)*(f32 *)0x164d2e0;
+        *(i32 *)0x17ce828 = (i32)*(f32 *)0x164d2e4;
+        *(i32 *)0x17ce82c = (i32)*(f32 *)0x164d2e8;
+
+        /* D3D viewport-set virtual call @ vtbl+0xa0 */
+        ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
+            *(void **)0x17ce760, (void *)0x17ce820);
+
+        if ((*(u32 *)0x17ce8fc >> 1) & 1)
+        {
+            if (this->curState != 0 || this->numFrames > 2)
+            {
+                g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this + 0xfe0));
+            }
+        }
+
+        if (g_GameManager.GetFlag14() == 0 && *(i32 *)0x160f538 < 4)
+        {
+            for (i = 0; i < 4; i++)
+            {
+                if (((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4))->IsVisible())
+                {
+                    g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4));
+                }
+            }
+        }
+        else
+        {
+            for (i = 0; i < 3; i++)
+            {
+                if (((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4))->IsVisible())
+                {
+                    g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4));
+                }
+            }
+        }
+    }
 }
 
 // STUB: th08 0x405420
