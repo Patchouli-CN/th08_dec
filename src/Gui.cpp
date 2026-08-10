@@ -651,9 +651,255 @@ void Gui::FUN_00435900()
 {
 }
 
-// STUB: th08 0x43625d
+// FUNCTION: th08 0x43625d
+#pragma var_order(x, y, i, vm)
 void Gui::DrawGameScene()
 {
+    f32 x;
+    f32 y;
+    i32 i;
+    AnmVm *vm;
+    g_AnmManager->FlushVertexBuffer();
+    g_Supervisor.viewport.X = 0;
+    g_Supervisor.viewport.Y = 0;
+    g_Supervisor.viewport.Width = 640;
+    g_Supervisor.viewport.Height = 480;
+    g_Supervisor.d3dDevice->SetViewport(&g_Supervisor.viewport);
+    if (!g_Supervisor.IsMinimumGraphicsMode())
+    {
+        vm = (AnmVm *)((u8 *)this->impl + 0x279c);
+        y = 480.0f;
+
+        vm->pos = Float3(y, 40.0f, 0.49f);
+        g_AnmManager->DrawNoRotation(vm);
+        vm->pos = Float3(y, 56.0f, 0.49f);
+        g_AnmManager->DrawNoRotation(vm);
+        if (this->flags.lifeDisplayUpdateFrames)
+        {
+            vm->pos = Float3(y, 88.0f, 0.48f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+        if (this->flags.bombDisplayUpdateFrames)
+        {
+            vm->pos = Float3(y, 104.0f, 0.48f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+        if (this->flags.powerDisplayUpdateFrames)
+        {
+            vm->pos = Float3(y, 136.0f, 0.48f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+        if (this->flags.grazeDisplayUpdateFrames)
+        {
+            vm->pos = Float3(y, 152.0f, 0.48f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+        if (this->flags.pointDisplayUpdateFrames)
+        {
+            vm->pos = Float3(y, 168.0f, 0.48f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+        if (this->flags.timeDisplayUpdateFrames)
+        {
+            vm->pos = Float3(y, 184.0f, 0.48f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+        vm->pos = Float3(512.0f, 464.0f, 0.48f);
+        g_AnmManager->DrawNoRotation(vm);
+    }
+
+    vm = (AnmVm *)((u8 *)this->impl + 0x2254);
+    if (g_Supervisor.IsHUDRedrawEnabled() || vm->currentInstruction != NULL || g_Supervisor.unk174 != 0)
+    {
+        for (x = 0.0f; x < 464.0f; x = x + 32.0f)
+        {
+            vm->pos = Float3(0.0f, x, 0.49f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+        for (y = 416.0f; y < 624.0f; y = y + 32.0f)
+        {
+            for (x = 16.0f; x < 464.0f; x = x + 32.0f)
+            {
+                vm->pos = Float3(y, x, 0.49f);
+                g_AnmManager->DrawNoRotation(vm);
+            }
+        }
+        vm = (AnmVm *)((u8 *)this->impl + 0x24f8);
+        for (y = 0.0f; y < 624.0f; y = y + 128.0f)
+        {
+            vm->pos = Float3(y, 0.0f, 0.49f);
+            g_AnmManager->DrawNoRotation(vm);
+            vm->pos = Float3(y, 464.0f, 0.49f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+        g_AnmManager->DrawNoRotation(&this->impl->vmsA[0]);
+        g_AnmManager->Draw2D(&this->impl->vmsA[1]);
+        g_AnmManager->DrawNoRotation(&this->impl->vmsA[2]);
+        g_AnmManager->DrawNoRotation(&this->impl->vmsA[3]);
+        g_AnmManager->DrawNoRotation(&this->impl->vmsA[4]);
+        g_AnmManager->DrawNoRotation(&this->impl->vmsA[5]);
+        g_AnmManager->DrawNoRotation(&this->impl->vmsA[6]);
+        g_AnmManager->DrawNoRotation(&this->impl->vmsA[7]);
+        g_AnmManager->DrawNoRotation(&this->impl->vmsA[8]);
+        g_AnmManager->DrawNoRotation(&this->impl->vmsA[9]);
+        g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this->impl + 0x22e14));
+        this->flags.lifeDisplayUpdateFrames = 2;
+        this->flags.bombDisplayUpdateFrames = 2;
+        this->flags.grazeDisplayUpdateFrames = 2;
+        this->flags.pointDisplayUpdateFrames = 2;
+        this->flags.powerDisplayUpdateFrames = 2;
+        this->flags.timeDisplayUpdateFrames = 2;
+    }
+    if (this->flags.lifeDisplayUpdateFrames)
+    {
+        vm = (AnmVm *)((u8 *)this->impl + 0x1a68);
+        for (i = 0, y = 488.0f; i < (i32)g_GameManager.GetLives(); i++, y = y + 16.0f)
+        {
+            vm->pos = Float3(y, 88.0f, 0.46f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+    }
+    if (this->flags.bombDisplayUpdateFrames)
+    {
+        vm = (AnmVm *)((u8 *)this->impl + 0x1d0c);
+        for (i = 0, y = 488.0f; i < (i32)g_GameManager.GetBombsRemaining(); i++, y = y + 16.0f)
+        {
+            vm->pos = Float3(y, 104.0f, 0.46f);
+            g_AnmManager->DrawNoRotation(vm);
+        }
+    }
+    if (this->flags.bombDisplayUpdateFrames || this->flags.lifeDisplayUpdateFrames)
+    {
+        if (g_GameManager.flags.unk7 == 1 && g_Spellcard.spellcard_fun_004178a0())
+        {
+            g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this->impl + 0x5484));
+        }
+    }
+    vm = (AnmVm *)((u8 *)this->impl + 0x24f8);
+    for (x = 32.0f; x < 368.0f; x = x + 128.0f)
+    {
+        vm->pos = Float3(x, 40.0f, 0.49f);
+        g_AnmManager->DrawNoRotation(vm);
+    }
+
+    {
+        Float3 textDrawPos = Float3(488.0f, 56.0f, 0.0f);
+        g_AsciiManager.AddFormatText(&textDrawPos, "%.9d", g_GameManager.globals->displayScore);
+        textDrawPos.x = textDrawPos.x + 117.0f;
+        g_AsciiManager.AddFormatText(&textDrawPos, "%1d", (i32)g_GameManager.globals->numRetries > 9 ? 9 : (i32)g_GameManager.globals->numRetries);
+        g_AsciiManager.SetScale(1.0f, 1.0f);
+    }
+    {
+        Float3 textDrawPos = Float3(488.0f, 40.0f, 0.0f);
+        g_AsciiManager.AddFormatText(&textDrawPos, "%.9d", g_GameManager.globals->displayedHighScore);
+        textDrawPos.x = textDrawPos.x + 117.0f;
+        g_AsciiManager.AddFormatText(&textDrawPos, "%1d", (i32)g_GameManager.globals->ontinuesUsedInHighScore > 9 ? 9 : (i32)g_GameManager.globals->ontinuesUsedInHighScore);
+        g_AsciiManager.SetScale(1.0f, 1.0f);
+    }
+    if (this->flags.grazeDisplayUpdateFrames || g_Supervisor.IsMinimumGraphicsMode())
+    {
+        Float3 textDrawPos = Float3(488.0f, 152.0f, 0.0f);
+        g_AsciiManager.AddFormatText(&textDrawPos, "%d", g_GameManager.globals->graze);
+    }
+    if (this->flags.pointDisplayUpdateFrames || g_Supervisor.IsMinimumGraphicsMode())
+    {
+        Float3 textDrawPos = Float3(488.0f, 168.0f, 0.0f);
+        g_AsciiManager.AddFormatText2(&textDrawPos, "%d", g_GameManager.globals->pointItemsCollected);
+        textDrawPos.x = textDrawPos.x + (f32)(g_GameManager.globals->pointItemsCollected * 13);
+        g_AsciiManager.SetScale(0.5f, 1.0f);
+        g_AsciiManager.AddFormatText(&textDrawPos, "/");
+        g_AsciiManager.SetScale(1.0f, 1.0f);
+        textDrawPos.x = textDrawPos.x + 6.0f;
+        g_AsciiManager.AddFormatText(&textDrawPos, "%d", g_GameManager.globals->nextPointItemExtendThreshold);
+    }
+    if (this->flags.timeDisplayUpdateFrames || g_Supervisor.IsMinimumGraphicsMode())
+    {
+        if (g_GameManager.GetTimeOrbs() >= g_GameManager.GetLastSpellTimeOrbThreshold())
+        {
+            g_AsciiManager.SetColor(0xfffff0c0);
+        }
+        Float3 textDrawPos = Float3(488.0f, 184.0f, 0.0f);
+        g_AsciiManager.AddFormatText2(&textDrawPos, "%d", g_GameManager.GetTimeOrbs());
+        textDrawPos.x = textDrawPos.x + (f32)(g_GameManager.GetTimeOrbs() * 13);
+        g_AsciiManager.SetScale(0.5f, 1.0f);
+        g_AsciiManager.AddFormatText(&textDrawPos, "/");
+        g_AsciiManager.SetScale(1.0f, 1.0f);
+        textDrawPos.x = textDrawPos.x + 6.0f;
+        g_AsciiManager.AddFormatText(&textDrawPos, "%d", g_GameManager.GetLastSpellTimeOrbThreshold());
+        g_AsciiManager.SetColor(0xffffffff);
+    }
+    g_AnmManager->FlushVertexBuffer();
+    if (this->flags.powerDisplayUpdateFrames || g_Supervisor.IsMinimumGraphicsMode())
+    {
+        VertexDiffuseXyzrhw powerBarVerts[4];
+
+        if (g_GameManager.GetPower() > 0)
+        {
+            powerBarVerts[0].pos = Float3(488.0f, 136.0f, 0.1f);
+            powerBarVerts[1].pos = Float3((f32)(g_GameManager.GetPower() + 0x1e8) + 0.0f, 136.0f, 0.1f);
+            powerBarVerts[2].pos = Float3(488.0f, 152.0f, 0.1f);
+            powerBarVerts[3].pos = Float3((f32)(g_GameManager.GetPower() + 0x1e8) + 0.0f, 152.0f, 0.1f);
+            powerBarVerts[0].diffuse = powerBarVerts[2].diffuse = 0xe0e0e0ff;
+            powerBarVerts[1].diffuse = powerBarVerts[3].diffuse = 0x80e0e0ff;
+            powerBarVerts[0].w = powerBarVerts[1].w = powerBarVerts[2].w = powerBarVerts[3].w = 1.0f;
+            if (!g_Supervisor.IsColorCompositingDisabled())
+            {
+                g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+                g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+            }
+            g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+            g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+            if (!g_Supervisor.IsDepthTestDisabled())
+            {
+                g_Supervisor.SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+            }
+            g_Supervisor.d3dDevice->SetVertexShader(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+            g_Supervisor.d3dDevice->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, &powerBarVerts, sizeof(VertexDiffuseXyzrhw));
+            g_AnmManager->ClearVertexShader();
+            g_AnmManager->ClearColorOp();
+            g_AnmManager->ClearBlendMode();
+            g_AnmManager->ClearZWrite();
+            if (!g_Supervisor.IsColorCompositingDisabled())
+            {
+                g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+                g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+            }
+            g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+            g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        }
+        if (g_GameManager.GetPower() < 128)
+        {
+            g_AsciiManager.AddFormatText(&Float3(488.0f, 136.0f, 0.0f), "%d", g_GameManager.GetPower());
+        }
+        else
+        {
+            g_AsciiManager.AddFormatText(&Float3(488.0f, 136.0f, 0.0f), "MAX");
+        }
+    }
+    if (this->flags.lifeDisplayUpdateFrames)
+    {
+        this->flags.lifeDisplayUpdateFrames--;
+    }
+    if (this->flags.powerDisplayUpdateFrames)
+    {
+        this->flags.powerDisplayUpdateFrames--;
+    }
+    if (this->flags.bombDisplayUpdateFrames)
+    {
+        this->flags.bombDisplayUpdateFrames--;
+    }
+    if (this->flags.grazeDisplayUpdateFrames)
+    {
+        this->flags.grazeDisplayUpdateFrames--;
+    }
+    if (this->flags.pointDisplayUpdateFrames)
+    {
+        this->flags.pointDisplayUpdateFrames--;
+    }
+    if (this->flags.timeDisplayUpdateFrames)
+    {
+        this->flags.timeDisplayUpdateFrames--;
+    }
 }
 
 // STUB: th08 0x43741d

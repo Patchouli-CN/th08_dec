@@ -211,6 +211,11 @@ struct Supervisor
         return this->cfg.opts.disableDepthTest;
     }
 
+    ZunBool IsMinimumGraphicsMode()
+    {
+        return this->cfg.opts.displayMinimumGraphics;
+    }
+
     ZunBool IsColorCompositingDisabled()
     {
         return this->cfg.opts.disableColorCompositing;

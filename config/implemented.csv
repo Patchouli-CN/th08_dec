@@ -222,6 +222,7 @@ th08::GameWindow::WindowProc
 th08::GetAnmFormat
 th08::Gui::AddedCallback
 th08::Gui::CutChain
+th08::Gui::DrawGameScene
 th08::Gui::DeletedCallback
 th08::Gui::FUN_00437e5d
 th08::Gui::FreeMsgFile
