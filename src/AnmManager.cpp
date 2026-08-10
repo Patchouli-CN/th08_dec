@@ -982,6 +982,16 @@ ZunBool AnmManager::SpriteHasTexture(AnmVm *vm)
     return this->anmFiles[vm->loadedSprite->anmIdx].textures != NULL;
 }
 
+// STUB: th08 0x40baf0
+void AnmManager::FUN_0040baf0(AnmVm *vm)
+{
+}
+
+// STUB: th08 0x40bab0
+void AnmManager::FUN_0040bab0()
+{
+}
+
 void AnmManager::ExecuteScriptArray(AnmVm *sprite, int count)
 {
     while (count != 0)

@@ -147,6 +147,12 @@ void Gui::FreeMsgFile(void)
     }
 }
 
+// STUB: th08 0x437d87
+i32 Gui::FUN_00437d87()
+{
+    return 0;
+}
+
 // FUNCTION: th08 0x43587e
 i32 Gui::MsgWait()
 {

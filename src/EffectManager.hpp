@@ -52,6 +52,7 @@ struct EffectManager
     static void CutChain();
 
     void ResetEffects();
+    void FUN_004281e0();
     AnmVm *FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c);
     AnmVm *FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d);
 

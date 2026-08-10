@@ -3,6 +3,8 @@
 #include "Background.hpp"
 #include "AnmManager.hpp"
 #include "EffectManager.hpp"
+#include "Gui.hpp"
+#include "ScreenEffect.hpp"
 
 namespace th08
 {
@@ -526,10 +528,95 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
-// STUB: th08 0x409640
+// FUNCTION: th08 0x409640 (93% FIXME: 625c/SetCamera1/虚函数寄存器)
 ChainCallbackResult Background::OnDrawLowPrio(Background *background)
 {
+    i32 i;
+
+    if ((i32)background->unk0xb24 <= 1)
+    {
+        if (g_Gui.FUN_00437d87() == 0)
+        {
+            background->FUN_0040a1b0(2);
+            background->FUN_0040a1b0(3);
+
+            if (!g_Supervisor.IsFogDisabled())
+            {
+                g_Supervisor.DisableFog();
+            }
+
+            g_EffectManager.FUN_004281e0();
+
+            if (background->unk0xb24 == 1)
+            {
+                ZunRect rect = {32.0f, 16.0f, 416.0f, 464.0f};
+                i32 alpha = (background->unk0xb28 * 0xff) / 0x3c;
+
+                g_AnmManager->FlushVertexBuffer();
+                g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x17, 8);
+
+                if (!g_Supervisor.IsFogDisabled())
+                {
+                    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x1c, 0);
+                }
+
+                ScreenEffect::DrawSquare(&rect, alpha << 0x18);
+            }
+        }
+    }
+
+    g_AnmManager->FlushVertexBuffer();
+    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x17, 8);
+
+    if (!g_Supervisor.IsFogDisabled())
+    {
+        g_Supervisor.DisableFog();
+    }
+
+    if ((i32)background->unk0xb24 >= 1)
+    {
+        for (i = 0; i < background->unk0xb30; i++)
+        {
+            g_AnmManager->FUN_0040baf0((AnmVm *)((u8 *)background + 0xb38 + i * 0x2a4));
+        }
+
+        if (background->unk0x625c != NULL)
+        {
+            background->unk0x625c(background);
+        }
+    }
+
+    g_AnmManager->SetCameraMode(0);
+
+    /* out-of-line SetCamera1 @ 0x40b5a0 */
+    ((void(__fastcall *)(Background *))0x40b5a0)(background);
+
+    /* D3D viewport-set virtual call @ vtbl+0xa0 */
+    ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
+        *(void **)0x17ce760, (void *)0x17ce820);
+
+    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x24, 0x447a0000);
+    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x25, 0x44fa0000);
+
+    if (background->unk0x646c == 0)
+    {
+        g_AnmManager->FUN_0040bab0();
+    }
+
+    background->unk0x646c = 0;
+    background->unk0x647c = 0;
+
     return CHAIN_CALLBACK_RESULT_CONTINUE;
+}
+
+// STUB: th08 0x40a1b0
+void Background::FUN_0040a1b0(u32 param)
+{
+}
+
+// STUB: th08 0x40b5a0
+void Background::SetCamera1()
+{
 }
 
 // FUNCTION: th08 0x409850

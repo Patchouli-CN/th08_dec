@@ -147,6 +147,11 @@ DIFFABLE_STATIC(EffectTemplate, g_EffectTemplates[0x100]);
 DIFFABLE_STATIC(ChainElem, g_EffectManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_EffectManagerDrawChain);
 
+// STUB: th08 0x4281e0
+void EffectManager::FUN_004281e0()
+{
+}
+
 // FUNCTION: th08 0x425410
 void EffectManager::ResetEffects()
 {
