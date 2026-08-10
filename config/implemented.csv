@@ -145,6 +145,7 @@ th08::ScreenEffect::CalcShakeWithEnvelope
 th08::ScreenEffect::AddedCallback
 th08::ScreenEffect::DeletedCallback
 th08::Supervisor::DrawFpsCounter
+th08::Supervisor::OnDraw2
 th08::Supervisor::ControllerCallback
 th08::Supervisor::CheckFps
 th08::Supervisor::SetupDInput
