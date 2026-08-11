@@ -180,7 +180,7 @@ struct GameManager
         return this->flags.isDemoMode;
     }
 
-    ZunBool GaugeIsExtremelyYoukai();
+    i32 GaugeIsExtremelyYoukai();
     i32 GaugeIsModeratelyYoukai();
 
     ZunBool GaugeIsExtremelyHuman()

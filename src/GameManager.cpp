@@ -966,10 +966,10 @@ ZunBool GameManager::IsStageClearedWithRetries(i32 stage, i32 character, i32 dif
     return IS_STAGE_CLEARED(this->clrdData[character].difficultiesClearedWithRetries[difficulty], stage);
 }
 
-// STUB: th08 0x406d70
-ZunBool GameManager::GaugeIsExtremelyYoukai()
+// FUNCTION: th08 0x406d70 (FIXME: /Os leave epilogue vs 原版 mov/pop)
+i32 GameManager::GaugeIsExtremelyYoukai()
 {
-    return FALSE;
+    return this->globals->youkaiGauge >= this->youkaiGaugeYoukaiLimit;
 }
 
 // FUNCTION: th08 0x406da0
