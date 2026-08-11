@@ -119,3 +119,18 @@
 - **进度条修正**：implemented.csv 曾含 7 个 fn_diff 非 100% 的函数（历史遗留 FIXME），
   导致进度虚高（93.84/15.28）。移除后进度准确：**92.61% func / 13.30% size**。
   进度条现只统计完全匹配（fn_diff 100%）的函数。
+
+## 2026-08-11 — GameManager::OnUpdate（0x439bc7）stub -> 98.26%
+
+攻下了全项目最大的状态机之一（3644 字节）。完整实现了：
+- 关卡完成记录（无续关/有续关通关表、extra 通关计数）
+- 暂停键 + 特殊模式暂停检测
+- 符卡收集 BGM 切换
+- focus 慢速切换（含 RNG 保存/恢复）
+- 换机/demo/slowMode 三套降速逻辑
+- 防篡改完整性检查（csumFloat 越界置 -9999）
+- 分数插值动画
+
+新增 12 个语义化全局，魔法常量全部命名（PAUSE_KEY_MASK、
+ANTITAMPER_RANGE_MIN/MAX、DEMO_*_FRAME 等）。剩余 1.74% 是 MSVC
+跳转 trampoline / u8 位或的系统性 codegen 差异（已标 FIXME）。
