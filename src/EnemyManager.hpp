@@ -10,6 +10,8 @@ namespace th08
 struct Enemy
 {
     void FUN_0042bc90();
+    void FUN_00422c40();
+    void FUN_00423150();
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
     unknown_fields(0x0, 0x7f8);
@@ -26,9 +28,14 @@ struct Enemy
     unknown_fields(0x2d32, 0x2);
     Float3 pos;                        // 0x2d34
     Float3 unk2d40;                    // 0x2d40  per-frame movement vector
-    unknown_fields(0x2d4c, 0x3c);      // 0x2d4c-0x2d88
+    f32 unk2d4c;                       // 0x2d4c  (dx from laser interp)
+    f32 unk2d50;                       // 0x2d50  (dy)
+    unknown_fields(0x2d54, 0x34);      // 0x2d54-0x2d88
     Float3 unk2d88;                    // 0x2d88  pos + unk2d40 (computed each ECL frame)
-    unknown_fields(0x2d94, 0x590);     // 0x2d94-0x3324
+    f32 unk2d94;                       // 0x2d94  (angle from dx/dy)
+    unknown_fields(0x2d98, 0x64);      // 0x2d98-0x2dfc
+    i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
+    unknown_fields(0x2e00, 0x524);     // 0x2e00-0x3324
     u32 unk3324;                       // 0x3324  bit26 = don't save context on interrupt
     unknown_fields(0x3328, 0x8);       // 0x3328-0x3330
     u8 eclFlags;                       // 0x3330
