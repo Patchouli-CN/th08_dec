@@ -498,6 +498,11 @@ restart:
                 enemy->unk2dbc = ECL_FVAL(1);
                 enemy->unk2dc0 = 0;
                 goto skipInstr;
+            case 137: // opcode 138 = 复制 3 字节到 unk3310/3311/3312
+                enemy->unk3310 = instr->args[0].b[0];
+                enemy->unk3311 = instr->args[0].b[1];
+                enemy->unk3312 = instr->args[0].b[2];
+                goto skipInstr;
             case 177: // opcode 178 = 子脚本 (FUN_004224a0)
                 FUN_004224a0(enemy, instr);
                 goto skipInstr;
