@@ -141,11 +141,11 @@ void BulletManager::FUN_00430d30(Float3 *pos, f32 a1)
 {
 }
 
-void BulletManager::FUN_00430e10(Float3 *pos)
+void BulletManager::SetupLaserMove(Float3 *pos)
 {
 }
 
-EnemySubData *BulletManager::FUN_00430f20(EnemySubData *src)
+EnemySubData *BulletManager::AllocShotSlot(EnemySubData *src)
 {
     return NULL;
 }

@@ -237,15 +237,15 @@ th08::EclManager::Load,0x418330,function
 FUN_00418420,0x418420,function
 FUN_00418450,0x418450,function
 th08::EclManager::RunEcl,0x4184b0,function
-FUN_0041efc0,0x41efc0,function
+th08::GetLastSubEnemy,0x41efc0,function
 FUN_0041f000,0x41f000,function
 FUN_0041f040,0x41f040,function
 fmodf,0x41f090,function
 FUN_0041f0b0,0x41f0b0,function
 FUN_0041f0e0,0x41f0e0,function
-FUN_0041f110,0x41f110,function
-FUN_0041f280,0x41f280,function
-FUN_0041f400,0x41f400,function
+th08::InitBulletPattern,0x41f110,function
+th08::InitBulletPatternAbs,0x41f280,function
+th08::InitEnemySpawnData,0x41f400,function
 FUN_0041f420,0x41f420,function
 th08::Enemy::FUN_0041fd20,0x41fd20,function
 FUN_0041fd40,0x41fd40,function
@@ -327,7 +327,7 @@ th08::EffectManager::SpawnEffect,0x425430,function
 th08::EffectManager::SpawnEffectAngle,0x425650,function
 th08::EffectManager::FUN_00425870,0x425870,function
 FUN_004259e0,0x4259e0,function
-FUN_00425b70,0x425b70,function
+th08::AllocEffectSlot,0x425b70,function
 FUN_00425d70,0x425d70,function
 FUN_00425e60,0x425e60,function
 FUN_00425ea0,0x425ea0,function
@@ -392,7 +392,7 @@ th08::EnemyUnkStruct0x1c::FUN_0042a490,0x42a490,function
 th08::EnemyUnkStruct3::FUN_0042a4c0,0x42a4c0,function
 th08::EnemyManager::SpawnEnemy1,0x42a4e0,function
 th08::EnemyManager::SpawnEnemy2,0x42a680,function
-th08::Enemy::FUN_0042a820,0x42a820,function
+th08::Enemy::th08::ClearEffectSlots,0x42a820,function
 th08::EclTimeline::FUN_0042a8a0,0x42a8a0,function
 th08::Enemy::FUN_0042adb0,0x42adb0,function
 FUN_0042b2f0,0x42b2f0,function
@@ -421,7 +421,7 @@ th08::EnemyManager::OnDrawLowPrio,0x42eb90,function
 th08::EnemyManager::AddedCallback,0x42ebf0,function
 th08::EnemyManager::DeletedCallback,0x42ee80,function
 th08::EnemyManager::CutChain,0x42ef70,function
-th08::EnemyManager::FUN_0042efb0,0x42efb0,function
+th08::EnemyManager::th08::RemoveEnemiesByScore,0x42efb0,function
 FUN_0042f1f0,0x42f1f0,function
 th08::GameManager::IsSoloHuman,0x42f230,function
 th08::GameManager::IsSoloYoukai,0x42f270,function
@@ -445,8 +445,8 @@ th08::BulletManager::RemoveAllBullets,0x430830,function
 th08::BulletManager::FUN_00430aa0,0x430aa0,function
 FUN_00430ab0,0x430ab0,function
 FUN_00430d30,0x430d30,function
-FUN_00430e10,0x430e10,function
-FUN_00430f20,0x430f20,function
+th08::SetupLaserMove,0x430e10,function
+th08::AllocShotSlot,0x430f20,function
 th08::BulletManager::RegisterChain,0x4311a0,function
 th08::BulletManager::OnUpdate,0x431240,function
 th08::Bullet::FUN_00432170,0x432170,function

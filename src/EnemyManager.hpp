@@ -8,6 +8,33 @@
 namespace th08
 {
 
+// The 0x200-byte shot-pattern descriptor at Enemy+0x3070, filled by op114-115
+// and handed to BulletManager::AllocShotSlot to claim an EnemySubData slot.
+struct EnemyShotData
+{
+    i16 subId;                    // 0x0  (0x3070)
+    i16 anmIdx;                   // 0x2  (0x3072)
+    Float3 pos;                   // 0x4  (0x3074)
+    f32 unk10;                    // 0x10 (0x3080)
+    unknown_fields(0x14, 0x4);    // 0x14-0x18
+    f32 unk18;                    // 0x18 (0x3088)
+    unknown_fields(0x1c, 0x1b4);  // 0x1c-0x1d0
+    f32 unk1d0;                   // 0x1d0
+    f32 unk1d4;                   // 0x1d4
+    f32 unk1d8;                   // 0x1d8
+    f32 unk1dc;                   // 0x1dc
+    i32 unk1e0;                   // 0x1e0
+    i32 unk1e4;                   // 0x1e4
+    i32 unk1e8;                   // 0x1e8
+    i32 unk1ec;                   // 0x1ec
+    i32 unk1f0;                   // 0x1f0
+    unknown_fields(0x1f4, 0x4);   // 0x1f4-0x1f8
+    i16 unk1f8;                   // 0x1f8  (0 if subId==0x73 else 1)
+    unknown_fields(0x1fa, 0x2);   // 0x1fa-0x1fc
+    i32 unk1fc;                   // 0x1fc
+};
+C_ASSERT(sizeof(EnemyShotData) == 0x200);
+
 // A 0x18-byte laser-pattern entry in Enemy's 0x2e44 area (op111).
 struct EnemyLaserData
 {
@@ -34,10 +61,10 @@ struct EnemySubData
     f32 unk564;              // 0x564
     f32 unk568;              // 0x568
     unknown_fields(0x56c, 0x18);
-    u32 unk584;              // 0x584  valid/active flag (0 => slot empty)
-    ZunTimer unk588;         // 0x588 (0xc)
+    u32 isActive;            // 0x584  0 => slot empty (checked by op120/121 & AllocShotSlot)
+    ZunTimer timer;          // 0x588 (0xc)
     unknown_fields(0x594, 0x4);
-    u8 unk598;               // 0x598  run state (0/1 => can run, 2 => running)
+    u8 runState;             // 0x598  0/1 => can run, 2 => running (op121)
     u8 unk599;               // 0x599
     unknown_fields(0x59a, 0x6);
 };
@@ -50,7 +77,7 @@ struct Enemy
     void FUN_00423150();
     void FUN_00421de0(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5); // ECL sub-call (0x421de0)
     void FUN_0042c180(); // move init after SET_POS (0x42c180)
-    void FUN_0042a820(); // 0x42a820 (op127 boss-marker setup)
+    void ClearEffectSlots(); // 0x42a820 (op127 boss-marker setup)
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
     unknown_fields(0x0, 0x4);
@@ -121,7 +148,8 @@ struct Enemy
     u8 unk3034[0x2c];                  // 0x3034 (0x2c bytes)
     i32 unk3060;                       // 0x3060  (movement/scaling base)
     ZunTimer unk3064;                  // 0x3064 (0xc bytes)
-    unknown_fields(0x3070, 0x210);     // 0x3070-0x3280
+    EnemyShotData shotData;            // 0x3070 (0x200 bytes, op114-115 fill it)
+    unknown_fields(0x3270, 0x10);      // 0x3270-0x3280
     EnemySubData *unk3280[0x20];       // 0x3280 (0x20 shot-pattern slots)
     i32 unk3300;                       // 0x3300
     i32 unk3304;                       // 0x3304
@@ -179,7 +207,7 @@ struct EnemyManager
     static void CutChain();
     Enemy *SpawnEnemy2(i32 eclSubId, Float3 *pos, i32 life, i32 itemDrop, i32 score,
                        EclContextArgs *args); // 0x42a680 (th07 SpawnEnemyEx equivalent)
-    void FUN_0042efb0(i32 a0, i32 a1);       // 0x42efb0 (遍历删敌人)
+    void RemoveEnemiesByScore(i32 a0, i32 a1);       // 0x42efb0 (遍历删敌人)
 
     unknown_fields(0x0, 0x53d0);
     Enemy enemies[0x1e0];

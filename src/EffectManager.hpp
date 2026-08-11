@@ -55,7 +55,7 @@ struct EffectManager
     void FUN_004281e0();
     AnmVm *FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c);
     AnmVm *FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d);
-    void *FUN_00425b70(i32 type, Float3 *pos, i32 b, i32 c); // 0x425b70 (claim an effect slot)
+    void *AllocEffectSlot(i32 type, Float3 *pos, i32 b, i32 c); // 0x425b70 (claim an effect slot)
 
     i32 unk0;                            // 0x0
     unknown_fields(0x4, 0x18);

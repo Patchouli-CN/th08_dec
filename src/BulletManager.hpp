@@ -26,8 +26,8 @@ struct BulletManager
     void RemoveAllBullets(i32);
     void bulletmanager_fun_00415c60();
     void FUN_00430d30(Float3 *pos, f32 a1); // 0x430d30 (ECL effect)
-    void FUN_00430e10(Float3 *pos);          // 0x430e10 (ECL laser/move setup)
-    EnemySubData *FUN_00430f20(EnemySubData *src); // 0x430f20 (claim a data slot)
+    void SetupLaserMove(Float3 *pos);          // 0x430e10 (ECL laser/move setup)
+    EnemySubData *AllocShotSlot(EnemySubData *src); // 0x430f20 (claim a data slot)
 
     unknown_fields(0x0, 0x1a880);
     u8 unk_1a880[0x4a5b8];       // 0x1a880

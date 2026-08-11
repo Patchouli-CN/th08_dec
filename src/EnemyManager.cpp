@@ -310,7 +310,7 @@ Enemy *EnemyManager::SpawnEnemy2(i32 eclSubId, Float3 *pos, i32 life, i32 itemDr
     return NULL;
 }
 
-void EnemyManager::FUN_0042efb0(i32 a0, i32 a1)
+void EnemyManager::RemoveEnemiesByScore(i32 a0, i32 a1)
 {
 }
 
@@ -497,7 +497,7 @@ AnmVm *EffectManager::FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d)
     return (AnmVm *)p;
 }
 
-void *EffectManager::FUN_00425b70(i32 type, Float3 *pos, i32 b, i32 c)
+void *EffectManager::AllocEffectSlot(i32 type, Float3 *pos, i32 b, i32 c)
 {
     return NULL;
 }

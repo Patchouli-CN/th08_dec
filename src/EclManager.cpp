@@ -38,10 +38,10 @@ void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr);           // 0x4
 void __fastcall FUN_00422720(Enemy *enemy, EclRawInstr *instr);           // 0x422720 (laser op96-104)
 
 // op90-93 底层 helper（内部逻辑无需逆向，call 目标归一化为 T，只需签名/返回类型正确）
-Enemy *__fastcall FUN_0041efc0(Enemy *enemy);                            // 0x41efc0 获取关联 Enemy (ecx)
-Enemy *__fastcall FUN_0041f110(Enemy *enemy, EclRawInstr *instr);        // 0x41f110 初始化弹幕 Enemy (ecx,edx)
-Enemy *__fastcall FUN_0041f280(Enemy *enemy, EclRawInstr *instr);        // 0x41f280 初始化弹幕 Enemy (变体)
-Enemy *__fastcall FUN_0041f400(Enemy *enemy);                            // 0x41f400 初始化 Enemy Float3 (ecx)
+Enemy *__fastcall GetLastSubEnemy(Enemy *enemy);                            // 0x41efc0 获取关联 Enemy (ecx)
+Enemy *__fastcall InitBulletPattern(Enemy *enemy, EclRawInstr *instr);        // 0x41f110 初始化弹幕 Enemy (ecx,edx)
+Enemy *__fastcall InitBulletPatternAbs(Enemy *enemy, EclRawInstr *instr);        // 0x41f280 初始化弹幕 Enemy (变体)
+Enemy *__fastcall InitEnemySpawnData(Enemy *enemy);                            // 0x41f400 初始化 Enemy Float3 (ecx)
 
 f32 __cdecl EclAtan2(f32 a, f32 b); // th08 0x41f090 (wraps CRT atan2)
 
@@ -70,7 +70,7 @@ void Enemy::FUN_0042c180()
 {
 }
 
-void Enemy::FUN_0042a820()
+void Enemy::ClearEffectSlots()
 {
 }
 
@@ -147,32 +147,32 @@ void __fastcall FUN_00422720(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-Enemy *__fastcall FUN_0041efc0(Enemy *enemy)
+Enemy *__fastcall GetLastSubEnemy(Enemy *enemy)
 {
     return NULL;
 }
 
-Enemy *__fastcall FUN_0041f110(Enemy *enemy, EclRawInstr *instr)
+Enemy *__fastcall InitBulletPattern(Enemy *enemy, EclRawInstr *instr)
 {
     return NULL;
 }
 
-Enemy *__fastcall FUN_0041f280(Enemy *enemy, EclRawInstr *instr)
+Enemy *__fastcall InitBulletPatternAbs(Enemy *enemy, EclRawInstr *instr)
 {
     return NULL;
 }
 
-Enemy *__fastcall FUN_0041f400(Enemy *enemy)
+Enemy *__fastcall InitEnemySpawnData(Enemy *enemy)
 {
     return NULL;
 }
 
-f32 EclGlobalObj::FUN_0041f0b0(i32 a0)
+f32 EclGlobalObj::SetGlobalFlag(i32 a0)
 {
     return 0.0f;
 }
 
-void EclGlobalObj::FUN_0041f040(f32 a0, f32 a1, f32 a2)
+void EclGlobalObj::SetTargetPos(f32 a0, f32 a1, f32 a2)
 {
 }
 
@@ -604,10 +604,10 @@ restart:
                         ((Enemy *)g_BulletObjects[ECL_IVAL(0)])->runInterrupt = (i16)ECL_IVAL(1);
                 }
                 goto skipInstr;
-            case 89: // opcode 90 = 生成弹幕子敌人 (FUN_0041efc0/41f110 + 425b70)
+            case 89: // opcode 90 = 生成弹幕子敌人 (GetLastSubEnemy/41f110 + 425b70)
                 {
-                    Enemy *head = FUN_0041efc0(enemy);
-                    Enemy *node = FUN_0041f110(enemy, instr);
+                    Enemy *head = GetLastSubEnemy(enemy);
+                    Enemy *node = InitBulletPattern(enemy, instr);
                     if (g_BulletSpawnFlag == 0)
                     {
                         node->unk3324 |= 0x100;
@@ -616,7 +616,7 @@ restart:
                         node->unk3324 &= ~0x4;
                         if (node->unk53c8 == 0)
                         {
-                            node->unk53c8 = (u32)g_EffectManager.FUN_00425b70(0x20, &node->pos, 1, -1);
+                            node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->pos, 1, -1);
                             if (node->unk53c8 != 0)
                             {
                                 AnmVm *obj = (AnmVm *)node->unk53c8;
@@ -637,8 +637,8 @@ restart:
                 goto skipInstr;
             case 90: // opcode 91 = 生成弹幕子敌人 (41f280 变体)
                 {
-                    Enemy *head = FUN_0041efc0(enemy);
-                    Enemy *node = FUN_0041f280(enemy, instr);
+                    Enemy *head = GetLastSubEnemy(enemy);
+                    Enemy *node = InitBulletPatternAbs(enemy, instr);
                     if (g_BulletSpawnFlag == 0)
                     {
                         node->unk3324 |= 0x100;
@@ -647,7 +647,7 @@ restart:
                         node->unk3324 &= ~0x4;
                         if (node->unk53c8 == 0)
                         {
-                            node->unk53c8 = (u32)g_EffectManager.FUN_00425b70(0x20, &node->pos, 1, -1);
+                            node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->pos, 1, -1);
                             if (node->unk53c8 != 0)
                             {
                                 AnmVm *obj = (AnmVm *)node->unk53c8;
@@ -668,8 +668,8 @@ restart:
                 goto skipInstr;
             case 91: // opcode 92 = 生成弹幕子敌人 (pos 复制 + 移动向量)
                 {
-                    Enemy *head = FUN_0041efc0(enemy);
-                    Enemy *node = FUN_0041f110(enemy, instr);
+                    Enemy *head = GetLastSubEnemy(enemy);
+                    Enemy *node = InitBulletPattern(enemy, instr);
                     if (g_BulletSpawnFlag == 0)
                     {
                         node->unk3324 |= 0x100;
@@ -680,7 +680,7 @@ restart:
                         node->unk3324 &= ~0x4;
                         if (node->unk53c8 == 0)
                         {
-                            node->unk53c8 = (u32)g_EffectManager.FUN_00425b70(0x20, &node->unk2d88, 1, -1);
+                            node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->unk2d88, 1, -1);
                             if (node->unk53c8 != 0)
                             {
                                 AnmVm *obj = (AnmVm *)node->unk53c8;
@@ -723,8 +723,8 @@ restart:
                                                &enemy->curContextPtr->eclContextArgs);
                 }
                 goto skipInstr;
-            case 94: // opcode 95 = 遍历删敌人 (g_EnemyManager.FUN_0042efb0)
-                g_EnemyManager.FUN_0042efb0(0x1f40, 0);
+            case 94: // opcode 95 = 遍历删敌人 (g_EnemyManager.RemoveEnemiesByScore)
+                g_EnemyManager.RemoveEnemiesByScore(0x1f40, 0);
                 goto skipInstr;
             case 95: case 96: case 97: case 98: case 99: case 100:
             case 101: case 102: case 103:
@@ -768,11 +768,11 @@ restart:
                 enemy->unk2dbc = ECL_FVAL(1);
                 enemy->unk2dc0 = 0;
                 goto skipInstr;
-            case 108: // opcode 109 = 计算 pos+unk2db8 向量并写 0x2e28; g_BulletManager.FUN_00430e10(&0x2e24)
+            case 108: // opcode 109 = 计算 pos+unk2db8 向量并写 0x2e28; g_BulletManager.SetupLaserMove(&0x2e24)
                 // 注: 原版中 0x2e24 的 Float3 与 0x2e28 的 Float3 字节重叠 (430e10 参数与结果共享)
                 *(Float3 *)((u8 *)enemy + 0x2e28) =
                     enemy->pos + Float3(enemy->unk2db8, enemy->unk2dbc, enemy->unk2dc0);
-                g_BulletManager.FUN_00430e10((Float3 *)((u8 *)enemy + 0x2e24));
+                g_BulletManager.SetupLaserMove((Float3 *)((u8 *)enemy + 0x2e24));
                 goto skipInstr;
             case 110: // opcode 111 = 写激光数据槽 (0x2e44 + v0*0x18)
                 {
@@ -835,7 +835,7 @@ restart:
             case 119: // opcode 120 = 设置 curContext globalVar intVars[0] (依 unk3280 子弹对象)
                 {
                     i32 v0 = ECL_IVAL(0);
-                    if (enemy->unk3280[v0] != 0 && enemy->unk3280[v0]->unk584 != 0)
+                    if (enemy->unk3280[v0] != 0 && enemy->unk3280[v0]->isActive != 0)
                         enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 1;
                     else
                         enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 0;
@@ -848,10 +848,10 @@ restart:
                 {
                     i32 v0 = ECL_IVAL(0);
                     EnemySubData *slot = enemy->unk3280[v0];
-                    if (slot != 0 && slot->unk584 != 0 && slot->unk598 < 2)
+                    if (slot != 0 && slot->isActive != 0 && slot->runState < 2)
                     {
-                        slot->unk598 = 2;
-                        slot->unk588.SetCurrent(0);
+                        slot->runState = 2;
+                        slot->timer.SetCurrent(0);
                         slot->unk564 = slot->unk568;
                     }
                 }

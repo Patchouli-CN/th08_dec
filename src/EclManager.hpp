@@ -89,8 +89,8 @@ DIFFABLE_EXTERN_ARRAY(EclExInstr, 32, g_EclExInsn); // 0x4c6cb0 ECL ex-instr tab
 // The global ECL state object at 0x4ea670 (op164 touches its helpers).
 struct EclGlobalObj
 {
-    f32 FUN_0041f0b0(i32 a0);              // 0x41f0b0
-    void FUN_0041f040(f32 a0, f32 a1, f32 a2); // 0x41f040
+    f32 SetGlobalFlag(i32 a0);              // 0x41f0b0
+    void SetTargetPos(f32 a0, f32 a1, f32 a2); // 0x41f040
 };
 DIFFABLE_EXTERN(EclGlobalObj, g_EclGlobalObj); // 0x4ea670
 
