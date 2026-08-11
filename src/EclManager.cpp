@@ -568,6 +568,9 @@ restart:
             case 148: // opcode 149 = 写 enemy+0x20a (i16)
                 *(i16 *)((u8 *)enemy + 0x20a) = (i16)ECL_IVAL(0);
                 goto skipInstr;
+            case 142: // opcode 143 = 设置 unk3304
+                enemy->unk3304 = ECL_IVAL(0);
+                goto skipInstr;
             case 146: // opcode 147 = 写全局 0x4ea290
                 *(volatile u32 *)0x4ea290 = ECL_IVAL(0);
                 goto skipInstr;

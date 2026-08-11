@@ -70,7 +70,7 @@ struct Enemy
     unknown_fields(0x3060, 0x220);     // 0x3060-0x3280
     i32 unk3280[0x20];                 // 0x3280 (0x20 entries, data table)
     i32 unk3300;                       // 0x3300
-    unknown_fields(0x3304, 0x4);       // 0x3304-0x3308
+    i32 unk3304;                       // 0x3304
     i32 unk3308;                       // 0x3308
     i32 unk330c;                       // 0x330c
     u8 unk3310;                        // 0x3310
