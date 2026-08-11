@@ -138,7 +138,9 @@ struct Enemy
     i32 unk2e0c;                       // 0x2e0c
     unknown_fields(0x2e10, 0x4);       // 0x2e10-0x2e14
     ZunTimer unk2e14;                  // 0x2e14 (0xc bytes)
-    unknown_fields(0x2e20, 0x200);     // 0x2e20-0x3020
+    unknown_fields(0x2e20, 0x24);      // 0x2e20-0x2e44 (含 SetupLaserMove 的 0x2e24 激光位置)
+    EnemyLaserData laserPatterns[0x13]; // 0x2e44 (op111 按 0x18 步进索引)
+    unknown_fields(0x300c, 0x14);      // 0x300c-0x3020
     i32 lifeCallbackState;                       // 0x3020  (boss spellcard-related)
     i32 lifeCallbackThreshold;                       // 0x3024  (set by SET_LIFE_CALLBACK_THRESHOLD)
     i32 lifeCallbackSub;                       // 0x3028  (set by SET_LIFE_CALLBACK_SUB)

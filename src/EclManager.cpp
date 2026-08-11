@@ -824,7 +824,7 @@ restart:
                 goto skipInstr;
             case 110: // opcode 111 = 写激光数据槽 (0x2e44 + v0*0x18)
                 {
-                    EnemyLaserData *ld = (EnemyLaserData *)((u8 *)enemy + 0x2e44 + ECL_IVAL(0) * 0x18);
+                    EnemyLaserData *ld = &enemy->laserPatterns[ECL_IVAL(0)];
                     ld->c = ECL_IVAL(1);
                     ld->d = ECL_IVAL(2);
                     ld->a = ECL_IVAL(3);
