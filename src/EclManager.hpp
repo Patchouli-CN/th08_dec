@@ -109,6 +109,7 @@ DIFFABLE_EXTERN_ARRAY(EclExInstr, 32, g_EclExInsn); // 0x4c6cb0 ECL ex-instr tab
 struct EclGlobalObj
 {
     void SetGlobalFlag(i32 a0);              // 0x41f0b0
+    void SetGlobalFlag2(i32 a0);             // 0x41f0e0
     void SetTargetPos(f32 a0, f32 a1, f32 a2); // 0x41f040
 };
 DIFFABLE_EXTERN(EclGlobalObj, g_EclGlobalObj); // 0x4ea670
