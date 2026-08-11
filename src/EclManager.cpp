@@ -418,6 +418,12 @@ restart:
                 enemy->unk2da0 = ECL_FVAL(1);
                 enemy->unk2db4 = ECL_FVAL(2);
                 goto skipInstr;
+            case 74: // opcode 75 = SET_MOVE_SPEED4: unk3340/44/48/4c = f0..f3
+                enemy->unk3340 = ECL_FVAL(0);
+                enemy->unk3344 = ECL_FVAL(1);
+                enemy->unk3348 = ECL_FVAL(2);
+                enemy->unk334c = ECL_FVAL(3);
+                goto skipInstr;
             case 75: // opcode 76 = 清除移动标志 (unk3324 bit19)
                 enemy->unk3324 &= ~0x80000;
                 goto skipInstr;

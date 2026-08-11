@@ -70,7 +70,11 @@ struct Enemy
     u8 eclFlags;                       // 0x3330
     unknown_fields(0x3331, 0xb);       // 0x3331-0x333c
     i16 unk333c;                       // 0x333c  current animation id
-    unknown_fields(0x333e, 0x12);      // 0x333e-0x3350
+    unknown_fields(0x333e, 0x2);       // 0x333e-0x3340
+    f32 unk3340;                       // 0x3340
+    f32 unk3344;                       // 0x3344
+    f32 unk3348;                       // 0x3348
+    f32 unk334c;                       // 0x334c
     f32 unk3350;                       // 0x3350
     unknown_fields(0x3354, 0x30);      // 0x3354-0x3384
     void *dataPtrs[4];                 // 0x3384
