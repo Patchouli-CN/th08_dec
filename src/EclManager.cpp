@@ -25,6 +25,7 @@ void __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr);           // 0x4
 void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr);           // 0x421e50
 void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr);           // 0x422020
 void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr);           // 0x4224a0
+void __fastcall FUN_00422720(Enemy *enemy, EclRawInstr *instr);           // 0x422720 (laser op96-104)
 
 f32 __cdecl EclAtan2(f32 a, f32 b); // th08 0x41f090 (wraps CRT atan2)
 
@@ -110,6 +111,10 @@ void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr)
 }
 
 void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+void __fastcall FUN_00422720(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
@@ -455,6 +460,21 @@ restart:
                 goto skipInstr;
             case 83: // opcode 84 = NOP
             case 84: // opcode 85 = NOP
+                goto skipInstr;
+            case 95: case 96: case 97: case 98: case 99: case 100:
+            case 101: case 102: case 103:
+                // opcode 96-104: 激光处理
+                if (enemy->unk2dfc > 0)
+                {
+                    if (((enemy->unk3324 >> 0x11) & 1) == 1)
+                    {
+                        memcpy(enemy->unk3034, instr, 0x2c);
+                    }
+                    else
+                    {
+                        FUN_00422720(enemy, instr);
+                    }
+                }
                 goto skipInstr;
             case 106: // opcode 107 = 设置 unk3324 bit17
                 enemy->unk3324 |= 0x20000;

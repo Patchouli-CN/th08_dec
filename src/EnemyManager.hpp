@@ -63,7 +63,14 @@ struct Enemy
     i32 unk2de8;                       // 0x2de8
     unknown_fields(0x2dec, 0x10);      // 0x2dec-0x2dfc
     i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
-    unknown_fields(0x2e00, 0x524);     // 0x2e00-0x3324
+    unknown_fields(0x2e00, 0x234);     // 0x2e00-0x3034
+    u8 unk3034[0x2c];                  // 0x3034 (0x2c bytes)
+    unknown_fields(0x3060, 0x2b0);     // 0x3060-0x3310
+    u8 unk3310;                        // 0x3310
+    u8 unk3311;                        // 0x3311
+    u8 unk3312;                        // 0x3312
+    u8 unk3313;                        // 0x3313
+    unknown_fields(0x3314, 0x10);      // 0x3314-0x3324
     u32 unk3324;                       // 0x3324  bit26 = don't save context on interrupt
     u32 unk3328;                       // 0x3328  (anm script flags, bit2 cleared by SET_ANM)
     unknown_fields(0x332c, 0x4);       // 0x332c-0x3330
