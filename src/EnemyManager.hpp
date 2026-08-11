@@ -85,7 +85,9 @@ struct Enemy
     f32 unk3350;                       // 0x3350
     unknown_fields(0x3354, 0x30);      // 0x3354-0x3384
     void *dataPtrs[4];                 // 0x3384
-    unknown_fields(0x3394, 0x203c);    // 0x3394-0x53d0
+    unknown_fields(0x3394, 0x2034);    // 0x3394-0x53c8
+    u32 unk53c8;                       // 0x53c8  (pointer to linked enemy/struct)
+    unknown_fields(0x53cc, 0x4);       // 0x53cc-0x53d0
 };
 C_ASSERT(sizeof(Enemy) == 0x53d0);
 
