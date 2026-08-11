@@ -124,6 +124,7 @@ struct ReplayManager
     u8 *unk54[MAX_STAGES];
     unknown_fields(0x78, 0x50);
     ChainElem *unkC8;                    // 0xc8
+    unknown_fields(0xcc, 0x4);
     ChainElem *unkD0;                    // 0xd0
     ChainElem *unkD4;                    // 0xd4
     unknown_fields(0xd8, 0x2);

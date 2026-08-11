@@ -1,7 +1,6 @@
 build
 diff
 *.obj
-*.exe
 log.txt
 scripts/dls
 scripts/prefix
