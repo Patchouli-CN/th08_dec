@@ -73,7 +73,7 @@ ZunResult EclManager::Load(const char *path)
     return ZUN_ERROR;
 }
 
-// FUNCTION: th08 0x4184b0 (逆向中：opcode 1-16 已确认，其余 default)
+// FUNCTION: th08 0x4184b0 (逆向中)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -98,7 +98,7 @@ restart:
     {
         enemy->unk2d88 = enemy->pos + enemy->unk2d40;
 
-        if (enemy->curContextPtr->waitTimer.AsFrames() > 0)
+        if ((i32)enemy->curContextPtr->waitTimer > 0)
         {
             enemy->curContextPtr->waitTimer--;
             enemy->curContextPtr->time--;
