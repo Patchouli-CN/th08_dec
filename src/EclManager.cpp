@@ -20,6 +20,16 @@ DIFFABLE_STATIC_ARRAY(EclExInstr, 32, g_EclExInsn); // 0x4c6cb0
 DIFFABLE_STATIC(EclGlobalObj, g_EclGlobalObj);      // 0x4ea670
 DIFFABLE_STATIC(EclInterruptTable, g_EclInterruptTable); // 0x4eccb8
 
+// ECL 魔法常量命名
+enum
+{
+    ECL_SOUND_ENEMY_SPAWN = 0x24,      // op90-92 敌人生成音效
+    ECL_SOUND_CLOCK_CHIME = 0x2d,      // op181 时钟整点报时
+    ECL_EFFECT_SPAWN_COLOR = 0xff6060d0, // op128 全屏特效颜色
+    ECL_SHOT_SLOT_ID_LASER = 0x73,     // op114-115 弹幕 ID == 0x73 判定激光模式
+    ECL_SCORE_SAVE_MAGIC = 0x5f5e0f6,  // op155 计分屏保存时间戳
+};
+
 // ECL variable access helpers (th08 standalone functions; th07 had these as
 // EclManager static methods). Stubs for now; RunEcl's call targets normalize to
 // T in fn_diff so only the calling convention needs to be right here.
@@ -30,14 +40,14 @@ void __fastcall FUN_00421280(Enemy *enemy, EclRawInstr *instr);           // 0x4
 void __fastcall FUN_004212e0(Enemy *enemy, EclRawInstr *instr);           // 0x4212e0
 void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr);           // 0x421300
 void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr);           // 0x4213f0
-EclRawInstr *__fastcall FUN_004215f0(Enemy *enemy, EclRawInstr *instr);   // 0x4215f0 子脚本 (op40-51)
-void __fastcall FUN_00420f40(Enemy *enemy, EclRawInstr *instr);           // 0x420f40
-void __fastcall FUN_00421bd0(Enemy *enemy, EclRawInstr *instr, i32 arg0); // 0x421bd0
-i32 __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr);            // 0x421cb0
+EclRawInstr *__fastcall RunSubScript(Enemy *enemy, EclRawInstr *instr);   // 0x4215f0 子脚本 (op40-51)
+void __fastcall MoveInterp(Enemy *enemy, EclRawInstr *instr);           // 0x420f40
+void __fastcall StartSubContext(Enemy *enemy, EclRawInstr *instr, i32 arg0); // 0x421bd0
+i32 __fastcall RunSubContext(Enemy *enemy, EclRawInstr *instr);            // 0x421cb0
 void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr);           // 0x421e50
 void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr);           // 0x422020
 void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr);           // 0x4224a0
-void __fastcall FUN_00422720(Enemy *enemy, EclRawInstr *instr);           // 0x422720 (laser op96-104)
+void __fastcall RunLaserScript(Enemy *enemy, EclRawInstr *instr);           // 0x422720 (laser op96-104)
 
 // op90-93 底层 helper（内部逻辑无需逆向，call 目标归一化为 T，只需签名/返回类型正确）
 Enemy *__fastcall GetLastSubEnemy(Enemy *enemy);                            // 0x41efc0 获取关联 Enemy (ecx)
@@ -64,11 +74,11 @@ f32 __fastcall EclAngleFromDxDy(f32 dx, f32 dy)
     return 0.0f;
 }
 
-void Enemy::FUN_00421de0(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5)
+void Enemy::EclSubCall(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5)
 {
 }
 
-void Enemy::FUN_0042c180()
+void Enemy::InitMoveAfterSetPos()
 {
 }
 
@@ -115,20 +125,20 @@ void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-EclRawInstr *__fastcall FUN_004215f0(Enemy *enemy, EclRawInstr *instr)
+EclRawInstr *__fastcall RunSubScript(Enemy *enemy, EclRawInstr *instr)
 {
     return NULL;
 }
 
-void __fastcall FUN_00420f40(Enemy *enemy, EclRawInstr *instr)
+void __fastcall MoveInterp(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-void __fastcall FUN_00421bd0(Enemy *enemy, EclRawInstr *instr, i32 arg0)
+void __fastcall StartSubContext(Enemy *enemy, EclRawInstr *instr, i32 arg0)
 {
 }
 
-i32 __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr)
+i32 __fastcall RunSubContext(Enemy *enemy, EclRawInstr *instr)
 {
     return 0;
 }
@@ -145,7 +155,7 @@ void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-void __fastcall FUN_00422720(Enemy *enemy, EclRawInstr *instr)
+void __fastcall RunLaserScript(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
@@ -222,7 +232,7 @@ restart:
     }
     for (;;)
     {
-        enemy->unk2d88 = enemy->pos + enemy->unk2d40;
+        enemy->movePos = enemy->pos + enemy->moveVec;
 
         if ((i32)enemy->curContextPtr->waitTimer > 0)
         {
@@ -383,9 +393,9 @@ restart:
                 goto skipInstr;
             case 39: case 40: case 41: case 42: case 43: case 44:
             case 45: case 46: case 47: case 48: case 49: case 50:
-                // opcode 40-51: 子脚本处理 (FUN_004215f0 内部再分派)
+                // opcode 40-51: 子脚本处理 (RunSubScript 内部再分派)
                 {
-                    EclRawInstr *subInstr = FUN_004215f0(enemy, instr);
+                    EclRawInstr *subInstr = RunSubScript(enemy, instr);
                     if (subInstr != NULL)
                     {
                         instr = subInstr;
@@ -393,11 +403,11 @@ restart:
                     }
                 }
                 goto skipInstr;
-            case 51: // opcode 52 = 子脚本上下文切换 (FUN_00421bd0)
-                FUN_00421bd0(enemy, instr, instr->args[0].i);
+            case 51: // opcode 52 = 子脚本上下文切换 (StartSubContext)
+                StartSubContext(enemy, instr, instr->args[0].i);
                 goto restart;
-            case 52: // opcode 53 = 子脚本 (FUN_00421cb0)
-                if (FUN_00421cb0(enemy, instr))
+            case 52: // opcode 53 = 子脚本 (RunSubContext)
+                if (RunSubContext(enemy, instr))
                 {
                     enemy->curContextPtr->curInstr = instr;
                     goto exit;
@@ -405,66 +415,66 @@ restart:
                 goto restart;
             case 53: // ECL_SET_ANM: play animation arg0
                 g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
-                enemy->unk3328 &= ~0x4;
+                enemy->anmFlags &= ~0x4;
                 goto skipInstr;
             case 54: // opcode 55 = ECL_SUB_CALL
-                enemy->FUN_00421de0(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
-                enemy->unk3328 &= ~0x4;
+                enemy->EclSubCall(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                enemy->anmFlags &= ~0x4;
                 goto skipInstr;
             case 55: // opcode 56 = ECL_SUB_CALL
-                enemy->FUN_00421de0(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
-                enemy->unk3328 &= ~0x4;
+                enemy->EclSubCall(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                enemy->anmFlags &= ~0x4;
                 goto skipInstr;
             case 56: // opcode 57 = 子脚本 (FUN_00421e50)
                 FUN_00421e50(enemy, instr);
-                enemy->unk3328 &= ~0x4;
+                enemy->anmFlags &= ~0x4;
                 goto skipInstr;
             case 57: // ECL_SET_ANM_SUB: play on the secondary animation set
                 g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
-                enemy->unk3328 |= 0x4;
+                enemy->anmFlags |= 0x4;
                 goto skipInstr;
             case 58: // opcode 59 = ECL_SUB_CALL
-                enemy->FUN_00421de0(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
-                enemy->unk3328 &= ~0x4;
+                enemy->EclSubCall(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                enemy->anmFlags &= ~0x4;
                 goto skipInstr;
             case 59: // opcode 60 = ECL_SUB_CALL
-                enemy->FUN_00421de0(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
-                enemy->unk3328 &= ~0x4;
+                enemy->EclSubCall(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                enemy->anmFlags &= ~0x4;
                 goto skipInstr;
             case 60: // opcode 61 = 子脚本 (FUN_00421e50)
-                enemy->unk3328 |= 0x4;
+                enemy->anmFlags |= 0x4;
                 FUN_00421e50(enemy, instr);
                 goto skipInstr;
-            case 61: // ECL_SET_ANM_SWITCH: play anim on the set chosen by unk3328 bit2
-                if (((enemy->unk3328 >> 2) & 1) == 0)
+            case 61: // ECL_SET_ANM_SWITCH: play anim on the set chosen by anmFlags bit2
+                if (((enemy->anmFlags >> 2) & 1) == 0)
                 {
-                    g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, enemy->unk333c);
+                    g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, enemy->currentAnmIdx);
                 }
                 else
                 {
-                    g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, enemy->unk333c);
+                    g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, enemy->currentAnmIdx);
                 }
                 goto skipInstr;
             case 62: // opcode 63 = ECL_SET_POS: set position + move init
                 enemy->pos.x = ECL_FVAL(0);
                 enemy->pos.y = ECL_FVAL(1);
                 enemy->pos.z = 0;
-                enemy->FUN_0042c180();
+                enemy->InitMoveAfterSetPos();
                 goto skipInstr;
-            case 63: // opcode 64 = 移动插值 (FUN_00420f40)
-                FUN_00420f40(enemy, instr);
+            case 63: // opcode 64 = 移动插值 (MoveInterp)
+                MoveInterp(enemy, instr);
                 goto skipInstr;
             case 64: // opcode 65 = SET_MOVE_ANGLE (与 op66 相同)
-                enemy->unk2d94 = AddNormalizeAngle(ECL_FVAL(0), 0);
+                enemy->moveAngle = AddNormalizeAngle(ECL_FVAL(0), 0);
                 enemy->unk2da8 = ECL_FVAL(1);
-                enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
+                enemy->flags = (enemy->flags & ~0x3000) | 0x1000;
                 enemy->unk2de8 = 0;
                 enemy->unk2ddc.SetCurrent(0);
                 goto skipInstr;
             case 65: // ECL_SET_MOVE_ANGLE: set angle + speed
-                enemy->unk2d94 = AddNormalizeAngle(ECL_FVAL(0), 0);
+                enemy->moveAngle = AddNormalizeAngle(ECL_FVAL(0), 0);
                 enemy->unk2da8 = ECL_FVAL(1);
-                enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
+                enemy->flags = (enemy->flags & ~0x3000) | 0x1000;
                 enemy->unk2de8 = 0;
                 enemy->unk2ddc.SetCurrent(0);
                 goto skipInstr;
@@ -472,12 +482,12 @@ restart:
                 FUN_00422020(enemy, instr);
                 goto skipInstr;
             case 69: // opcode 70 = SET_MOVE_SPEED: moveSpeed + flag bit12
-                enemy->unk2d98 = ECL_FVAL(0);
-                enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
+                enemy->moveSpeed = ECL_FVAL(0);
+                enemy->flags = (enemy->flags & ~0x3000) | 0x1000;
                 goto skipInstr;
             case 70: // opcode 71 = 移动角度 (unk2dac) + flag bit12
                 enemy->unk2dac = ECL_FVAL(0);
-                enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
+                enemy->flags = (enemy->flags & ~0x3000) | 0x1000;
                 goto skipInstr;
             case 71: // opcode 72 = SET_MOVE_INTERP: 移动插值参数
                 enemy->unk2de8 = ECL_IVAL(0);
@@ -509,8 +519,8 @@ restart:
                 enemy->unk3348 = ECL_FVAL(2);
                 enemy->unk334c = ECL_FVAL(3);
                 goto skipInstr;
-            case 75: // opcode 76 = 清除移动标志 (unk3324 bit19)
-                enemy->unk3324 &= ~0x80000;
+            case 75: // opcode 76 = 清除移动标志 (flags bit19)
+                enemy->flags &= ~0x80000;
                 goto skipInstr;
             case 76: // opcode 77 = 写两个 float 字段
                 enemy->unk2d70 = ECL_FVAL(0);
@@ -520,53 +530,53 @@ restart:
                 enemy->unk2d7c = ECL_FVAL(0);
                 enemy->unk2d80 = ECL_FVAL(1);
                 goto skipInstr;
-            case 78: // opcode 79 = 设置特效标志 (flags bit → unk3324/3328 各 bit)
+            case 78: // opcode 79 = 设置特效标志 (flags bit → flags/3328 各 bit)
                 {
                     i32 flags = ECL_IVAL(0);
-                    enemy->unk3324 = (enemy->unk3324 & ~0x40) | (((flags >> 0) & 1) << 6);
-                    enemy->unk3324 = (enemy->unk3324 & ~0x4) | (((flags >> 1) & 1) << 2);
-                    enemy->unk3324 = (enemy->unk3324 & ~0x8) | (((flags >> 2) & 1) << 3);
-                    enemy->unk3324 = (enemy->unk3324 & ~0x10) | (((flags >> 3) & 1) << 4);
-                    enemy->unk3324 = (enemy->unk3324 & ~0x10000000) | (((flags >> 4) & 1) << 0x1c);
-                    enemy->unk3328 = (enemy->unk3328 & ~0x40) | (((flags >> 5) & 1) << 6);
+                    enemy->flags = (enemy->flags & ~0x40) | (((flags >> 0) & 1) << 6);
+                    enemy->flags = (enemy->flags & ~0x4) | (((flags >> 1) & 1) << 2);
+                    enemy->flags = (enemy->flags & ~0x8) | (((flags >> 2) & 1) << 3);
+                    enemy->flags = (enemy->flags & ~0x10) | (((flags >> 3) & 1) << 4);
+                    enemy->flags = (enemy->flags & ~0x10000000) | (((flags >> 4) & 1) << 0x1c);
+                    enemy->anmFlags = (enemy->anmFlags & ~0x40) | (((flags >> 5) & 1) << 6);
                 }
                 goto skipInstr;
             case 79: // opcode 80 = 清除特效标志 (flags if 分支)
                 {
                     i32 flags = ECL_IVAL(0);
-                    if (flags & 1) enemy->unk3324 &= ~0x40;
+                    if (flags & 1) enemy->flags &= ~0x40;
                     if (flags & 2)
                     {
-                        enemy->unk3324 &= ~0x4;
+                        enemy->flags &= ~0x4;
                         if (enemy->unk53c8) *(u32 *)((u8 *)enemy->unk53c8 + 0x1f8) &= ~0x20000;
                     }
-                    if (flags & 4) enemy->unk3324 &= ~0x8;
-                    if (flags & 8) enemy->unk3324 |= 0x10;
-                    if (flags & 0x10) enemy->unk3324 |= 0x10000000;
-                    if (flags & 0x20) enemy->unk3328 |= 0x40;
+                    if (flags & 4) enemy->flags &= ~0x8;
+                    if (flags & 8) enemy->flags |= 0x10;
+                    if (flags & 0x10) enemy->flags |= 0x10000000;
+                    if (flags & 0x20) enemy->anmFlags |= 0x40;
                 }
                 goto skipInstr;
             case 80: // opcode 81 = 混合设置/清除特效标志
                 {
                     i32 flags = ECL_IVAL(0);
-                    if (flags & 1) enemy->unk3324 |= 0x40;
+                    if (flags & 1) enemy->flags |= 0x40;
                     if (flags & 2)
                     {
-                        enemy->unk3324 |= 0x4;
+                        enemy->flags |= 0x4;
                         if (enemy->unk53c8) *(u32 *)((u8 *)enemy->unk53c8 + 0x1f8) |= 0x20000;
                     }
-                    if (flags & 4) enemy->unk3324 |= 0x8;
-                    if (flags & 8) enemy->unk3324 &= ~0x10;
-                    if (flags & 0x10) enemy->unk3324 &= ~0x10000000;
-                    if (flags & 0x20) enemy->unk3328 &= ~0x40;
+                    if (flags & 4) enemy->flags |= 0x8;
+                    if (flags & 8) enemy->flags &= ~0x10;
+                    if (flags & 0x10) enemy->flags &= ~0x10000000;
+                    if (flags & 0x20) enemy->anmFlags &= ~0x40;
                 }
                 goto skipInstr;
             case 81: // opcode 82 = 速度平方: unk3350 = f0*f0
                 enemy->unk3350 = ECL_FVAL(0);
                 enemy->unk3350 *= enemy->unk3350;
                 goto skipInstr;
-            case 82: // opcode 83 = 设置 unk3328 bit1
-                enemy->unk3328 = (enemy->unk3328 & ~0x2) | ((ECL_IVAL(0) & 1) << 1);
+            case 82: // opcode 83 = 设置 anmFlags bit1
+                enemy->anmFlags = (enemy->anmFlags & ~0x2) | ((ECL_IVAL(0) & 1) << 1);
                 goto skipInstr;
             case 83: // opcode 84 = NOP
             case 84: // opcode 85 = NOP
@@ -595,11 +605,11 @@ restart:
                     }
                 }
                 goto skipInstr;
-            case 87: // opcode 88 = 子弹对象子脚本 (FUN_00421bd0)
+            case 87: // opcode 88 = 子弹对象子脚本 (StartSubContext)
                 {
                     i32 v0 = ECL_IVAL(0);
                     Enemy *bullet = (Enemy *)g_BulletObjects[v0];
-                    FUN_00421bd0(bullet, bullet->curContextPtr->curInstr, instr->args[1].i);
+                    StartSubContext(bullet, bullet->curContextPtr->curInstr, instr->args[1].i);
                 }
                 goto skipInstr;
             case 88: // opcode 89 = 写子弹对象+0x2d30 (若 g_BulletObjects[arg0] 有效)
@@ -615,10 +625,10 @@ restart:
                     Enemy *node = InitBulletPattern(enemy, instr);
                     if (g_BulletSpawnFlag == 0)
                     {
-                        node->unk3324 |= 0x100;
-                        node->unk3324 = (node->unk3324 & ~0x800) | ((g_Player.IsYoukai() & 1) << 0xb);
+                        node->flags |= 0x100;
+                        node->flags = (node->flags & ~0x800) | ((g_Player.IsYoukai() & 1) << 0xb);
                         node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
-                        node->unk3324 &= ~0x4;
+                        node->flags &= ~0x4;
                         if (node->unk53c8 == 0)
                         {
                             node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->pos, 1, -1);
@@ -627,17 +637,17 @@ restart:
                                 AnmVm *obj = (AnmVm *)node->unk53c8;
                                 obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
                                 *(u32 *)((u8 *)obj + 0x1f8) = (*(u32 *)((u8 *)obj + 0x1f8) & ~0x20000) |
-                                                              (((node->unk3324 >> 2) & 1) << 0x11);
+                                                              (((node->flags >> 2) & 1) << 0x11);
                                 if (node->unk2e0c & 1)
                                     *(f32 *)((u8 *)obj + 0x14) = -*(f32 *)((u8 *)obj + 0x14);
                             }
                         }
-                        node->unk2da4 = enemy;
+                        node->ownerEnemy = enemy;
                         head->unk8 = (i32)node;
                         node->unk4 = (i32)head;
-                        enemy->unk3380++;
+                        enemy->subEnemyCount++;
                     }
-                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0x24, enemy->pos.x);
+                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_SOUND_ENEMY_SPAWN, enemy->pos.x);
                 }
                 goto skipInstr;
             case 90: // opcode 91 = 生成弹幕子敌人 (41f280 变体)
@@ -646,10 +656,10 @@ restart:
                     Enemy *node = InitBulletPatternAbs(enemy, instr);
                     if (g_BulletSpawnFlag == 0)
                     {
-                        node->unk3324 |= 0x100;
-                        node->unk3324 = (node->unk3324 & ~0x800) | ((g_Player.IsYoukai() & 1) << 0xb);
+                        node->flags |= 0x100;
+                        node->flags = (node->flags & ~0x800) | ((g_Player.IsYoukai() & 1) << 0xb);
                         node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
-                        node->unk3324 &= ~0x4;
+                        node->flags &= ~0x4;
                         if (node->unk53c8 == 0)
                         {
                             node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->pos, 1, -1);
@@ -658,17 +668,17 @@ restart:
                                 AnmVm *obj = (AnmVm *)node->unk53c8;
                                 obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
                                 *(u32 *)((u8 *)obj + 0x1f8) = (*(u32 *)((u8 *)obj + 0x1f8) & ~0x20000) |
-                                                              (((node->unk3324 >> 2) & 1) << 0x11);
+                                                              (((node->flags >> 2) & 1) << 0x11);
                                 if (node->unk2e0c & 1)
                                     *(f32 *)((u8 *)obj + 0x14) = -*(f32 *)((u8 *)obj + 0x14);
                             }
                         }
-                        node->unk2da4 = enemy;
+                        node->ownerEnemy = enemy;
                         head->unk8 = (i32)node;
                         node->unk4 = (i32)head;
-                        enemy->unk3380++;
+                        enemy->subEnemyCount++;
                     }
-                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0x24, enemy->pos.x);
+                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_SOUND_ENEMY_SPAWN, enemy->pos.x);
                 }
                 goto skipInstr;
             case 91: // opcode 92 = 生成弹幕子敌人 (pos 复制 + 移动向量)
@@ -677,36 +687,36 @@ restart:
                     Enemy *node = InitBulletPattern(enemy, instr);
                     if (g_BulletSpawnFlag == 0)
                     {
-                        node->unk3324 |= 0x100;
-                        node->unk3324 = (node->unk3324 & ~0x800) | ((g_Player.IsYoukai() & 1) << 0xb);
+                        node->flags |= 0x100;
+                        node->flags = (node->flags & ~0x800) | ((g_Player.IsYoukai() & 1) << 0xb);
                         node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
-                        node->unk2d40 = enemy->pos;
-                        node->unk2d88 = node->unk2d40 + node->pos;
-                        node->unk3324 &= ~0x4;
+                        node->moveVec = enemy->pos;
+                        node->movePos = node->moveVec + node->pos;
+                        node->flags &= ~0x4;
                         if (node->unk53c8 == 0)
                         {
-                            node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->unk2d88, 1, -1);
+                            node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->movePos, 1, -1);
                             if (node->unk53c8 != 0)
                             {
                                 AnmVm *obj = (AnmVm *)node->unk53c8;
                                 obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
                                 *(u32 *)((u8 *)obj + 0x1f8) = (*(u32 *)((u8 *)obj + 0x1f8) & ~0x20000) |
-                                                              (((node->unk3324 >> 2) & 1) << 0x11);
+                                                              (((node->flags >> 2) & 1) << 0x11);
                                 if (node->unk2e0c & 1)
                                     *(f32 *)((u8 *)obj + 0x14) = -*(f32 *)((u8 *)obj + 0x14);
                             }
                         }
-                        node->unk3324 |= 0x200;
-                        node->unk2da4 = enemy;
+                        node->flags |= 0x200;
+                        node->ownerEnemy = enemy;
                         head->unk8 = (i32)node;
                         node->unk4 = (i32)head;
-                        enemy->unk3380++;
+                        enemy->subEnemyCount++;
                     }
-                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0x24, enemy->pos.x);
+                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_SOUND_ENEMY_SPAWN, enemy->pos.x);
                 }
                 goto skipInstr;
             case 92: // opcode 93 = SPAWN_ENEMY_ABS
-                if (enemy->unk2dfc > 0)
+                if (enemy->laserActive > 0)
                 {
                     Float3 pos = Float3(ECL_FVAL(1), ECL_FVAL(2), ECL_FVAL(3));
                     i32 life = ECL_IVAL(6);
@@ -717,7 +727,7 @@ restart:
                 }
                 goto skipInstr;
             case 93: // opcode 94 = SPAWN_ENEMY_REL (pos 相对敌人)
-                if (enemy->unk2dfc > 0)
+                if (enemy->laserActive > 0)
                 {
                     Float3 pos = Float3(ECL_FVAL(1), ECL_FVAL(2), ECL_FVAL(3));
                     pos = pos + enemy->pos;
@@ -734,15 +744,15 @@ restart:
             case 95: case 96: case 97: case 98: case 99: case 100:
             case 101: case 102: case 103:
                 // opcode 96-104: 激光处理
-                if (enemy->unk2dfc > 0)
+                if (enemy->laserActive > 0)
                 {
-                    if (((enemy->unk3324 >> 0x11) & 1) == 1)
+                    if (((enemy->flags >> 0x11) & 1) == 1)
                     {
                         memcpy(enemy->unk3034, instr, 0x2c);
                     }
                     else
                     {
-                        FUN_00422720(enemy, instr);
+                        RunLaserScript(enemy, instr);
                     }
                 }
                 goto skipInstr;
@@ -762,20 +772,20 @@ restart:
                     enemy->unk3064.SetCurrent(g_Rng.GetRandomU32InRange(enemy->unk3060));
                 }
                 goto skipInstr;
-            case 106: // opcode 107 = 设置 unk3324 bit17
-                enemy->unk3324 |= 0x20000;
+            case 106: // opcode 107 = 设置 flags bit17
+                enemy->flags |= 0x20000;
                 goto skipInstr;
-            case 107: // opcode 108 = 清除 unk3324 bit17
-                enemy->unk3324 &= ~0x20000;
+            case 107: // opcode 108 = 清除 flags bit17
+                enemy->flags &= ~0x20000;
                 goto skipInstr;
-            case 109: // opcode 110 = 移动插值 (unk2db8 向量)
-                enemy->unk2db8.x = ECL_FVAL(0);
-                enemy->unk2db8.y = ECL_FVAL(1);
-                enemy->unk2db8.z = 0;
+            case 109: // opcode 110 = 移动插值 (moveVec2 向量)
+                enemy->moveVec2.x = ECL_FVAL(0);
+                enemy->moveVec2.y = ECL_FVAL(1);
+                enemy->moveVec2.z = 0;
                 goto skipInstr;
-            case 108: // opcode 109 = 计算 pos+unk2db8 向量并写 0x2e28; g_BulletManager.SetupLaserMove(&0x2e24)
+            case 108: // opcode 109 = 计算 pos+moveVec2 向量并写 0x2e28; g_BulletManager.SetupLaserMove(&0x2e24)
                 // 注: 原版中 0x2e24 的 Float3 与 0x2e28 的 Float3 字节重叠 (430e10 参数与结果共享)
-                *(Float3 *)((u8 *)enemy + 0x2e28) = enemy->pos + enemy->unk2db8;
+                *(Float3 *)((u8 *)enemy + 0x2e28) = enemy->pos + enemy->moveVec2;
                 g_BulletManager.SetupLaserMove((Float3 *)((u8 *)enemy + 0x2e24));
                 goto skipInstr;
             case 110: // opcode 111 = 写激光数据槽 (0x2e44 + v0*0x18)
@@ -792,25 +802,25 @@ restart:
             case 111: // opcode 112 = RemoveAllBullets(1)
                 g_BulletManager.bulletmanager_fun_00415c60();
                 goto skipInstr;
-            case 112: // opcode 113 = 生命回调阈值/子脚本: unk3020/24/28
+            case 112: // opcode 113 = 生命回调阈值/子脚本: lifeCallbackState/24/28
                 {
                     i32 v0 = ECL_IVAL(0);
                     if (v0 >= 0)
                     {
-                        enemy->unk3024 = ECL_IVAL(0);
-                        enemy->unk3020 |= 0x200;
+                        enemy->lifeCallbackThreshold = ECL_IVAL(0);
+                        enemy->lifeCallbackState |= 0x200;
                     }
                     else
                     {
-                        enemy->unk3020 &= ~0x200;
+                        enemy->lifeCallbackState &= ~0x200;
                     }
-                    enemy->unk3028 = ECL_IVAL(1);
+                    enemy->lifeCallbackSub = ECL_IVAL(1);
                 }
                 goto skipInstr;
             case 113: case 114: // opcode 114-115 = 注册弹幕数据 (填充 shotData → AllocShotSlot)
                 {
                     EnemyShotData *sd = &enemy->shotData;
-                    sd->pos = enemy->unk2d88 + enemy->unk2db8;
+                    sd->pos = enemy->movePos + enemy->moveVec2;
                     sd->subId = (i16)instr->args[0].i;
                     sd->anmIdx = (i16)ECL_IVAL(1);
                     sd->unk10 = ECL_FVAL(2);
@@ -824,44 +834,44 @@ restart:
                     sd->unk1e8 = ECL_IVAL(10);
                     sd->unk1ec = instr->args[11].i;
                     sd->unk1f0 = instr->args[12].i;
-                    sd->unk1f8 = (instr->id == 0x73) ? 0 : 1;
+                    sd->unk1f8 = (instr->id == ECL_SHOT_SLOT_ID_LASER) ? 0 : 1;
                     sd->unk1fc = instr->args[13].i;
-                    enemy->unk3280[enemy->unk3300] = g_BulletManager.AllocShotSlot(sd);
+                    enemy->shotSlots[enemy->shotSlotIdx] = g_BulletManager.AllocShotSlot(sd);
                 }
                 goto skipInstr;
-            case 115: // opcode 116 = 设置 unk3300
-                enemy->unk3300 = ECL_IVAL(0);
+            case 115: // opcode 116 = 设置 shotSlotIdx
+                enemy->shotSlotIdx = ECL_IVAL(0);
                 goto skipInstr;
-            case 116: // opcode 117 = 给子弹对象加角度 (unk3280[idx] 的 unk554)
+            case 116: // opcode 117 = 给子弹对象加角度 (shotSlots[idx] 的 unk554)
                 {
                     i32 idx = ECL_IVAL(0);
-                    if (enemy->unk3280[idx] != 0)
-                        enemy->unk3280[idx]->angle = AddNormalizeAngle(enemy->unk3280[idx]->angle, ECL_FVAL(1));
+                    if (enemy->shotSlots[idx] != 0)
+                        enemy->shotSlots[idx]->angle = AddNormalizeAngle(enemy->shotSlots[idx]->angle, ECL_FVAL(1));
                 }
                 goto skipInstr;
             case 117: // opcode 118 = 给子弹对象设角度: angle = AngleToPlayer(pos) + f1
                 {
                     i32 v0 = ECL_IVAL(0);
-                    if (enemy->unk3280[v0] != 0)
-                        enemy->unk3280[v0]->angle =
-                            g_Player.AngleToPlayer(&enemy->unk3280[v0]->pos) + ECL_FVAL(1);
+                    if (enemy->shotSlots[v0] != 0)
+                        enemy->shotSlots[v0]->angle =
+                            g_Player.AngleToPlayer(&enemy->shotSlots[v0]->pos) + ECL_FVAL(1);
                 }
                 goto skipInstr;
             case 118: // opcode 119 = 设置子弹对象位置 unk548/54c/550 = f + pos
                 {
                     i32 v0 = ECL_IVAL(0);
-                    if (enemy->unk3280[v0] != 0)
+                    if (enemy->shotSlots[v0] != 0)
                     {
-                        enemy->unk3280[v0]->pos.x = ECL_FVAL(1) + enemy->unk2d88.x;
-                        enemy->unk3280[v0]->pos.y = ECL_FVAL(2) + enemy->unk2d88.y;
-                        enemy->unk3280[v0]->pos.z = ECL_FVAL(3) + enemy->unk2d88.z;
+                        enemy->shotSlots[v0]->pos.x = ECL_FVAL(1) + enemy->movePos.x;
+                        enemy->shotSlots[v0]->pos.y = ECL_FVAL(2) + enemy->movePos.y;
+                        enemy->shotSlots[v0]->pos.z = ECL_FVAL(3) + enemy->movePos.z;
                     }
                 }
                 goto skipInstr;
-            case 119: // opcode 120 = 设置 curContext globalVar intVars[0] (依 unk3280 子弹对象)
+            case 119: // opcode 120 = 设置 curContext globalVar intVars[0] (依 shotSlots 子弹对象)
                 {
                     i32 v0 = ECL_IVAL(0);
-                    if (enemy->unk3280[v0] != 0 && enemy->unk3280[v0]->isActive != 0)
+                    if (enemy->shotSlots[v0] != 0 && enemy->shotSlots[v0]->isActive != 0)
                         enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 1;
                     else
                         enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 0;
@@ -882,28 +892,28 @@ restart:
                             g_Gui.FUN_00422c20(1);
                             g_Gui.FUN_004230c0(1.0f);
                         }
-                        enemy->unk3324 |= 0x2;
-                        enemy->unk3313 = (u8)ECL_IVAL(0);
-                        g_AsciiManager.SetBossMarkerInterrupt(enemy->unk3313, 1);
+                        enemy->flags |= 0x2;
+                        enemy->bossMarkerIdx = (u8)ECL_IVAL(0);
+                        g_AsciiManager.SetBossMarkerInterrupt(enemy->bossMarkerIdx, 1);
                         enemy->unk3350 = 0;
                     }
                     else
                     {
-                        if (enemy->unk3313 < 4)
+                        if (enemy->bossMarkerIdx < 4)
                             g_Gui.FUN_00422c20(0);
-                        g_BulletObjects[enemy->unk3313] = 0;
-                        enemy->unk3324 &= ~0x2;
-                        g_AsciiManager.SetBossMarkerInterrupt(enemy->unk3313, 2);
+                        g_BulletObjects[enemy->bossMarkerIdx] = 0;
+                        enemy->flags &= ~0x2;
+                        g_AsciiManager.SetBossMarkerInterrupt(enemy->bossMarkerIdx, 2);
                         enemy->ClearEffectSlots();
                         Float3 offscreenPos(-1000.0f, -1000.0f, 0.0f);
-                        g_AsciiManager.SetBossMarkerPosition(enemy->unk3313, &offscreenPos);
+                        g_AsciiManager.SetBossMarkerPosition(enemy->bossMarkerIdx, &offscreenPos);
                     }
                 }
                 goto skipInstr;
             case 120: // opcode 121 = RUN_EX_INS (子弹对象: unk598<2 时设状态)
                 {
                     i32 v0 = ECL_IVAL(0);
-                    EnemySubData *slot = enemy->unk3280[v0];
+                    EnemySubData *slot = enemy->shotSlots[v0];
                     if (slot != 0 && slot->isActive != 0 && slot->runState < 2)
                     {
                         slot->runState = 2;
@@ -924,7 +934,7 @@ restart:
             case 124: // opcode 125 = 触发中断子程序
                 enemy->runInterrupt = (i16)ECL_IVAL(0);
                 enemy->curContextPtr->curInstr = (EclRawInstr *)((u8 *)instr + instr->size);
-                if (((enemy->unk3324 >> 0x1a) & 1) == 0)
+                if (((enemy->flags >> 0x1a) & 1) == 0)
                     enemy->savedContextStack[enemy->stackDepth] = enemy->eclContext;
                 g_EclInterruptTable.SetupEclContext(&enemy->eclContext, enemy->interrupts[enemy->runInterrupt]);
                 if (enemy->stackDepth < 0xf)
@@ -934,7 +944,7 @@ restart:
             case 127: // opcode 128 = 生成特效并存入 unk5360 槽
                 {
                     i32 idx = enemy->unk53c0;
-                    AnmVm *eff = g_EffectManager.FUN_00425430(0xd, &enemy->pos, 1, 0xff6060d0);
+                    AnmVm *eff = g_EffectManager.FUN_00425430(0xd, &enemy->pos, 1, ECL_EFFECT_SPAWN_COLOR);
                     enemy->unk5360[idx] = eff;
                     memcpy((u8 *)eff + 0x2ec, &instr->args[1], 0xc);
                     enemy->unk53c4 = instr->args[4].i;
@@ -988,11 +998,11 @@ restart:
                     }
                 }
                 goto skipInstr;
-            case 130: // opcode 131 = 设置激光字段 unk2e00/2dfc/2e04 + 若条件清 Gui
-                enemy->unk2e00 = ECL_IVAL(0);
-                enemy->unk2dfc = ECL_IVAL(0);
+            case 130: // opcode 131 = 设置激光字段 laserData/2dfc/2e04 + 若条件清 Gui
+                enemy->laserData = ECL_IVAL(0);
+                enemy->laserActive = ECL_IVAL(0);
                 enemy->unk2e04 = ECL_IVAL(0);
-                if (enemy->unk3313 == 0 && ((enemy->unk3324 >> 1) & 1))
+                if (enemy->bossMarkerIdx == 0 && ((enemy->flags >> 1) & 1))
                 {
                     for (i = 0; i < 8; i++)
                         g_Gui.FUN_004230e0(i, 0.0f, 0.0f);
@@ -1001,9 +1011,9 @@ restart:
             case 131: // opcode 132 = 设置 unk2e14 计时器
                 enemy->unk2e14.SetCurrent(ECL_IVAL(0));
                 goto skipInstr;
-            case 128: // opcode 129 = 设置 unk3324 bit20-22 (boss 模式跳过)
+            case 128: // opcode 129 = 设置 flags bit20-22 (boss 模式跳过)
                 if (!IS_BOSS_MODE())
-                    enemy->unk3324 = (enemy->unk3324 & 0xff8fffff) | ((instr->args[0].i & 0x7) << 0x14);
+                    enemy->flags = (enemy->flags & 0xff8fffff) | ((instr->args[0].i & 0x7) << 0x14);
                 goto skipInstr;
             case 129: // opcode 130 = 设置 unk2cee (boss 模式跳过)
                 if (!IS_BOSS_MODE())
@@ -1030,22 +1040,22 @@ restart:
                 }
                 enemy->unk2e14.SetCurrent(0);
                 goto skipInstr;
-            case 134: // opcode 135 = 分配/释放数据缓冲 (dataPtrs[v0])
+            case 134: // opcode 135 = 分配/释放数据缓冲 (dataSlots[v0])
                 {
                     i32 v0 = ECL_IVAL(0);
-                    if (enemy->dataPtrs[v0] != 0)
-                        g_ZunMemory.Free(enemy->dataPtrs[v0]);
-                    enemy->dataPtrs[v0] = NULL;
+                    if (enemy->dataSlots[v0] != 0)
+                        g_ZunMemory.Free(enemy->dataSlots[v0]);
+                    enemy->dataSlots[v0] = NULL;
                     if (ECL_IVAL(1) >= 0)
                     {
-                        enemy->dataPtrs[v0] = g_ZunMemory.Alloc(0x24b0, "ECLInt");
-                        if (enemy->dataPtrs[v0] != 0)
+                        enemy->dataSlots[v0] = g_ZunMemory.Alloc(0x24b0, "ECLInt");
+                        if (enemy->dataSlots[v0] != 0)
                         {
-                            memset(enemy->dataPtrs[v0], 0, 0x24b0);
-                            *(i32 *)enemy->dataPtrs[v0] = ECL_IVAL(1);
+                            memset(enemy->dataSlots[v0], 0, 0x24b0);
+                            *(i32 *)enemy->dataSlots[v0] = ECL_IVAL(1);
                             g_EclInterruptTable.SetupEclContext(
-                                (EclContext *)((u8 *)enemy->dataPtrs[v0] + 0x8), *(i16 *)enemy->dataPtrs[v0]);
-                            memcpy((u8 *)enemy->dataPtrs[v0] + 0x20, &enemy->curContextPtr->eclContextArgs,
+                                (EclContext *)((u8 *)enemy->dataSlots[v0] + 0x8), *(i16 *)enemy->dataSlots[v0]);
+                            memcpy((u8 *)enemy->dataSlots[v0] + 0x20, &enemy->curContextPtr->eclContextArgs,
                                    0x1e * 4);
                         }
                     }
@@ -1081,8 +1091,8 @@ restart:
                 enemy->unk337c = enemy->unk2cee;
                 enemy->unk2e14.SetCurrent(0);
                 goto skipInstr;
-            case 150: // opcode 151 = 设置 unk3324 bit26
-                enemy->unk3324 = (enemy->unk3324 & ~0x4000000) | ((instr->args[0].b[0] & 1) << 0x1a);
+            case 150: // opcode 151 = 设置 flags bit26
+                enemy->flags = (enemy->flags & ~0x4000000) | ((instr->args[0].b[0] & 1) << 0x1a);
                 goto skipInstr;
             case 148: // opcode 149 = 写 primaryVm 脚本索引字段 (+0x1fe)
                 *(i16 *)((u8 *)&enemy->primaryVm + 0x1fe) = (i16)ECL_IVAL(0);
@@ -1125,11 +1135,11 @@ restart:
                                                (i32)(((i32)(i16)enemy->unk5352 / (i32)(i16)enemy->unk534e) << 1));
                 }
                 goto skipInstr;
-            case 157: // opcode 158 = 设置 Gui 数据 (v0, a1/unk2e00, a2/unk2e00) + 若 bit3 调 23110
+            case 157: // opcode 158 = 设置 Gui 数据 (v0, a1/laserData, a2/laserData) + 若 bit3 调 23110
                 {
                     i32 v0 = ECL_IVAL(0);
-                    g_Gui.FUN_004230e0(v0, (f32)ECL_IVAL(1) / (f32)enemy->unk2e00,
-                                       (f32)ECL_IVAL(2) / (f32)enemy->unk2e00);
+                    g_Gui.FUN_004230e0(v0, (f32)ECL_IVAL(1) / (f32)enemy->laserData,
+                                       (f32)ECL_IVAL(2) / (f32)enemy->laserData);
                     if (instr->paramMask & 0x8)
                         g_Gui.FUN_00423110(v0, ECL_IVAL(3));
                 }
@@ -1137,8 +1147,8 @@ restart:
             case 159: // opcode 160 = unk5354 ZunTimer.SetCurrent(v0)
                 enemy->unk5354.SetCurrent(ECL_IVAL(0));
                 goto skipInstr;
-            case 160: // opcode 161 = 生成特效 at unk2d88 (g_BulletManager.FUN_00430d30)
-                g_BulletManager.FUN_00430d30(&enemy->unk2d88, ECL_FVAL(0));
+            case 160: // opcode 161 = 生成特效 at movePos (g_BulletManager.FUN_00430d30)
+                g_BulletManager.FUN_00430d30(&enemy->movePos, ECL_FVAL(0));
                 goto skipInstr;
             case 161: // opcode 162 = RemoveAllBullets(4)
                 g_BulletManager.RemoveAllBullets(4);
@@ -1150,13 +1160,13 @@ restart:
                 *GetFloatPtr(enemy, &instr->args[1], instr->paramMask, 0) = sinf(ECL_FVAL(2)) * ECL_FVAL(3);
                 *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = cosf(ECL_FVAL(2)) * ECL_FVAL(3);
                 goto skipInstr;
-            case 144: // opcode 145 = 设置 unk3324 bit25
-                enemy->unk3324 = (enemy->unk3324 & ~0x2000000) | ((instr->args[0].b[0] & 1) << 0x19);
+            case 144: // opcode 145 = 设置 flags bit25
+                enemy->flags = (enemy->flags & ~0x2000000) | ((instr->args[0].b[0] & 1) << 0x19);
                 goto skipInstr;
-            case 153: // opcode 154 = 清空 unk3280[0x20]
+            case 153: // opcode 154 = 清空 shotSlots[0x20]
                 for (i = 0; i < 0x20; i++)
                 {
-                    enemy->unk3280[i] = 0;
+                    enemy->shotSlots[i] = 0;
                 }
                 goto skipInstr;
             case 162: // opcode 163 = 写全局 0xf54cec
@@ -1173,40 +1183,40 @@ restart:
             case 158: // opcode 159 = 设置 unk332f (byte)
                 enemy->unk332f = (u8)ECL_IVAL(0);
                 goto skipInstr;
-            case 154: // opcode 155 = 设置 unk3324 bit27 + 写保存时间戳全局
-                enemy->unk3324 = (enemy->unk3324 & ~0x8000000) | ((instr->args[0].b[0] & 1) << 0x1b);
-                g_4ecca8 = 0x5f5e0f6; // save timestamp for the score screen
+            case 154: // opcode 155 = 设置 flags bit27 + 写保存时间戳全局
+                enemy->flags = (enemy->flags & ~0x8000000) | ((instr->args[0].b[0] & 1) << 0x1b);
+                g_4ecca8 = ECL_SCORE_SAVE_MAGIC;
                 goto skipInstr;
-            case 155: // opcode 156 = 设置 unk3324 bit7 + unk332f=2
-                enemy->unk3324 = (enemy->unk3324 & ~0x80) | ((instr->args[0].b[0] & 1) << 7);
+            case 155: // opcode 156 = 设置 flags bit7 + unk332f=2
+                enemy->flags = (enemy->flags & ~0x80) | ((instr->args[0].b[0] & 1) << 7);
                 enemy->unk332f = 2;
                 goto skipInstr;
             case 166: // opcode 167 = 设置子弹对象 unk554
                 {
                     i32 v0 = ECL_IVAL(0);
-                    if (enemy->unk3280[v0] != 0)
-                        enemy->unk3280[v0]->angle = ECL_FVAL(1);
+                    if (enemy->shotSlots[v0] != 0)
+                        enemy->shotSlots[v0]->angle = ECL_FVAL(1);
                 }
                 goto skipInstr;
             case 170: // opcode 171 = 设置子弹对象 unk560
                 {
                     i32 v0 = ECL_IVAL(0);
-                    if (enemy->unk3280[v0] != 0)
-                        enemy->unk3280[v0]->unk560 = ECL_FVAL(1);
+                    if (enemy->shotSlots[v0] != 0)
+                        enemy->shotSlots[v0]->unk560 = ECL_FVAL(1);
                 }
                 goto skipInstr;
             case 171: // opcode 172 = 设置子弹对象 unk558/55c
                 {
                     i32 v0 = ECL_IVAL(0);
-                    if (enemy->unk3280[v0] != 0)
+                    if (enemy->shotSlots[v0] != 0)
                     {
-                        enemy->unk3280[v0]->unk558 = ECL_FVAL(1);
-                        enemy->unk3280[v0]->unk55c = ECL_FVAL(2);
+                        enemy->shotSlots[v0]->unk558 = ECL_FVAL(1);
+                        enemy->shotSlots[v0]->unk55c = ECL_FVAL(2);
                     }
                 }
                 goto skipInstr;
-            case 172: // opcode 173 = 设置 unk3324 bit30
-                enemy->unk3324 = (enemy->unk3324 & ~0x40000000) | ((ECL_IVAL(0) & 1) << 0x1e);
+            case 172: // opcode 173 = 设置 flags bit30
+                enemy->flags = (enemy->flags & ~0x40000000) | ((ECL_IVAL(0) & 1) << 0x1e);
                 goto skipInstr;
             case 174: // opcode 175 = 写全局 0xf54e2c
                 g_BulletSpawnFlag2 = ECL_IVAL(0);
@@ -1223,7 +1233,7 @@ restart:
             case 180: // opcode 181 = 若时钟<12h 播声+加时钟+依是否=12h 调 Gui
                 if (g_GameManager.GetClockTime() < 0xc)
                 {
-                    g_SoundPlayer.PlaySoundByIdx((SoundIdx)0x2d, 0);
+                    g_SoundPlayer.PlaySoundByIdx((SoundIdx)ECL_SOUND_CLOCK_CHIME, 0);
                     g_GameManager.AddToClockTime(1);
                     if (g_GameManager.GetClockTime() == 0xc)
                         g_Gui.FUN_00439093();
@@ -1252,11 +1262,11 @@ restart:
             case 169: // opcode 170 = 写子弹对象+0x599 (byte)
                 {
                     i32 idx = ECL_IVAL(0);
-                    if (enemy->unk3280[idx] != 0)
-                        enemy->unk3280[idx]->unk599 = (u8)ECL_IVAL(1);
+                    if (enemy->shotSlots[idx] != 0)
+                        enemy->shotSlots[idx]->unk599 = (u8)ECL_IVAL(1);
                 }
                 goto skipInstr;
-            case 175: // opcode 176 = 全局弹幕/特殊事件状态 + unk3324 bit30
+            case 175: // opcode 176 = 全局弹幕/特殊事件状态 + flags bit30
                 g_PlayerFlags |= 0x80;
                 g_PlayerFlags &= ~0x2000;
                 if (!(g_PlayerFlags & 0x4000))
@@ -1269,13 +1279,13 @@ restart:
                 {
                     g_PlayerFlags |= 0x2000;
                 }
-                enemy->unk3324 |= 0x40000000;
+                enemy->flags |= 0x40000000;
                 goto skipInstr;
-            case 181: // opcode 182 = 设置 unk3328 bit8
-                enemy->unk3328 = (enemy->unk3328 & ~0x100) | ((ECL_IVAL(0) & 1) << 8);
+            case 181: // opcode 182 = 设置 anmFlags bit8
+                enemy->anmFlags = (enemy->anmFlags & ~0x100) | ((ECL_IVAL(0) & 1) << 8);
                 goto skipInstr;
-            case 182: // opcode 183 = 设置 unk3324 bit31
-                enemy->unk3324 = (enemy->unk3324 & ~0x80000000) | ((ECL_IVAL(0) & 1) << 0x1f);
+            case 182: // opcode 183 = 设置 flags bit31
+                enemy->flags = (enemy->flags & ~0x80000000) | ((ECL_IVAL(0) & 1) << 0x1f);
                 goto skipInstr;
             case 177: // opcode 178 = 子脚本 (FUN_004224a0)
                 FUN_004224a0(enemy, instr);
@@ -1294,7 +1304,7 @@ restart:
 handleInterrupt:
     // Save the current context and run the interrupt subroutine.
     enemy->curContextPtr->curInstr = (EclRawInstr *)((u8 *)instr + instr->size);
-    if (((enemy->unk3324 >> 0x1a) & 1) == 0)
+    if (((enemy->flags >> 0x1a) & 1) == 0)
     {
         enemy->savedContextStack[enemy->stackDepth] = enemy->eclContext;
     }
@@ -1307,7 +1317,7 @@ handleInterrupt:
 
 exit:
     // Laser/interp wind-down, then switch to any remaining sub-context.
-    if (enemy->unk2dfc > 0)
+    if (enemy->laserActive > 0)
     {
         i32 flag = 0;
         EclInterp *interp = &enemy->curContextPtr->interps[0];
@@ -1365,7 +1375,7 @@ exit:
         {
             enemy->unk2d4c = enemy->pos.x - savedPos.x;
             enemy->unk2d50 = enemy->pos.y - savedPos.y;
-            enemy->unk2d94 = EclAngleFromDxDy(enemy->unk2d4c, enemy->unk2d50);
+            enemy->moveAngle = EclAngleFromDxDy(enemy->unk2d4c, enemy->unk2d50);
             enemy->pos = savedPos;
         }
     }
@@ -1376,19 +1386,19 @@ exit:
     }
     else
     {
-        *(i16 *)((u8 *)enemy->dataPtrs[subCtxIdx] + 0x6) = enemy->stackDepth;
+        *(i16 *)((u8 *)enemy->dataSlots[subCtxIdx] + 0x6) = enemy->stackDepth;
     }
     enemy->curContextPtr->curInstr = instr;
     enemy->curContextPtr->time.SetCurrent(0);
     for (i = subCtxIdx + 1; i < 4; i++)
     {
-        if (enemy->dataPtrs[i] != NULL)
+        if (enemy->dataSlots[i] != NULL)
         {
-            enemy->savedStackPtr = (EclContext *)((u8 *)enemy->dataPtrs[i] + 0x230);
-            enemy->curContextPtr = (EclContext *)((u8 *)enemy->dataPtrs[i] + 0x8);
+            enemy->savedStackPtr = (EclContext *)((u8 *)enemy->dataSlots[i] + 0x230);
+            enemy->curContextPtr = (EclContext *)((u8 *)enemy->dataSlots[i] + 0x8);
             instr = enemy->curContextPtr->curInstr;
             enemy->curContextPtr->unk220 = i + 1;
-            enemy->stackDepth = *(i16 *)((u8 *)enemy->dataPtrs[i] + 0x6);
+            enemy->stackDepth = *(i16 *)((u8 *)enemy->dataSlots[i] + 0x6);
             subCtxIdx = i;
             goto restart;
         }

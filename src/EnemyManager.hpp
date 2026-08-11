@@ -47,7 +47,7 @@ struct EnemyLaserData
 };
 C_ASSERT(sizeof(EnemyLaserData) == 0x18);
 
-// The per-slot ECL data structure each Enemy::unk3280[] pointer points to.
+// The per-slot ECL data structure each Enemy::shotSlots[] pointer points to.
 // A slot holds one shot-pattern/effect descriptor that RunEcl opcodes read and
 // mutate (op117-121, op166-172). The base is allocated by op114 (0x430f20).
 struct EnemySubData
@@ -75,8 +75,8 @@ struct Enemy
     void FUN_0042bc90();
     void FUN_00422c40();
     void FUN_00423150();
-    void FUN_00421de0(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5); // ECL sub-call (0x421de0)
-    void FUN_0042c180(); // move init after SET_POS (0x42c180)
+    void EclSubCall(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5); // ECL sub-call (0x421de0)
+    void InitMoveAfterSetPos(); // move init after SET_POS (0x42c180)
     void ClearEffectSlots(); // 0x42a820 (op127 boss-marker setup)
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
@@ -98,7 +98,7 @@ struct Enemy
     i16 runInterrupt;                  // 0x2d30  >= 0 forces the interrupt path
     unknown_fields(0x2d32, 0x2);
     Float3 pos;                        // 0x2d34
-    Float3 unk2d40;                    // 0x2d40  per-frame movement vector
+    Float3 moveVec;                    // 0x2d40  per-frame movement vector
     f32 unk2d4c;                       // 0x2d4c  (dx from laser interp)
     f32 unk2d50;                       // 0x2d50  (dy)
     unknown_fields(0x2d54, 0x1c);      // 0x2d54-0x2d70
@@ -108,17 +108,17 @@ struct Enemy
     f32 unk2d7c;                       // 0x2d7c
     f32 unk2d80;                       // 0x2d80
     unknown_fields(0x2d84, 0x4);       // 0x2d84-0x2d88
-    Float3 unk2d88;                    // 0x2d88  pos + unk2d40 (computed each ECL frame)
-    f32 unk2d94;                       // 0x2d94  (angle from dx/dy)
-    f32 unk2d98;                       // 0x2d98  (move speed)
+    Float3 movePos;                    // 0x2d88  pos + moveVec (computed each ECL frame)
+    f32 moveAngle;                       // 0x2d94  (angle from dx/dy)
+    f32 moveSpeed;                       // 0x2d98  (move speed)
     f32 unk2d9c;                       // 0x2d9c
     f32 unk2da0;                       // 0x2da0
-    Enemy *unk2da4;                    // 0x2da4  (owner enemy, set by bullet spawn)
+    Enemy *ownerEnemy;                    // 0x2da4  (owner enemy, set by bullet spawn)
     f32 unk2da8;                       // 0x2da8  (move angle)
     f32 unk2dac;                       // 0x2dac
     f32 unk2db0;                       // 0x2db0
     f32 unk2db4;                       // 0x2db4
-    Float3 unk2db8;                    // 0x2db8  (movement vector, op110 sets it)
+    Float3 moveVec2;                    // 0x2db8  (movement vector, op110 sets it)
     unknown_fields(0x2dc4, 0xc);       // 0x2dc4-0x2dd0
     f32 unk2dd0;                       // 0x2dd0
     f32 unk2dd4;                       // 0x2dd4
@@ -131,40 +131,49 @@ struct Enemy
     i16 unk2df6;                       // 0x2df6
     i16 unk2df8;                       // 0x2df8
     i16 unk2dfa;                       // 0x2dfa
-    i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
-    i32 unk2e00;                       // 0x2e00  (laser-related, divide base)
+    i32 laserActive;                       // 0x2dfc  laser-in-use flag
+    i32 laserData;                       // 0x2e00  (laser-related, divide base)
     i32 unk2e04;                       // 0x2e04  (laser-related)
     unknown_fields(0x2e08, 0x4);       // 0x2e08-0x2e0c
     i32 unk2e0c;                       // 0x2e0c
     unknown_fields(0x2e10, 0x4);       // 0x2e10-0x2e14
     ZunTimer unk2e14;                  // 0x2e14 (0xc bytes)
     unknown_fields(0x2e20, 0x200);     // 0x2e20-0x3020
-    i32 unk3020;                       // 0x3020  (boss spellcard-related)
-    i32 unk3024;                       // 0x3024  (set by SET_LIFE_CALLBACK_THRESHOLD)
-    i32 unk3028;                       // 0x3028  (set by SET_LIFE_CALLBACK_SUB)
+    i32 lifeCallbackState;                       // 0x3020  (boss spellcard-related)
+    i32 lifeCallbackThreshold;                       // 0x3024  (set by SET_LIFE_CALLBACK_THRESHOLD)
+    i32 lifeCallbackSub;                       // 0x3028  (set by SET_LIFE_CALLBACK_SUB)
     unknown_fields(0x302c, 0x8);       // 0x302c-0x3034
     u8 unk3034[0x2c];                  // 0x3034 (0x2c bytes)
     i32 unk3060;                       // 0x3060  (movement/scaling base)
     ZunTimer unk3064;                  // 0x3064 (0xc bytes)
     EnemyShotData shotData;            // 0x3070 (0x200 bytes, op114-115 fill it)
     unknown_fields(0x3270, 0x10);      // 0x3270-0x3280
-    EnemySubData *unk3280[0x20];       // 0x3280 (0x20 shot-pattern slots)
-    i32 unk3300;                       // 0x3300
+    EnemySubData *shotSlots[0x20];       // 0x3280 (0x20 shot-pattern slots)
+    i32 shotSlotIdx;                       // 0x3300
     i32 unk3304;                       // 0x3304
     i32 unk3308;                       // 0x3308
     i32 unk330c;                       // 0x330c
     u8 unk3310;                        // 0x3310
     u8 unk3311;                        // 0x3311
     u8 unk3312;                        // 0x3312
-    u8 unk3313;                        // 0x3313
+    u8 bossMarkerIdx;                        // 0x3313
     unknown_fields(0x3314, 0x10);      // 0x3314-0x3324
-    u32 unk3324;                       // 0x3324  bit26 = don't save context on interrupt
-    u32 unk3328;                       // 0x3328  (anm script flags, bit2 cleared by SET_ANM)
+    // 0x3324 ECL enemy state flags (bits as observed in RunEcl opcodes):
+    //   bit1  = boss-marker registered (op127)
+    //   bit2  = bullet pattern active (op90-92 clear on spawn, op127 set)
+    //   bit8  = bullet pattern spawned (op90-92)
+    //   bit11 = player-is-youkai modifier (op90-92)
+    //   bit12-13 = movement mode (op64-66)
+    //   bit17 = laser active (op107/108, checked by op96-104)
+    //   bit26 = do NOT save context when taking an interrupt
+    //   bit30/31 = misc flags (op173/176, op183)
+    u32 flags;                       // 0x3324
+    u32 anmFlags;                    // 0x3328  (anm script flags; bit2 cleared by SET_ANM)
     unknown_fields(0x332c, 0x3);       // 0x332c-0x332f
     u8 unk332f;                        // 0x332f
     u8 eclFlags;                       // 0x3330
     unknown_fields(0x3331, 0xb);       // 0x3331-0x333c
-    i16 unk333c;                       // 0x333c  current animation id
+    i16 currentAnmIdx;                       // 0x333c  current animation id
     unknown_fields(0x333e, 0x2);       // 0x333e-0x3340
     f32 unk3340;                       // 0x3340
     f32 unk3344;                       // 0x3344
@@ -176,8 +185,8 @@ struct Enemy
     i32 unk3368[4];                    // 0x3368  (same indexing; set with unk3358)
     i32 unk3378;                       // 0x3378  (initialized to -1)
     i32 unk337c;                       // 0x337c
-    i32 unk3380;                       // 0x3380  (sub-enemy chain count)
-    void *dataPtrs[4];                 // 0x3384
+    i32 subEnemyCount;                       // 0x3380  (sub-enemy chain count)
+    void *dataSlots[4];                 // 0x3384
     unknown_fields(0x3394, 0x1fb8);    // 0x3394-0x534c
     u8 unk534c;                        // 0x534c  (tutorial/boss-ai flags, bit3 gate)
     i16 unk534e;                       // 0x534e

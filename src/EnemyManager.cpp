@@ -320,10 +320,10 @@ void Enemy::FUN_0042bc90()
 
     for (i = 0; i < 4; i++)
     {
-        if (this->dataPtrs[i] != NULL)
+        if (this->dataSlots[i] != NULL)
         {
-            g_ZunMemory.RemoveFromRegistry(this->dataPtrs[i]);
-            this->dataPtrs[i] = NULL;
+            g_ZunMemory.RemoveFromRegistry(this->dataSlots[i]);
+            this->dataSlots[i] = NULL;
         }
     }
 }
