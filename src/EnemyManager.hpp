@@ -138,7 +138,13 @@ struct Enemy
     i32 unk2e0c;                       // 0x2e0c
     unknown_fields(0x2e10, 0x4);       // 0x2e10-0x2e14
     ZunTimer unk2e14;                  // 0x2e14 (0xc bytes)
-    unknown_fields(0x2e20, 0x24);      // 0x2e20-0x2e44 (含 SetupLaserMove 的 0x2e24 激光位置)
+    unknown_fields(0x2e20, 0x4);       // 0x2e20-0x2e24
+    // 0x2e24: SetupLaserMove 输入/输出块 — 原版输入 Float3(0x2e24) 与输出 Float3(0x2e28) 字节重叠
+    f32 laserMoveStartX;   // 0x2e24
+    f32 laserMoveYZ;       // 0x2e28  (startY 与 resultX 共享)
+    f32 laserMoveZ2;       // 0x2e2c  (startZ 与 resultY 共享)
+    f32 laserMoveResultZ;  // 0x2e30
+    unknown_fields(0x2e34, 0x10);      // 0x2e34-0x2e44
     EnemyLaserData laserPatterns[0x13]; // 0x2e44 (op111 按 0x18 步进索引)
     unknown_fields(0x300c, 0x14);      // 0x300c-0x3020
     i32 lifeCallbackState;                       // 0x3020  (boss spellcard-related)

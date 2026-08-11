@@ -576,7 +576,7 @@ restart:
                     if (flags & 2)
                     {
                         enemy->flags &= ~0x4;
-                        if (enemy->unk53c8) *(u32 *)((u8 *)enemy->unk53c8 + 0x1f8) &= ~0x20000;
+                        if (enemy->unk53c8) ((EffectManagerParticle *)enemy->unk53c8)->flags &= ~0x20000;
                     }
                     if (flags & 4) enemy->flags &= ~0x8;
                     if (flags & 8) enemy->flags |= 0x10;
@@ -591,7 +591,7 @@ restart:
                     if (flags & 2)
                     {
                         enemy->flags |= 0x4;
-                        if (enemy->unk53c8) *(u32 *)((u8 *)enemy->unk53c8 + 0x1f8) |= 0x20000;
+                        if (enemy->unk53c8) ((EffectManagerParticle *)enemy->unk53c8)->flags |= 0x20000;
                     }
                     if (flags & 4) enemy->flags |= 0x8;
                     if (flags & 8) enemy->flags &= ~0x10;
@@ -817,10 +817,15 @@ restart:
                 enemy->moveVec2.y = ECL_FVAL(1);
                 enemy->moveVec2.z = 0;
                 goto skipInstr;
-            case 108: // opcode 109 = 计算 pos+moveVec2 向量并写 0x2e28; g_BulletManager.SetupLaserMove(&0x2e24)
-                // 注: 原版中 0x2e24 的 Float3 与 0x2e28 的 Float3 字节重叠 (430e10 参数与结果共享)
-                *(Float3 *)((u8 *)enemy + 0x2e28) = enemy->pos + enemy->moveVec2;
-                g_BulletManager.SetupLaserMove((Float3 *)((u8 *)enemy + 0x2e24));
+            case 108: // opcode 109 = 计算 pos+moveVec2 写入激光输出; SetupLaserMove(&输入)
+                {
+                    // 注: 原版输入 Float3(0x2e24) 与输出 Float3(0x2e28) 字节重叠, 故逐分量写
+                    Float3 result = enemy->pos + enemy->moveVec2;
+                    enemy->laserMoveYZ = result.x;
+                    enemy->laserMoveZ2 = result.y;
+                    enemy->laserMoveResultZ = result.z;
+                }
+                g_BulletManager.SetupLaserMove((Float3 *)&enemy->laserMoveStartX);
                 goto skipInstr;
             case 110: // opcode 111 = 写激光数据槽 (0x2e44 + v0*0x18)
                 {
@@ -1128,13 +1133,13 @@ restart:
             case 150: // opcode 151 = 设置 flags bit26
                 enemy->flags = (enemy->flags & ~ECL_FLAG_NO_SAVE_ON_INTERRUPT) | ((instr->args[0].b[0] & 1) << 0x1a);
                 goto skipInstr;
-            case 148: // opcode 149 = 写 primaryVm 脚本索引字段 (+0x1fe)
-                *(i16 *)((u8 *)&enemy->primaryVm + 0x1fe) = (i16)ECL_IVAL(0);
+            case 148: // opcode 149 = 设置 primaryVm 挂起中断
+                enemy->primaryVm.prefix.pendingInterrupt = (i16)ECL_IVAL(0);
                 goto skipInstr;
-            case 149: // opcode 150 = 写 vms[idx] 脚本索引字段 (+0x1fe)
+            case 149: // opcode 150 = 设置 vms[idx] 挂起中断
                 {
                     i32 idx = instr->args[0].i;
-                    *(i16 *)((u8 *)&enemy->vms[idx] + 0x1fe) = (i16)instr->args[1].i;
+                    enemy->vms[idx].prefix.pendingInterrupt = (i16)instr->args[1].i;
                 }
                 goto skipInstr;
             case 142: // opcode 143 = 设置 unk3304
