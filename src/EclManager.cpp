@@ -72,6 +72,7 @@ EclRawInstr *__fastcall RunSubScript(Enemy *enemy, EclRawInstr *instr);   // 0x4
 void __fastcall MoveInterp(Enemy *enemy, EclRawInstr *instr);           // 0x420f40
 void __fastcall StartSubContext(Enemy *enemy, EclRawInstr *instr, i32 arg0); // 0x421bd0
 i32 __fastcall RunSubContext(Enemy *enemy, EclRawInstr *instr);            // 0x421cb0
+void __fastcall FUN_00420d10(Enemy *enemy, EclRawInstr *instr);           // 0x420d10 (op66/69 条件分支)
 void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr);           // 0x421e50
 void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr);           // 0x422020
 void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr);           // 0x4224a0
@@ -171,6 +172,10 @@ i32 __fastcall RunSubContext(Enemy *enemy, EclRawInstr *instr)
     return 0;
 }
 
+void __fastcall FUN_00420d10(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
 void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr)
 {
 }
@@ -241,7 +246,8 @@ ZunResult EclManager::Load(const char *path)
                   v25a, v25b, v25c, v21a, v21b, v26a, v26b, v26c, v22a, v22b, v27a, v27b, v27c, v23a, v23b, \
                   v28a, v28b, v28c, v29a, v30a, v31a, p141, v32a, p143, v33a, v33b, v33c, v33d, v33e, v36a, v36b, \
                   p151, p152, p153, p154, p155, p156, p157, p158, p159, v53a, v54a, v55a, v55b, v55c, v55d, v55e, \
-                  v55f, v57a, v58a, v59a, v59b, v59c, v59d, v59e, v59f, v62a, v62b)
+                  v55f, v57a, v58a, v59a, v59b, v59c, v59d, v59e, v59f, v62a, v62b, v64a, v64b, v65a, v65b, v65c, \
+                  v67a, v67b, v68a, v68b, v68c, v68d, v69a, v70a)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -304,6 +310,12 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v58a;       // slot 169 (case 58)
     i32 v59a, v59b, v59c, v59d, v59e, v59f; // slots 170-175 (case 59: SUB_CALL; eval order arg5..arg0)
     f32 v62a, v62b; // slots 176-177 (case 62: SET_POS)
+    f32 v64a, v64b; // slots 178-179 (case 64: SET_MOVE_ANGLE; ECL_FVAL(0), ECL_FVAL(1))
+    i32 v65a; f32 v65b, v65c; // slots 180-182 (case 65: SET_MOVE_ANGLE 条件; IVAL(0), FVAL(1), FVAL(2))
+    f32 v67a, v67b; // slots 183-184 (case 67: 瞄准+速度; FVAL(0), FVAL(1))
+    i32 v68a; f32 v68b, v68c; i32 v68d; // slots 185-188 (case 68: 瞄准条件; IVAL(0), FVAL(1), FVAL(2), IVAL(0))
+    f32 v69a;       // slot 189 (case 69: SET_MOVE_SPEED)
+    f32 v70a;       // slot 190 (case 70: 移动角度)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -808,8 +820,17 @@ restart:
                 MoveInterp(enemy, instr);
                 goto skipInstr;
             case 64: // opcode 65 = SET_MOVE_ANGLE
-                enemy->moveAngle = AddNormalizeAngle(ECL_FVAL(0), 0);
-                enemy->unk2da8 = ECL_FVAL(1);
+                // 完整操作: moveAngle=AddNormalizeAngle(f0,0); unk2da8=f1; flags bit; unk2de8=0; unk2ddc.SetCurrent(0)
+                if (instr->paramMask & 0x1)
+                    v64a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v64a = instr->args[0].f;
+                enemy->moveAngle = AddNormalizeAngle(v64a, 0);
+                if (instr->paramMask & 0x2)
+                    v64b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v64b = instr->args[1].f;
+                enemy->unk2da8 = v64b;
                 enemy->flags = (enemy->flags & ~ECL_FLAG_MOVE_MODE_MASK) | ECL_FLAG_MOVE_MODE_ANGLE;
                 enemy->unk2de8 = 0;
                 enemy->unk2ddc.SetCurrent(0);
@@ -817,29 +838,87 @@ restart:
             case 177: // opcode 178 = 子脚本 (FUN_004224a0)
                 FUN_004224a0(enemy, instr);
                 goto skipInstr;
-            case 65: // ECL_SET_MOVE_ANGLE: set angle + speed
-                enemy->moveAngle = AddNormalizeAngle(ECL_FVAL(0), 0);
-                enemy->unk2da8 = ECL_FVAL(1);
-                enemy->flags = (enemy->flags & ~ECL_FLAG_MOVE_MODE_MASK) | ECL_FLAG_MOVE_MODE_ANGLE;
-                enemy->unk2de8 = 0;
-                enemy->unk2ddc.SetCurrent(0);
+            case 65: // ECL_SET_MOVE_ANGLE: arg0>0 走 FUN_00420d10; 否则 moveAngle/unk2da8/flags/unk2de8/unk2ddc
+                if (instr->paramMask & 0x1)
+                    v65a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v65a = instr->args[0].i;
+                if (v65a <= 0)
+                {
+                    if (instr->paramMask & 0x4)
+                        v65b = enemy->GetEclFloatVar(instr->args[1].i);
+                    else
+                        v65b = instr->args[1].f;
+                    enemy->moveAngle = AddNormalizeAngle(v65b, 0);
+                    if (instr->paramMask & 0x8)
+                        v65c = enemy->GetEclFloatVar(instr->args[2].i);
+                    else
+                        v65c = instr->args[2].f;
+                    enemy->unk2da8 = v65c;
+                    enemy->flags = (enemy->flags & ~ECL_FLAG_MOVE_MODE_MASK) | ECL_FLAG_MOVE_MODE_ANGLE;
+                    enemy->unk2de8 = 0;
+                    enemy->unk2ddc.SetCurrent(0);
+                    goto skipInstr;
+                }
+                FUN_00420d10(enemy, instr);
                 goto skipInstr;
             case 66: // opcode 67 = 子脚本 (FUN_00422020)
                 FUN_00422020(enemy, instr);
                 goto skipInstr;
             case 67: // opcode 68 = 设瞄准玩家角度 + 移动速度 (AngleToPlayer + AddNormalizeAngle)
+                if (instr->paramMask & 0x1)
+                    v67a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v67a = instr->args[0].f;
+                enemy->moveAngle = AddNormalizeAngle(v67a, g_Player.AngleToPlayer(&enemy->pos));
+                if (instr->paramMask & 0x2)
+                    v67b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v67b = instr->args[1].f;
+                enemy->unk2da8 = v67b;
+                goto skipInstr;
+            case 68: // opcode 69 = 瞄准+速度 (条件: arg0>0 走 FUN_00420d10)
+                if (instr->paramMask & 0x1)
+                    v68a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v68a = instr->args[0].i;
+                if (v68a <= 0)
                 {
-                    f32 v0 = ECL_FVAL(0);
-                    enemy->moveAngle = AddNormalizeAngle(v0, g_Player.AngleToPlayer(&enemy->pos));
-                    enemy->unk2da8 = ECL_FVAL(1);
+                    if (instr->paramMask & 0x4)
+                        v68b = enemy->GetEclFloatVar(instr->args[1].i);
+                    else
+                        v68b = instr->args[1].f;
+                    enemy->moveAngle = AddNormalizeAngle(v68b, g_Player.AngleToPlayer(&enemy->pos));
+                    if (instr->paramMask & 0x8)
+                        v68c = enemy->GetEclFloatVar(instr->args[2].i);
+                    else
+                        v68c = instr->args[2].f;
+                    enemy->unk2da8 = v68c;
+                    enemy->flags = (enemy->flags & ~ECL_FLAG_MOVE_MODE_MASK) | ECL_FLAG_MOVE_MODE_ANGLE;
+                    if (instr->paramMask & 0x1)
+                        v68d = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v68d = instr->args[0].i;
+                    enemy->unk2de8 = v68d;
+                    enemy->unk2ddc.SetCurrent(v68d);
+                    goto skipInstr;
                 }
+                FUN_00420d10(enemy, instr);
                 goto skipInstr;
             case 69: // opcode 70 = SET_MOVE_SPEED: moveSpeed + flag bit12
-                enemy->moveSpeed = ECL_FVAL(0);
+                if (instr->paramMask & 0x1)
+                    v69a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v69a = instr->args[0].f;
+                enemy->moveSpeed = v69a;
                 enemy->flags = (enemy->flags & ~ECL_FLAG_MOVE_MODE_MASK) | ECL_FLAG_MOVE_MODE_ANGLE;
                 goto skipInstr;
             case 70: // opcode 71 = 移动角度 (unk2dac) + flag bit12
-                enemy->unk2dac = ECL_FVAL(0);
+                if (instr->paramMask & 0x1)
+                    v70a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v70a = instr->args[0].f;
+                enemy->unk2dac = v70a;
                 enemy->flags = (enemy->flags & ~ECL_FLAG_MOVE_MODE_MASK) | ECL_FLAG_MOVE_MODE_ANGLE;
                 goto skipInstr;
             case 71: // opcode 72 = SET_MOVE_INTERP: 移动插值参数
