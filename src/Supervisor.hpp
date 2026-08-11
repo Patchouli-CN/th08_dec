@@ -403,6 +403,7 @@ struct ZunTimer
     ZunBool operator+=(int value)
     {
         this->Increment(value);
+        return this->current;
     }
 
     ZunBool operator-=(int value)

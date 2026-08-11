@@ -701,6 +701,10 @@ void Gui::FUN_00439810(i32 arg)
     this->impl->FUN_0043396d(arg);
 }
 
+void Gui::FUN_00423130(i32 a0)
+{
+}
+
 // STUB: th08 0x43542b
 void GuiImpl::DrawDialogue()
 {

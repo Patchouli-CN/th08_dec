@@ -1388,6 +1388,10 @@ i32 AnmManager::FUN_004639e0(AnmVm *vm)
     return 0;
 }
 
+void AnmManager::FUN_004649a0(AnmVm *vm, void *a1, i32 a2)
+{
+}
+
 ZunResult AnmManager::FUN_00463cf0(AnmVm *vm)
 {
     if (!vm->IsVisible())

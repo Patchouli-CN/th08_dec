@@ -139,6 +139,7 @@ struct GuiFlags
 struct Gui
 {
     void FUN_00439810(i32 arg);
+    void FUN_00423130(i32 a0); // 0x423130 (ECL set-data helper)
     static ChainCallbackResult OnUpdate(Gui *gui);
     static ChainCallbackResult OnDraw(Gui *gui);
 

@@ -62,11 +62,20 @@ struct Enemy
     unknown_fields(0x2dd8, 0x4);       // 0x2dd8-0x2ddc
     ZunTimer unk2ddc;                  // 0x2ddc
     i32 unk2de8;                       // 0x2de8
-    unknown_fields(0x2dec, 0x10);      // 0x2dec-0x2dfc
+    f32 unk2dec;                       // 0x2dec
+    f32 unk2df0;                       // 0x2df0
+    i16 unk2df4;                       // 0x2df4
+    i16 unk2df6;                       // 0x2df6
+    i16 unk2df8;                       // 0x2df8
+    i16 unk2dfa;                       // 0x2dfa
     i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
     unknown_fields(0x2e00, 0x14);      // 0x2e00-0x2e14
     ZunTimer unk2e14;                  // 0x2e14 (0xc bytes)
-    unknown_fields(0x2e20, 0x214);     // 0x2e20-0x3034
+    unknown_fields(0x2e20, 0x200);     // 0x2e20-0x3020
+    i32 unk3020;                       // 0x3020  (boss spellcard-related)
+    i32 unk3024;                       // 0x3024  (set by SET_LIFE_CALLBACK_THRESHOLD)
+    i32 unk3028;                       // 0x3028  (set by SET_LIFE_CALLBACK_SUB)
+    unknown_fields(0x302c, 0x8);       // 0x302c-0x3034
     u8 unk3034[0x2c];                  // 0x3034 (0x2c bytes)
     unknown_fields(0x3060, 0x220);     // 0x3060-0x3280
     i32 unk3280[0x20];                 // 0x3280 (0x20 entries, data table)
@@ -92,11 +101,19 @@ struct Enemy
     f32 unk3348;                       // 0x3348
     f32 unk334c;                       // 0x334c
     f32 unk3350;                       // 0x3350
-    unknown_fields(0x3354, 0x28);      // 0x3354-0x337c
+    unknown_fields(0x3354, 0x4);       // 0x3354-0x3358
+    i32 unk3358[4];                    // 0x3358  (indexed by ECL arg; boss data / effect slots)
+    i32 unk3368[4];                    // 0x3368  (same indexing; set with unk3358)
+    i32 unk3378;                       // 0x3378  (initialized to -1)
     i32 unk337c;                       // 0x337c
     unknown_fields(0x3380, 0x4);       // 0x3380-0x3384
     void *dataPtrs[4];                 // 0x3384
-    unknown_fields(0x3394, 0x2034);    // 0x3394-0x53c8
+    unknown_fields(0x3394, 0x1fb8);    // 0x3394-0x534c
+    u8 unk534c;                        // 0x534c  (tutorial/boss-ai flags, bit3 gate)
+    i16 unk534e;                       // 0x534e
+    i16 unk5350;                       // 0x5350
+    i16 unk5352;                       // 0x5352
+    unknown_fields(0x5354, 0x74);      // 0x5354-0x53c8
     u32 unk53c8;                       // 0x53c8  (pointer to linked enemy/struct)
     unknown_fields(0x53cc, 0x4);       // 0x53cc-0x53d0
 };

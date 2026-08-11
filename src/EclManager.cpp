@@ -4,6 +4,10 @@
 #include "EnemyManager.hpp"
 #include "Global.hpp"
 #include "GameManager.hpp"
+#include "BulletManager.hpp"
+#include "Player.hpp"
+#include "SoundPlayer.hpp"
+#include "Gui.hpp"
 
 namespace th08
 {
@@ -160,6 +164,9 @@ restart:
     // ECL arg access: paramMask bit N set means arg N is a variable id.
 #define ECL_IVAL(n) ((instr->paramMask & (1 << (n))) ? GetVarValue(enemy, instr->args[n].i) : instr->args[n].i)
 #define ECL_FVAL(n) ((instr->paramMask & (1 << (n))) ? enemy->GetEclFloatVar(instr->args[n].i) : instr->args[n].f)
+    // Boss-mode gate: bit14 (extra stage) AND bits7-8 set → several boss-only
+    // ECL opcodes skip their non-boss write and take a shorter path.
+#define IS_BOSS_MODE() ((g_PlayerFlags & 0x4000) && (((g_PlayerFlags >> 7) & 3) != 0))
     instr = enemy->curContextPtr->curInstr;
     if (enemy->runInterrupt >= 0)
     {
@@ -284,6 +291,10 @@ restart:
             case 27: // ECL_SET_DIV_FLOAT: *arg0 = arg1 / arg2
                 *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
                     ECL_FVAL(1) / ECL_FVAL(2);
+                goto skipInstr;
+            case 28: // ECL_ATAN2_SWAP: *arg0 = atan2(arg2, arg1) (args 1/2 swapped)
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
+                    EclAtan2(ECL_FVAL(2), ECL_FVAL(1));
                 goto skipInstr;
             case 29: // ECL_INC: *arg0 += 1
                 *GetIntPtr(enemy, &instr->args[0], instr->paramMask) += 1;
@@ -512,6 +523,37 @@ restart:
             case 83: // opcode 84 = NOP
             case 84: // opcode 85 = NOP
                 goto skipInstr;
+            case 85: // opcode 86 = 读子弹对象 int 变量 (g_BulletObjects[arg2] 上的 var1)
+                {
+                    i32 result;
+                    if (instr->paramMask & 0x2)
+                        result = GetVarValue((Enemy *)*(u32 *)(0xf54cc0 + ECL_IVAL(2) * 4), instr->args[1].i);
+                    else
+                        result = instr->args[1].i;
+                    *GetIntPtr(enemy, &instr->args[0], instr->paramMask) = result;
+                }
+                goto skipInstr;
+            case 86: // opcode 87 = 读子弹对象 float 变量 (g_BulletObjects[arg2] 上的 var1)
+                {
+                    i32 idx = ECL_IVAL(2);
+                    if (*(u32 *)(0xf54cc0 + idx * 4) != 0)
+                    {
+                        f32 result;
+                        if (instr->paramMask & 0x2)
+                            result = ((Enemy *)*(u32 *)(0xf54cc0 + ECL_IVAL(2) * 4))->GetEclFloatVar(instr->args[1].i);
+                        else
+                            result = instr->args[1].f;
+                        *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = result;
+                    }
+                }
+                goto skipInstr;
+            case 88: // opcode 89 = 写子弹对象+0x2d30 (若 g_BulletObjects[arg0] 有效)
+                {
+                    i32 idx = ECL_IVAL(0);
+                    if (*(u32 *)(0xf54cc0 + idx * 4) != 0)
+                        *(i16 *)(*(u32 *)(0xf54cc0 + ECL_IVAL(0) * 4) + 0x2d30) = (i16)ECL_IVAL(1);
+                }
+                goto skipInstr;
             case 95: case 96: case 97: case 98: case 99: case 100:
             case 101: case 102: case 103:
                 // opcode 96-104: 激光处理
@@ -538,8 +580,43 @@ restart:
                 enemy->unk2dbc = ECL_FVAL(1);
                 enemy->unk2dc0 = 0;
                 goto skipInstr;
+            case 111: // opcode 112 = RemoveAllBullets(1)
+                g_BulletManager.bulletmanager_fun_00415c60();
+                goto skipInstr;
+            case 112: // opcode 113 = 生命回调阈值/子脚本: unk3020/24/28
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    if (v0 >= 0)
+                    {
+                        enemy->unk3024 = ECL_IVAL(0);
+                        enemy->unk3020 |= 0x200;
+                    }
+                    else
+                    {
+                        enemy->unk3020 &= ~0x200;
+                    }
+                    enemy->unk3028 = ECL_IVAL(1);
+                }
+                goto skipInstr;
             case 115: // opcode 116 = 设置 unk3300
                 enemy->unk3300 = ECL_IVAL(0);
+                goto skipInstr;
+            case 116: // opcode 117 = 给子弹对象加角度 (unk3280[idx] 的 unk554)
+                {
+                    i32 idx = ECL_IVAL(0);
+                    if (enemy->unk3280[idx] != 0)
+                        *(f32 *)((u8 *)enemy->unk3280[idx] + 0x554) = AddNormalizeAngle(
+                            *(f32 *)((u8 *)enemy->unk3280[idx] + 0x554), ECL_FVAL(1));
+                }
+                goto skipInstr;
+            case 119: // opcode 120 = 设置 curContext globalVar intVars[0] (依 unk3280 子弹对象)
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    if (enemy->unk3280[v0] != 0 && *(u32 *)((u8 *)enemy->unk3280[v0] + 0x584) != 0)
+                        enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 1;
+                    else
+                        enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 0;
+                }
                 goto skipInstr;
             case 125: // opcode 126 = 设置 interrupts 数组元素
                 enemy->interrupts[ECL_IVAL(1)] = (i16)ECL_IVAL(0);
@@ -550,8 +627,41 @@ restart:
             case 122: // opcode 123 = 子脚本 (FUN_004212e0)
                 FUN_004212e0(enemy, instr);
                 goto skipInstr;
+            case 123: // opcode 124 = 播放音效 (声音索引 v0, 位置 pos.x)
+                g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_IVAL(0), enemy->pos.x);
+                goto skipInstr;
             case 131: // opcode 132 = 设置 unk2e14 计时器
                 enemy->unk2e14.SetCurrent(ECL_IVAL(0));
+                goto skipInstr;
+            case 128: // opcode 129 = 设置 unk3324 bit20-22 (boss 模式跳过)
+                if (!IS_BOSS_MODE())
+                    enemy->unk3324 = (enemy->unk3324 & 0xff8fffff) | ((instr->args[0].i & 0x7) << 0x14);
+                goto skipInstr;
+            case 129: // opcode 130 = 设置 unk2cee (boss 模式跳过)
+                if (!IS_BOSS_MODE())
+                    enemy->unk2cee = (i16)instr->args[0].i;
+                goto skipInstr;
+            case 132: // opcode 133 = 设置 unk3358/unk3368 (boss 模式只写 3358)
+                if (IS_BOSS_MODE())
+                {
+                    enemy->unk3358[ECL_IVAL(0)] = ECL_IVAL(1);
+                }
+                else
+                {
+                    enemy->unk3358[ECL_IVAL(0)] = ECL_IVAL(1);
+                    enemy->unk3368[ECL_IVAL(0)] = ECL_IVAL(2);
+                }
+                goto skipInstr;
+            case 136: // opcode 137 = 设置 curContextPtr->func/eclExInstr (依函数表 0x4c6cb0)
+                if (ECL_IVAL(0) >= 0)
+                {
+                    enemy->curContextPtr->func = (EclExInstr)(*(void **)(0x4c6cb0 + ECL_IVAL(0) * 4));
+                    enemy->curContextPtr->eclExInstr = instr;
+                }
+                else
+                {
+                    enemy->curContextPtr->func = NULL;
+                }
                 goto skipInstr;
             case 137: // opcode 138 = 复制 3 字节到 unk3310/3311/3312
                 enemy->unk3310 = instr->args[0].b[0];
@@ -575,8 +685,34 @@ restart:
             case 142: // opcode 143 = 设置 unk3304
                 enemy->unk3304 = ECL_IVAL(0);
                 goto skipInstr;
+            case 145: // opcode 146 = curContextPtr->time += v0
+                enemy->curContextPtr->time += ECL_IVAL(0);
+                goto skipInstr;
             case 146: // opcode 147 = 写全局 0x4ea290
                 *(volatile u32 *)0x4ea290 = ECL_IVAL(0);
+                goto skipInstr;
+            case 147: // opcode 148 = g_Gui.FUN_00423130(v0); 全局 0x164d30c += 0x708
+                g_Gui.FUN_00423130(ECL_IVAL(0));
+                *(u32 *)0x164d30c += 0x708;
+                goto skipInstr;
+            case 151: // opcode 152 = 写移动界限字段 unk2dec/2df0/2df4..2dfa
+                enemy->unk2dec = ECL_FVAL(0);
+                enemy->unk2df0 = ECL_FVAL(1);
+                enemy->unk2df4 = (i16)ECL_IVAL(2);
+                enemy->unk2df6 = (i16)ECL_IVAL(3);
+                enemy->unk2df8 = (i16)ECL_IVAL(4);
+                enemy->unk2dfa = (i16)ECL_IVAL(5);
+                goto skipInstr;
+            case 156: // opcode 157 = 设置 AI 字段 unk534c/534e/5350/5352 + 若 bit3 调 AnmManager
+                enemy->unk534c = instr->args[0].b[0];
+                enemy->unk534e = (i16)ECL_IVAL(1);
+                enemy->unk5350 = (i16)ECL_IVAL(2);
+                enemy->unk5352 = (i16)ECL_IVAL(3);
+                if (enemy->unk534c & 0x8)
+                {
+                    g_AnmManager->FUN_004649a0(&enemy->primaryVm, (void *)((u8 *)enemy + 0x3e14),
+                                               (i32)(((i32)(i16)enemy->unk5352 / (i32)(i16)enemy->unk534e) << 1));
+                }
                 goto skipInstr;
             case 144: // opcode 145 = 设置 unk3324 bit25
                 enemy->unk3324 = (enemy->unk3324 & ~0x2000000) | ((instr->args[0].b[0] & 1) << 0x19);
@@ -600,6 +736,28 @@ restart:
             case 155: // opcode 156 = 设置 unk3324 bit7 + unk332f=2
                 enemy->unk3324 = (enemy->unk3324 & ~0x80) | ((instr->args[0].b[0] & 1) << 7);
                 enemy->unk332f = 2;
+                goto skipInstr;
+            case 169: // opcode 170 = 写子弹对象+0x599 (byte)
+                {
+                    i32 idx = ECL_IVAL(0);
+                    if (enemy->unk3280[idx] != 0)
+                        *(u8 *)((u8 *)enemy->unk3280[idx] + 0x599) = (u8)ECL_IVAL(1);
+                }
+                goto skipInstr;
+            case 175: // opcode 176 = 全局弹幕/特殊事件状态 + unk3324 bit30
+                g_PlayerFlags |= 0x80;
+                g_PlayerFlags &= ~0x2000;
+                if (!(g_PlayerFlags & 0x4000))
+                {
+                    if (g_Unknown164d2cc == GAME_STATE_EVENT_6 || g_Unknown164d2cc == GAME_STATE_EVENT_7)
+                        g_PlayerFlags |= 0x2000;
+                }
+                else if ((g_CurrentSpellcardNumber >= 0x8f && g_CurrentSpellcardNumber <= 0x92) ||
+                         (g_CurrentSpellcardNumber >= 0xab && g_CurrentSpellcardNumber <= 0xbe))
+                {
+                    g_PlayerFlags |= 0x2000;
+                }
+                enemy->unk3324 |= 0x40000000;
                 goto skipInstr;
             case 177: // opcode 178 = 子脚本 (FUN_004224a0)
                 FUN_004224a0(enemy, instr);
