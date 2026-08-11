@@ -177,6 +177,7 @@ th08::g_ItemAutoCollectTimer,0x18b89d4,global
 th08::g_UnkAutoCollectTimer,0x18b89bc,global
 th08::g_BulletPool,0xf6f710,global
 th08::g_PlayerUnknown0bb,0x164d0bb,global
+th08::g_PlayerUnknown0b0,0x164d0b0,global
 th08::g_PlayerPos,0x164d2dc,global
 th08::g_Unknown57ad30,0x57ad30,global
 th08::g_PlayerCharacter,0x164d0b1,global

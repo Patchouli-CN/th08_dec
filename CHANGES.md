@@ -101,3 +101,11 @@
   `g_OptionInitCallbacks[8][4]`/`g_OptionUpdateCallbacks[8][4]`/`g_SpiritOptionInitCallbacks[4]`/
   `g_SpiritOptionUpdateCallbacks[4]`。
 - **新 stub**：`Player::FUN_00451640`(0x451640)、`D3DVectorOps`（D3DXVECTOR3 operator-/+ 0x4090d0/409080 的 thiscall stub）、`GameManager::GaugeIsModeratelyYoukai`。
+
+- **`Player::FUN_0044cbf0`（0x44cbf0 死亡/重生）stub → 98.7%**：死亡处理（消耗时间点、
+  shotIndex 递减、清结界、死亡特效+音效、掉落物 spawn、Lives/Power/Bomb 恢复）+ 重生
+  （invulnerabilityTimer 插值 alpha、30 帧后 playerState=1、重生点设置、形态切换动画、
+  扣命、SetBombCount）。剩余差异为 goto 跳板布局（AsFrames/形态切换分支）。
+- 逆向发现：死亡掉落物为 1 个大 P + 5 个小 P（第一 SpawnItem itemType=2，后 5 个=0）；
+  时间点惩罚 `-(currentTimeOrbs/10)`（>5000 时 -500）；`0x160f510+0x3c`=currentTimeOrbs。
+- 新增：`g_PlayerUnknown0b0`(0x164d0b0)、`Spellcard::FUN_0044d150`、`ItemManager::FUN_00441530`。

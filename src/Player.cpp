@@ -5,6 +5,8 @@
 #include "EffectManager.hpp"
 #include "GameManager.hpp"
 #include "Gui.hpp"
+#include "ItemManager.hpp"
+#include "ReplayManager.hpp"
 #include "ScreenEffect.hpp"
 #include "SoundPlayer.hpp"
 #include "Supervisor.hpp"
@@ -13,6 +15,7 @@ namespace th08
 {
 
 DIFFABLE_STATIC(Player, g_Player);
+DIFFABLE_STATIC(u8, g_PlayerUnknown0b0); // 0x164d0b0
 DIFFABLE_STATIC(u8, g_PlayerUnknown0bb);
 DIFFABLE_STATIC(Float2, g_PlayerPos);
 DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile);
@@ -504,9 +507,127 @@ switch_shot:
     }
 }
 
-// STUB: th08 0x44cbf0
+// FUNCTION: th08 0x44cbf0 (death: bomb out -> item drops; respawn: invulnerability
+// flash -> reposition at the target point)
 i32 Player::FUN_0044cbf0()
 {
+    i32 timeOrbPenalty;
+    f32 invulnRatio;
+    f32 targetX;
+    f32 targetY;
+
+    if (this->shotIndex != 0)
+    {
+        /* Death / bomb-out: consume a stock and spawn the drop items. */
+        g_GameManager.AddTimeOrbs(-15);
+        this->shotIndex--;
+        this->unk4 = 1;
+        if (this->shotIndex == 0)
+        {
+            if (this->unkE2b28 != 0)
+            {
+                *(u8 *)(this->unkE2b28 + 0x350) = 0;
+                this->unkE2b28 = 0;
+            }
+            g_EffectManager.FUN_00425870(0xc, &this->positionCenter, 3, 1, 0xff4040ff);
+            g_EffectManager.FUN_00425430(0x6, &this->positionCenter, 0x10, -1);
+            g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0xf, this->positionCenter.x);
+            g_PlayerFlags &= ~0x400;
+            g_AnmManager->FUN_0040bab0();
+            *(u32 *)((u8 *)this + 0x208) &= ~0x20000;
+            g_ReplayManager->replayEventFlags |= 4;
+            g_PlayerUnknown0b0 = 0;
+            this->unk4 = 0;
+            g_Spellcard.FUN_0044d150();
+            g_GameManager.AddToDeaths(1);
+            g_GuiDisplayState = (g_GuiDisplayState & ~0xC00) | 0x800;
+            if (g_GameManager.globals->currentTimeOrbs > 0x1388)
+                timeOrbPenalty = -500;
+            else
+                timeOrbPenalty = -g_GameManager.globals->currentTimeOrbs / 10;
+            g_GameManager.AddTimeOrbs(timeOrbPenalty);
+            if (g_GameManager.GetLives() > 0)
+            {
+                if (g_GameManager.GetPower() <= 0x10)
+                    g_GameManager.SetPower(0);
+                else
+                    g_GameManager.AddPower(-16);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_BIG, 2);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_SMALL, 2);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_SMALL, 2);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_SMALL, 2);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_SMALL, 2);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_SMALL, 2);
+                if (g_GameManager.GetBombsRemaining() > 0)
+                {
+                    if (g_PlayerCharacter == 2 || g_PlayerCharacter == 8 || g_PlayerCharacter == 9)
+                    {
+                        g_ItemManager.SpawnItem(&this->positionCenter, ITEM_BOMB, 2);
+                    }
+                }
+                g_GuiDisplayState = (g_GuiDisplayState & ~0x30) | 0x20;
+                g_ItemManager.FUN_00441530();
+            }
+            else
+            {
+                g_GameManager.SetPower(0);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_FULL, 2);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_FULL, 2);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_FULL, 2);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_FULL, 2);
+                g_ItemManager.SpawnItem(&this->positionCenter, ITEM_POWER_FULL, 2);
+                g_GuiDisplayState = (g_GuiDisplayState & ~0x30) | 0x20;
+            }
+            g_GameManager.DecreaseSubrank(0x640);
+        }
+        goto ret0;
+    }
+
+    /* Respawn: interpolate the invulnerability flash, then place the player at the
+     * respawn point and hand back control. */
+    invulnRatio = this->invulnerabilityTimer.AsFramesFloat() / 120.0f;
+    *(f32 *)((u8 *)this + 0x2c) = 3.0f * invulnRatio + 1.0f;
+    *(f32 *)((u8 *)this + 0x28) = 1.0f - 1.0f * invulnRatio;
+    *(u32 *)((u8 *)this + 0x200) =
+        (u32)((i32)(255.0f - this->invulnerabilityTimer.AsFramesFloat() * 255.0f / 120.0f) << 24) | 0xffffff;
+    ((Player *)((u8 *)this + 0x10))->FUN_0044e0f0();
+    this->velocityX = 0;
+    this->velocityY = 0;
+    if (this->invulnerabilityTimer.AsFrames() < 0x1e)
+    {
+        goto ret0;
+    }
+    this->playerState = 1;
+    targetX = g_PlayerTargetX / 2.0f;
+    PlayerPosCenter(&this->positionCenter)->x = targetX;
+    targetY = g_PlayerTargetY - 64.0f;
+    PlayerPosCenter(&this->positionCenter)->y = targetY;
+    PlayerPosCenter(&this->positionCenter)->z = 0.2f;
+    this->invulnerabilityTimer.SetCurrent(0);
+    *(f32 *)((u8 *)this + 0x28) = 3.0f;
+    *(f32 *)((u8 *)this + 0x2c) = 3.0f;
+    if (g_PlayerCharacter < 4 && this->isYoukaiMode == 0)
+        goto setForm0;
+    if (g_PlayerCharacter & 1)
+        goto setForm5;
+setForm0:
+    this->anm->SetAndExecuteScriptIdx((AnmVm *)this->unk_10, 0);
+    goto setFormDone;
+setForm5:
+    this->anm->SetAndExecuteScriptIdx((AnmVm *)this->unk_10, 5);
+setFormDone:
+    (void)0;
+    if (g_GameManager.GetLives() <= 0)
+    {
+        g_PlayerUnknown0bb = 1;
+        goto ret0;
+    }
+    g_GameManager.AddLives(-1);
+    g_GuiDisplayState = (g_GuiDisplayState & ~0x3) | 0x2;
+    g_GameManager.SetBombCount((i32)g_PlayerShtFile->unk4);
+    g_GuiDisplayState = (g_GuiDisplayState & ~0xC) | 0x8;
+    return 1;
+ret0:
     return 0;
 }
 

@@ -80,6 +80,7 @@ struct ItemManager
     void CancelAutoCollect();
     void OnDraw();
     i32 GetTimeOrbCount();
+    void FUN_00441530();
 };
 C_ASSERT(sizeof(ItemManager) == 0x17b094);
 

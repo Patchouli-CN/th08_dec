@@ -268,6 +268,7 @@ struct Spellcard
     i32 spellcard_fun_004178a0();
     void spellcard_fun_00416b10(i32 arg);
     ZunResult FUN_00414590();
+    void FUN_0044d150();
 
     u32 flags;
     unknown_fields(0x4, 0xf8);

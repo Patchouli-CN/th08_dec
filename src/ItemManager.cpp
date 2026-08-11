@@ -725,4 +725,8 @@ i32 ItemManager::GetTimeOrbCount()
     return count;
 }
 
+// STUB: th08 0x441530
+void ItemManager::FUN_00441530()
+{
+}
 } /* namespace th08 */

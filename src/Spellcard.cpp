@@ -440,4 +440,11 @@ void Spellcard::CutChain()
         g_Chain.Cut(g_SpellcardChainElem);
     }
 }
+
+// STUB: th08 0x44d150
+void Spellcard::FUN_0044d150()
+{
+    this->flags &= ~0x4;
+    this->unk0xfc = 0;
+}
 } /* namespace th08 */

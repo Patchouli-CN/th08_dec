@@ -264,6 +264,7 @@ struct Player
 };
 
 DIFFABLE_EXTERN(Player, g_Player);
+DIFFABLE_EXTERN(u8, g_PlayerUnknown0b0);
 DIFFABLE_EXTERN(u8, g_PlayerUnknown0bb);
 DIFFABLE_EXTERN(Float2, g_PlayerPos);
 DIFFABLE_EXTERN(PlayerRawShtFile *, g_PlayerShtFile);
