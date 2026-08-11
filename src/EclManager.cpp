@@ -40,6 +40,10 @@ void Enemy::FUN_00421de0(u8 *a, u8 *b, u8 *c, u8 *d, u8 *e)
 {
 }
 
+void Enemy::FUN_0042c180()
+{
+}
+
 void Enemy::FUN_00422c40()
 {
 }
@@ -233,6 +237,23 @@ restart:
             case 57: // ECL_SET_ANM_SUB: play on the secondary animation set
                 g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
                 enemy->unk3328 |= 0x4;
+                goto skipInstr;
+            case 61: // ECL_SET_ANM_SWITCH: play anim on the set chosen by unk3328 bit2
+                if (((enemy->unk3328 >> 2) & 1) == 0)
+                {
+                    g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, enemy->unk333c);
+                }
+                else
+                {
+                    g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, enemy->unk333c);
+                }
+                goto skipInstr;
+            case 65: // ECL_SET_MOVE_ANGLE: set angle + speed
+                enemy->unk2d94 = AddNormalizeAngle(ECL_FVAL(0), 0);
+                enemy->unk2da8 = ECL_FVAL(1);
+                enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
+                enemy->unk2de8 = 0;
+                enemy->unk2ddc.SetCurrent(0);
                 goto skipInstr;
             default:
                 goto skipInstr;

@@ -14,6 +14,7 @@ struct Enemy
     void FUN_00422c40();
     void FUN_00423150();
     void FUN_00421de0(u8 *a, u8 *b, u8 *c, u8 *d, u8 *e); // ECL sub-call (0x421de0)
+    void FUN_0042c180(); // move init after SET_POS (0x42c180)
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
     unknown_fields(0x0, 0xc);
@@ -37,14 +38,21 @@ struct Enemy
     unknown_fields(0x2d54, 0x34);      // 0x2d54-0x2d88
     Float3 unk2d88;                    // 0x2d88  pos + unk2d40 (computed each ECL frame)
     f32 unk2d94;                       // 0x2d94  (angle from dx/dy)
-    unknown_fields(0x2d98, 0x64);      // 0x2d98-0x2dfc
+    unknown_fields(0x2d98, 0x10);      // 0x2d98-0x2da8
+    f32 unk2da8;                       // 0x2da8  (move angle)
+    unknown_fields(0x2dac, 0x30);      // 0x2dac-0x2ddc
+    ZunTimer unk2ddc;                  // 0x2ddc
+    i32 unk2de8;                       // 0x2de8
+    unknown_fields(0x2dec, 0x10);      // 0x2dec-0x2dfc
     i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
     unknown_fields(0x2e00, 0x524);     // 0x2e00-0x3324
     u32 unk3324;                       // 0x3324  bit26 = don't save context on interrupt
     u32 unk3328;                       // 0x3328  (anm script flags, bit2 cleared by SET_ANM)
     unknown_fields(0x332c, 0x4);       // 0x332c-0x3330
     u8 eclFlags;                       // 0x3330
-    unknown_fields(0x3331, 0x53);      // 0x3331-0x3384
+    unknown_fields(0x3331, 0xb);       // 0x3331-0x333c
+    i16 unk333c;                       // 0x333c  current animation id
+    unknown_fields(0x333e, 0x46);      // 0x333e-0x3384
     void *dataPtrs[4];                 // 0x3384
     unknown_fields(0x3394, 0x203c);    // 0x3394-0x53d0
 };
