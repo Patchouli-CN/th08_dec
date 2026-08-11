@@ -45,12 +45,35 @@ struct EclContextArgs
 C_ASSERT(sizeof(EclContextArgs) == 0x68);
 
 // An interpolation entry used by the move/lerp ECL instructions.
+typedef void (*EclInterpFn)(Enemy *, struct EclInterp *, f32 t);
+typedef void (*EclExInstr)(Enemy *, EclRawInstr *);
+
 struct EclInterp
 {
-    void (*fn)(Enemy *, EclInterp *, f32 t);
-    ZunTimer timer;
-    AnyArg args[8];
+    EclInterpFn fn;    // 0x0
+    ZunTimer timer;    // 0x4 (0xc)
+    AnyArg args[8];    // 0x10 (0x20)
 };
+C_ASSERT(sizeof(EclInterp) == 0x30);
+
+// The per-enemy ECL execution context. In th08 this lives inline in the Enemy
+// at +0x7f8 (0x228 bytes); RunEcl reaches it through Enemy.curContextPtr.
+struct EclContext
+{
+    EclRawInstr *curInstr;         // 0x0
+    ZunTimer time;                 // 0x4
+    EclExInstr func;               // 0x10
+    EclRawInstr *eclExInstr;       // 0x14
+    EclContextArgs eclContextArgs; // 0x18 (0x68)
+    unknown_fields(0x80, 0x10);
+    ZunTimer waitTimer;            // 0x90
+    i32 laserNotInUse;             // 0x9c
+    i32 isPeriodicSub;             // 0xa0
+    i16 subId;                     // 0xa4
+    unknown_fields(0xa6, 0x2);
+    EclInterp interps[8];          // 0xa8 (8 * 0x30 = 0x180)
+};
+C_ASSERT(sizeof(EclContext) == 0x228);
 
 struct EclManager
 {

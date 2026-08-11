@@ -732,7 +732,7 @@ void GameManager::GameplaySetupThread(void *param)
         }
         gameManager->InitArcadeRegionParams();
         gameManager->globals->playerPower = 0.0f;
-        g_GameManager.UpdateAntiTamper();
+        gameManager->UpdateAntiTamper();
         gameManager->unk3de04 = 0;
         g_GameManager.unk3D2A4 = 0;
         g_GameManager.unk3D2A0 = 0;
@@ -774,10 +774,10 @@ void GameManager::GameplaySetupThread(void *param)
         gameManager->InitRankParams();
         gameManager->globals->deaths = 0.0f;
         gameManager->globals->deathInStage = 0.0f;
-        g_GameManager.UpdateAntiTamper();
+        gameManager->UpdateAntiTamper();
         gameManager->globals->bombsUsed = 0.0f;
         gameManager->globals->bombsUsedInStage = 0.0f;
-        g_GameManager.UpdateAntiTamper();
+        gameManager->UpdateAntiTamper();
         gameManager->globals->unk1C = 0;
         gameManager->unk3de10 = 0;
         gameManager->unk3de18 = 0;
@@ -818,9 +818,9 @@ void GameManager::GameplaySetupThread(void *param)
         gameManager->globals->displayScore = gameManager->globals->score;
         gameManager->globals->unk0x10 = 0;
         gameManager->globals->deathInStage = 0.0f;
-        g_GameManager.UpdateAntiTamper();
+        gameManager->UpdateAntiTamper();
         gameManager->globals->bombsUsedInStage = 0.0f;
-        g_GameManager.UpdateAntiTamper();
+        gameManager->UpdateAntiTamper();
         if (Player::RegisterChain(0) != ZUN_SUCCESS)
         {
             if (g_Supervisor.subthreadCloseRequestActive)
@@ -860,15 +860,15 @@ void GameManager::GameplaySetupThread(void *param)
             {
             case 0:
                 gameManager->globals->playerPower = 0.0f;
-                g_GameManager.UpdateAntiTamper();
+                gameManager->UpdateAntiTamper();
                 break;
             case 1:
                 gameManager->globals->playerPower = 112.0f;
-                g_GameManager.UpdateAntiTamper();
+                gameManager->UpdateAntiTamper();
                 break;
             default:
                 gameManager->globals->playerPower = 128.0f;
-                g_GameManager.UpdateAntiTamper();
+                gameManager->UpdateAntiTamper();
                 break;
             }
         }
@@ -877,17 +877,17 @@ void GameManager::GameplaySetupThread(void *param)
             if (gameManager->currentSpellCardNumber <= 1)
             {
                 gameManager->globals->playerPower = 30.0f;
-                g_GameManager.UpdateAntiTamper();
+                gameManager->UpdateAntiTamper();
             }
             else if (gameManager->currentSpellCardNumber <= 12)
             {
                 gameManager->globals->playerPower = 80.0f;
-                g_GameManager.UpdateAntiTamper();
+                gameManager->UpdateAntiTamper();
             }
             else
             {
                 gameManager->globals->playerPower = 128.0f;
-                g_GameManager.UpdateAntiTamper();
+                gameManager->UpdateAntiTamper();
             }
         }
     }
@@ -896,7 +896,7 @@ void GameManager::GameplaySetupThread(void *param)
         gameManager->InitRankParams();
         ReplayManager::RegisterChain(1, g_GameManager.replayFilename);
         oldSeed = g_Rng.seed;
-        g_GameManager.UpdateAntiTamper();
+        gameManager->UpdateAntiTamper();
         g_Rng.seed = oldSeed;
     }
     gameManager->stageRngSeed = g_Rng.seed;
