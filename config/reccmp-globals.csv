@@ -207,3 +207,10 @@ th08::g_PlayerUnknown0bd,0x164d0bd,global
 th08::g_CurrentSpellcardNumber,0x164d0b8,global
 th08::g_EnemyAnmLoaded,0xf54e0c,global
 th08::g_EnemyAnmLoaded2,0xf54e10,global
+th08::g_EclExInsn,0x4c6cb0,global
+th08::g_BulletSpawnFlag,0xf54e18,global
+th08::g_BulletSpawnFlag2,0xf54e2c,global
+th08::g_BossPhaseState,0x4ea290,global
+th08::g_f54cec,0xf54cec,global
+th08::g_4ecca8,0x4ecca8,global
+th08::g_164d30c,0x164d30c,global

@@ -275,6 +275,7 @@ DIFFABLE_EXTERN(i16, g_CurrentSpellcardNumber);
 DIFFABLE_EXTERN(u8, g_PlayerCharacter);
 DIFFABLE_EXTERN(u32, g_PlayerFlags);
 DIFFABLE_EXTERN(Float2, g_PlayerPos);
+DIFFABLE_EXTERN_ARRAY(u32, 8, g_BulletObjects); // 0xf54cc0 (active bullet-object slots)
 DIFFABLE_EXTERN(f32, g_PlayerTargetX);
 DIFFABLE_EXTERN(f32, g_PlayerTargetY);
 DIFFABLE_EXTERN(PlayerRawShtFile *, g_PlayerShtFile);

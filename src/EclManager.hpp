@@ -84,5 +84,6 @@ struct EclManager
     void **subTable;
 };
 extern EclManager g_EclManager;
+DIFFABLE_EXTERN_ARRAY(EclExInstr, 32, g_EclExInsn); // 0x4c6cb0 ECL ex-instr table
 
 } // namespace th08

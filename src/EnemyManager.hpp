@@ -8,6 +8,29 @@
 namespace th08
 {
 
+// The per-slot ECL data structure each Enemy::unk3280[] pointer points to.
+// A slot holds one shot-pattern/effect descriptor that RunEcl opcodes read and
+// mutate (op117-121, op166-172). The base is allocated by op114 (0x430f20).
+struct EnemySubData
+{
+    unknown_fields(0x0, 0x548);
+    Float3 pos;              // 0x548  world position of the pattern
+    f32 angle;               // 0x554
+    f32 unk558;              // 0x558
+    f32 unk55c;              // 0x55c
+    f32 unk560;              // 0x560
+    f32 unk564;              // 0x564
+    f32 unk568;              // 0x568
+    unknown_fields(0x56c, 0x18);
+    u32 unk584;              // 0x584  valid/active flag (0 => slot empty)
+    ZunTimer unk588;         // 0x588 (0xc)
+    unknown_fields(0x594, 0x4);
+    u8 unk598;               // 0x598  run state (0/1 => can run, 2 => running)
+    u8 unk599;               // 0x599
+    unknown_fields(0x59a, 0x6);
+};
+C_ASSERT(sizeof(EnemySubData) == 0x5a0);
+
 struct Enemy
 {
     void FUN_0042bc90();
@@ -82,7 +105,7 @@ struct Enemy
     i32 unk3060;                       // 0x3060  (movement/scaling base)
     ZunTimer unk3064;                  // 0x3064 (0xc bytes)
     unknown_fields(0x3070, 0x210);     // 0x3070-0x3280
-    i32 unk3280[0x20];                 // 0x3280 (0x20 entries, data table)
+    EnemySubData *unk3280[0x20];       // 0x3280 (0x20 shot-pattern slots)
     i32 unk3300;                       // 0x3300
     i32 unk3304;                       // 0x3304
     i32 unk3308;                       // 0x3308
