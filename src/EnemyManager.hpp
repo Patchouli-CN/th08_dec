@@ -63,7 +63,9 @@ struct Enemy
     i32 unk2de8;                       // 0x2de8
     unknown_fields(0x2dec, 0x10);      // 0x2dec-0x2dfc
     i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
-    unknown_fields(0x2e00, 0x234);     // 0x2e00-0x3034
+    unknown_fields(0x2e00, 0x14);      // 0x2e00-0x2e14
+    ZunTimer unk2e14;                  // 0x2e14 (0xc bytes)
+    unknown_fields(0x2e20, 0x214);     // 0x2e20-0x3034
     u8 unk3034[0x2c];                  // 0x3034 (0x2c bytes)
     unknown_fields(0x3060, 0x220);     // 0x3060-0x3280
     i32 unk3280[0x20];                 // 0x3280 (0x20 entries, data table)

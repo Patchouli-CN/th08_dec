@@ -547,6 +547,9 @@ restart:
             case 122: // opcode 123 = 子脚本 (FUN_004212e0)
                 FUN_004212e0(enemy, instr);
                 goto skipInstr;
+            case 131: // opcode 132 = 设置 unk2e14 计时器
+                enemy->unk2e14.SetCurrent(ECL_IVAL(0));
+                goto skipInstr;
             case 137: // opcode 138 = 复制 3 字节到 unk3310/3311/3312
                 enemy->unk3310 = instr->args[0].b[0];
                 enemy->unk3311 = instr->args[0].b[1];
