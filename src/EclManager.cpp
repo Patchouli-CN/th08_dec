@@ -376,6 +376,30 @@ restart:
                 enemy->unk2dac = ECL_FVAL(0);
                 enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
                 goto skipInstr;
+            case 71: // opcode 72 = SET_MOVE_INTERP: 移动插值参数
+                enemy->unk2de8 = ECL_IVAL(0);
+                enemy->unk2ddc.SetCurrent(ECL_IVAL(0));
+                enemy->unk2dd0 = ECL_FVAL(1);
+                enemy->unk2dd4 = ECL_FVAL(2);
+                enemy->unk2d9c = ECL_FVAL(3);
+                enemy->unk2da0 = ECL_FVAL(4);
+                enemy->unk2db0 = ECL_FVAL(5);
+                enemy->unk2db4 = ECL_FVAL(6);
+                goto skipInstr;
+            case 72: // opcode 73 = SET_MOVE_INTERP
+                enemy->unk2de8 = ECL_IVAL(0);
+                enemy->unk2ddc.SetCurrent(ECL_IVAL(0));
+                enemy->unk2d9c = ECL_FVAL(1);
+                enemy->unk2da0 = ECL_FVAL(2);
+                enemy->unk2db0 = 0;
+                enemy->unk2db4 = ECL_FVAL(3);
+                goto skipInstr;
+            case 73: // opcode 74 = SET_MOVE_INTERP
+                enemy->unk2de8 = ECL_IVAL(0);
+                enemy->unk2ddc.SetCurrent(ECL_IVAL(0));
+                enemy->unk2da0 = ECL_FVAL(1);
+                enemy->unk2db4 = ECL_FVAL(2);
+                goto skipInstr;
             case 75: // opcode 76 = 清除移动标志 (unk3324 bit19)
                 enemy->unk3324 &= ~0x80000;
                 goto skipInstr;

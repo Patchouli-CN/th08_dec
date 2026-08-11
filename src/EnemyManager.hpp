@@ -45,10 +45,17 @@ struct Enemy
     Float3 unk2d88;                    // 0x2d88  pos + unk2d40 (computed each ECL frame)
     f32 unk2d94;                       // 0x2d94  (angle from dx/dy)
     f32 unk2d98;                       // 0x2d98  (move speed)
-    unknown_fields(0x2d9c, 0xc);       // 0x2d9c-0x2da8
+    f32 unk2d9c;                       // 0x2d9c
+    f32 unk2da0;                       // 0x2da0
+    unknown_fields(0x2da4, 0x4);       // 0x2da4-0x2da8
     f32 unk2da8;                       // 0x2da8  (move angle)
     f32 unk2dac;                       // 0x2dac
-    unknown_fields(0x2db0, 0x2c);      // 0x2db0-0x2ddc
+    f32 unk2db0;                       // 0x2db0
+    f32 unk2db4;                       // 0x2db4
+    unknown_fields(0x2db8, 0x18);      // 0x2db8-0x2dd0
+    f32 unk2dd0;                       // 0x2dd0
+    f32 unk2dd4;                       // 0x2dd4
+    unknown_fields(0x2dd8, 0x4);       // 0x2dd8-0x2ddc
     ZunTimer unk2ddc;                  // 0x2ddc
     i32 unk2de8;                       // 0x2de8
     unknown_fields(0x2dec, 0x10);      // 0x2dec-0x2dfc
