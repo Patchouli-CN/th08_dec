@@ -62,7 +62,7 @@ enum
 // EclManager static methods). Stubs for now; RunEcl's call targets normalize to
 // T in fn_diff so only the calling convention needs to be right here.
 i32 __fastcall GetVarValue(Enemy *enemy, i32 varId);                       // 0x41f420
-i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask);      // 0x41fe10
+i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 argIdx = -1); // 0x41fe10
 f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused); // 0x420950
 void __fastcall FUN_00421280(Enemy *enemy, EclRawInstr *instr);           // 0x421280
 void __fastcall FUN_004212e0(Enemy *enemy, EclRawInstr *instr);           // 0x4212e0
@@ -83,14 +83,14 @@ Enemy *__fastcall InitBulletPattern(Enemy *enemy, EclRawInstr *instr);        //
 Enemy *__fastcall InitBulletPatternAbs(Enemy *enemy, EclRawInstr *instr);        // 0x41f280 初始化弹幕 Enemy (变体)
 Enemy *__fastcall InitEnemySpawnData(Enemy *enemy);                            // 0x41f400 初始化 Enemy Float3 (ecx)
 
-f32 __cdecl EclAtan2(f32 a, f32 b); // th08 0x41f090 (wraps CRT atan2)
+f32 __stdcall EclAtan2(f32 a, f32 b); // th08 0x41f090 (wraps CRT atan2)
 
 i32 __fastcall GetVarValue(Enemy *enemy, i32 varId)
 {
     return 0;
 }
 
-f32 __cdecl EclAtan2(f32 a, f32 b)
+f32 __stdcall EclAtan2(f32 a, f32 b)
 {
     return 0.0f;
 }
@@ -122,7 +122,7 @@ void Enemy::FUN_00423150()
 {
 }
 
-i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask)
+i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 argIdx)
 {
     return NULL;
 }
@@ -234,7 +234,12 @@ ZunResult EclManager::Load(const char *path)
                   p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19,                              \
                   p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
-                  p50, p51, p52, p53, p54, p55, p56, p57)
+                  p50, p51, p52, p53, p54, p55, p56, p57, p58, p59, p60, p61, p62, p63, p64, p65, p66,               \
+                  p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81, p82, v1, p84, p85, v5, \
+                  v6, v7, v8a, v8b, v8c, v9a, v9b, v14a, v14b, v10a, v10b, v15a, v15b, v11a, v11b, v16a, v16b, \
+                  v12a, v12b, v17a, v17b, v13a, v13b, v18b, v18a, v18c, v19a, v19b, v24a, v24b, v24c, v20a, v20b, \
+                  v25a, v25b, v25c, v21a, v21b, v26a, v26b, v26c, v22a, v22b, v27a, v27b, v27c, v23a, v23b, \
+                  v28a, v28b, v28c, v29a, v30a, v31a, p141, v32a)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -244,7 +249,41 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19;
     i32 p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34;
     i32 p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49;
-    i32 p50, p51, p52, p53, p54, p55, p56, p57;
+    i32 p50, p51, p52, p53, p54, p55, p56, p57, p58, p59, p60, p61, p62, p63, p64, p65;
+    i32 p66, p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81;
+    i32 p82;
+    i32 v1;   // slot 83 (case 1: SET_WAIT_TIMER)
+    i32 p84;  // slot 84 (case 4: DEC_JUMP GetIntPtr ptr, not yet converted)
+    i32 p85;  // slot 85 (case 4: DEC_JUMP arg1, not yet converted)
+    i32 v5;   // slot 86 (case 5: SET_INT)
+    f32 v6;   // slot 87 (case 6: SET_FLOAT)
+    i32 v7;   // slot 88 (case 7: RAND_SIGN)
+    f32 v8a, v8b, v8c;  // slots 89-91 (case 8: RAND_SIGN_FLOAT)
+    i32 v9a; i32 *v9b;   // slots 92-93 (case 9: ADD)
+    f32 v14a; f32 *v14b; // slots 94-95 (case 14: ADD_FLOAT)
+    i32 v10a; i32 *v10b; // slots 96-97 (case 10: SUB)
+    f32 v15a; f32 *v15b; // slots 98-99 (case 15: SUB_FLOAT)
+    i32 v11a; i32 *v11b; // slots 100-101 (case 11: MUL)
+    f32 v16a; f32 *v16b; // slots 102-103 (case 16: MUL_FLOAT)
+    i32 v12a; i32 *v12b; // slots 104-105 (case 12: DIV)
+    f32 v17a; f32 *v17b; // slots 106-107 (case 17: DIV_FLOAT)
+    i32 v13a; i32 *v13b; // slots 108-109 (case 13: MOD)
+    f32 v18b, v18a, v18c; // slots 110-112 (case 18: ATAN2; 先读 arg1 存低槽)
+    i32 v19a, v19b;     // slots 113-114 (case 19: SET_ADD)
+    f32 v24a, v24b, v24c; // slots 115-117 (case 24: SET_ADD_FLOAT)
+    i32 v20a, v20b;     // slots 118-119 (case 20: SET_SUB)
+    f32 v25a, v25b, v25c; // slots 120-122 (case 25: SET_SUB_FLOAT)
+    i32 v21a, v21b;     // slots 123-124 (case 21: SET_MUL)
+    f32 v26a, v26b, v26c; // slots 125-127 (case 26: SET_MUL_FLOAT)
+    i32 v22a, v22b;     // slots 128-129 (case 22: SET_DIV)
+    f32 v27a, v27b, v27c; // slots 130-132 (case 27: SET_DIV_FLOAT)
+    i32 v23a, v23b;     // slots 133-134 (case 23: SET_MOD)
+    f32 v28a, v28b, v28c; // slots 135-137 (case 28: ATAN2_SWAP)
+    i32 *v29a;          // slot 138 (case 29: INC)
+    i32 *v30a;          // slot 139 (case 30: DEC)
+    f32 v31a;           // slot 140 (case 31: SIN)
+    i32 p141;           // slot 141 (unused)
+    f32 v32a;           // slot 142 (case 32: COS)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -283,10 +322,14 @@ restart:
             case 0: // ECL_UNIMP
                 return ZUN_ERROR;
             case 1: // ECL_SET_WAIT_TIMER: waitTimer = arg0
-                enemy->curContextPtr->waitTimer.SetCurrent(ECL_IVAL(0));
+                if (instr->paramMask & 1)
+                    v1 = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v1 = instr->args[0].i;
+                enemy->curContextPtr->waitTimer.SetCurrent(v1);
                 goto skipInstr;
             case 4: // ECL_DEC_JUMP: *arg2--; if (arg1 > 0) jump
-                *GetIntPtr(enemy, &instr->args[2], instr->paramMask) -= 1;
+                *GetIntPtr(enemy, &instr->args[2], instr->paramMask, 2) -= 1;
                 arg = ECL_IVAL(1);
                 if (arg > 0)
                 {
@@ -300,101 +343,256 @@ restart:
                 instr = (EclRawInstr *)((u8 *)instr + instr->args[1].i);
                 continue;
             case 5: // ECL_SET_INT: *arg0 = arg1
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) = ECL_IVAL(1);
+                if (instr->paramMask & 0x2)
+                    v5 = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v5 = instr->args[1].i;
+                *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) = v5;
                 goto skipInstr;
             case 6: // ECL_SET_FLOAT: *arg0 = arg1
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = ECL_FVAL(1);
+                if (instr->paramMask & 0x2)
+                    v6 = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v6 = instr->args[1].f;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v6;
                 goto skipInstr;
             case 7: // ECL_RAND_SIGN: *arg0 = ±arg1
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) =
-                    (g_Rng.GetRandomU16() & 1 ? 1 : -1) * ECL_IVAL(1);
+                if (instr->paramMask & 0x2)
+                    v7 = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v7 = instr->args[1].i;
+                *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) =
+                    (g_Rng.GetRandomU16() & 1 ? 1 : -1) * v7;
                 goto skipInstr;
             case 8: // ECL_RAND_SIGN_FLOAT: *arg0 = ±arg1
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    (g_Rng.GetRandomU16() & 1 ? 1.0f : -1.0f) * ECL_FVAL(1);
+                v8a = (g_Rng.GetRandomU16() & 1) ? 1.0f : -1.0f;
+                if (instr->paramMask & 0x2)
+                    v8b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v8b = instr->args[1].f;
+                v8c = v8a * v8b;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v8c;
                 goto skipInstr;
             case 9: // ECL_ADD: *arg0 += arg1
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) += ECL_IVAL(1);
+                if (instr->paramMask & 0x2)
+                    v9a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v9a = instr->args[1].i;
+                v9b = GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v9b += v9a;
                 goto skipInstr;
             case 14: // ECL_ADD_FLOAT: *arg0 += arg1
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) += ECL_FVAL(1);
+                if (instr->paramMask & 0x2)
+                    v14a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v14a = instr->args[1].f;
+                v14b = GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v14b += v14a;
                 goto skipInstr;
             case 10: // ECL_SUB: *arg0 -= arg1
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) -= ECL_IVAL(1);
+                if (instr->paramMask & 0x2)
+                    v10a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v10a = instr->args[1].i;
+                v10b = GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v10b -= v10a;
                 goto skipInstr;
             case 15: // ECL_SUB_FLOAT: *arg0 -= arg1
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) -= ECL_FVAL(1);
+                if (instr->paramMask & 0x2)
+                    v15a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v15a = instr->args[1].f;
+                v15b = GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v15b -= v15a;
                 goto skipInstr;
             case 11: // ECL_MUL: *arg0 *= arg1
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) *= ECL_IVAL(1);
+                if (instr->paramMask & 0x2)
+                    v11a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v11a = instr->args[1].i;
+                v11b = GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v11b *= v11a;
                 goto skipInstr;
             case 16: // ECL_MUL_FLOAT: *arg0 *= arg1
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) *= ECL_FVAL(1);
+                if (instr->paramMask & 0x2)
+                    v16a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v16a = instr->args[1].f;
+                v16b = GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v16b *= v16a;
                 goto skipInstr;
             case 12: // ECL_DIV: *arg0 /= arg1
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) /= ECL_IVAL(1);
+                if (instr->paramMask & 0x2)
+                    v12a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v12a = instr->args[1].i;
+                v12b = GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v12b /= v12a;
                 goto skipInstr;
             case 17: // ECL_DIV_FLOAT: *arg0 /= arg1
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) /= ECL_FVAL(1);
+                if (instr->paramMask & 0x2)
+                    v17a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v17a = instr->args[1].f;
+                v17b = GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v17b /= v17a;
                 goto skipInstr;
             case 13: // ECL_MOD: *arg0 %= arg1
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) %= ECL_IVAL(1);
+                if (instr->paramMask & 0x2)
+                    v13a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v13a = instr->args[1].i;
+                v13b = GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v13b %= v13a;
                 goto skipInstr;
-            case 18: // ECL_ATAN2: *arg0 = atan2(arg1, arg2)
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    EclAtan2(ECL_FVAL(1), ECL_FVAL(2));
+            case 18: // ECL_ATAN2: *arg0 = atan2(arg0, arg1) — 原版先读 arg1 后读 arg0
+                if (instr->paramMask & 0x2)
+                    v18b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v18b = instr->args[1].f;
+                if (instr->paramMask & 0x1)
+                    v18a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v18a = instr->args[0].f;
+                v18c = EclAtan2(v18a, v18b);
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v18c;
                 goto skipInstr;
             case 19: // ECL_SET_ADD: *arg0 = arg1 + arg2
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) =
-                    ECL_IVAL(1) + ECL_IVAL(2);
+                if (instr->paramMask & 0x2)
+                    v19a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v19a = instr->args[1].i;
+                if (instr->paramMask & 0x4)
+                    v19b = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v19b = instr->args[2].i;
+                *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) = v19a + v19b;
                 goto skipInstr;
             case 24: // ECL_SET_ADD_FLOAT: *arg0 = arg1 + arg2
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    ECL_FVAL(1) + ECL_FVAL(2);
+                if (instr->paramMask & 0x2)
+                    v24a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v24a = instr->args[1].f;
+                if (instr->paramMask & 0x4)
+                    v24b = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v24b = instr->args[2].f;
+                v24c = v24a + v24b;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v24c;
                 goto skipInstr;
             case 20: // ECL_SET_SUB: *arg0 = arg1 - arg2
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) =
-                    ECL_IVAL(1) - ECL_IVAL(2);
+                if (instr->paramMask & 0x2)
+                    v20a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v20a = instr->args[1].i;
+                if (instr->paramMask & 0x4)
+                    v20b = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v20b = instr->args[2].i;
+                *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) = v20a - v20b;
                 goto skipInstr;
             case 25: // ECL_SET_SUB_FLOAT: *arg0 = arg1 - arg2
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    ECL_FVAL(1) - ECL_FVAL(2);
+                if (instr->paramMask & 0x2)
+                    v25a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v25a = instr->args[1].f;
+                if (instr->paramMask & 0x4)
+                    v25b = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v25b = instr->args[2].f;
+                v25c = v25a - v25b;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v25c;
                 goto skipInstr;
             case 21: // ECL_SET_MUL: *arg0 = arg1 * arg2
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) =
-                    ECL_IVAL(1) * ECL_IVAL(2);
+                if (instr->paramMask & 0x2)
+                    v21a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v21a = instr->args[1].i;
+                if (instr->paramMask & 0x4)
+                    v21b = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v21b = instr->args[2].i;
+                *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) = v21a * v21b;
                 goto skipInstr;
             case 26: // ECL_SET_MUL_FLOAT: *arg0 = arg1 * arg2
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    ECL_FVAL(1) * ECL_FVAL(2);
+                if (instr->paramMask & 0x2)
+                    v26a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v26a = instr->args[1].f;
+                if (instr->paramMask & 0x4)
+                    v26b = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v26b = instr->args[2].f;
+                v26c = v26a * v26b;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v26c;
                 goto skipInstr;
             case 22: // ECL_SET_DIV: *arg0 = arg1 / arg2
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) =
-                    ECL_IVAL(1) / ECL_IVAL(2);
+                if (instr->paramMask & 0x2)
+                    v22a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v22a = instr->args[1].i;
+                if (instr->paramMask & 0x4)
+                    v22b = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v22b = instr->args[2].i;
+                *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) = v22a / v22b;
                 goto skipInstr;
             case 27: // ECL_SET_DIV_FLOAT: *arg0 = arg1 / arg2
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    ECL_FVAL(1) / ECL_FVAL(2);
+                if (instr->paramMask & 0x2)
+                    v27a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v27a = instr->args[1].f;
+                if (instr->paramMask & 0x4)
+                    v27b = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v27b = instr->args[2].f;
+                v27c = v27a / v27b;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v27c;
                 goto skipInstr;
             case 23: // ECL_SET_MOD: *arg0 = arg1 %% arg2
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) =
-                    ECL_IVAL(1) % ECL_IVAL(2);
+                if (instr->paramMask & 0x2)
+                    v23a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v23a = instr->args[1].i;
+                if (instr->paramMask & 0x4)
+                    v23b = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v23b = instr->args[2].i;
+                *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) = v23a % v23b;
                 goto skipInstr;
-            case 28: // ECL_ATAN2_SWAP: *arg0 = atan2(arg2, arg1) (args 1/2 swapped)
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    EclAtan2(ECL_FVAL(2), ECL_FVAL(1));
+            case 28: // ECL_ATAN2: *arg0 = atan2(arg1, arg2)
+                if (instr->paramMask & 0x4)
+                    v28a = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v28a = instr->args[2].f;
+                if (instr->paramMask & 0x2)
+                    v28b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v28b = instr->args[1].f;
+                v28c = EclAtan2(v28b, v28a);
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v28c;
                 goto skipInstr;
             case 29: // ECL_INC: *arg0 += 1
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) += 1;
+                v29a = GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v29a += 1;
                 goto skipInstr;
             case 30: // ECL_DEC: *arg0 -= 1
-                *GetIntPtr(enemy, &instr->args[0], instr->paramMask) -= 1;
+                v30a = GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                *v30a -= 1;
                 goto skipInstr;
             case 31: // ECL_SIN: *arg0 = sin(arg1)
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = sinf(ECL_FVAL(1));
+                if (instr->paramMask & 0x2)
+                    v31a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v31a = instr->args[1].f;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = sinf(v31a);
                 goto skipInstr;
             case 32: // ECL_COS: *arg0 = cos(arg1)
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = cosf(ECL_FVAL(1));
+                if (instr->paramMask & 0x2)
+                    v32a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v32a = instr->args[1].f;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = cosf(v32a);
                 goto skipInstr;
             case 33: // opcode 34 = 两点角度: *float[0]=EclAngleFromDxDy(f4-f2, f3-f1)
                 *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
@@ -618,7 +816,7 @@ restart:
                         result = GetVarValue((Enemy *)g_BulletObjects[ECL_IVAL(2)], instr->args[1].i);
                     else
                         result = instr->args[1].i;
-                    *GetIntPtr(enemy, &instr->args[0], instr->paramMask) = result;
+                    *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) = result;
                 }
                 goto skipInstr;
             case 86: // opcode 87 = 读子弹对象 float 变量 (g_BulletObjects[arg2] 上的 var1)
