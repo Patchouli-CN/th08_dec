@@ -115,7 +115,10 @@ restart:
             case 0: // ECL_UNIMP
                 return ZUN_ERROR;
             case 1: // ECL_SET_WAIT_TIMER: waitTimer = arg0
-                enemy->curContextPtr->waitTimer.SetCurrent(ECL_IVAL(0));
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    enemy->curContextPtr->waitTimer.SetCurrent(v0);
+                }
                 goto skipInstr;
             case 2: // ECL_NOP
                 goto skipInstr;
