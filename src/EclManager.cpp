@@ -571,6 +571,9 @@ restart:
                     enemy->unk3280[i] = 0;
                 }
                 goto skipInstr;
+            case 162: // opcode 163 = 写全局 0xf54cec
+                *(volatile u32 *)0xf54cec = ECL_IVAL(0);
+                goto skipInstr;
             case 158: // opcode 159 = 设置 unk332f (byte)
                 enemy->unk332f = (u8)ECL_IVAL(0);
                 goto skipInstr;
