@@ -64,7 +64,7 @@ i32 ResultScreen::HandleCategorySelectScreen()
     case 0:
         if (this->unk18 == 0)
         {
-            vm = (AnmVm *)((u8 *)this + 0x1a0);
+            vm = this->vms;
 
             for (i = 0; i < 0x48; i++, vm = (AnmVm *)((u8 *)vm + 0x2a4))
             {
@@ -73,16 +73,16 @@ i32 ResultScreen::HandleCategorySelectScreen()
 
             for (i = 0; i <= 3; i++)
             {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
-                g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -104,11 +104,11 @@ i32 ResultScreen::HandleCategorySelectScreen()
             {
                 if (i == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -132,18 +132,18 @@ i32 ResultScreen::HandleCategorySelectScreen()
             {
                 if (i == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
 
         if (WAS_PRESSED(0x1001))
         {
-            vm = (AnmVm *)((u8 *)this + 0x1a0);
+            vm = this->vms;
             selected = this->unk1c;
 
             switch (selected)
@@ -155,11 +155,11 @@ i32 ResultScreen::HandleCategorySelectScreen()
                 {
                     if (i == this->unk1c)
                     {
-                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
                     }
                     else
                     {
-                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
                     }
                 }
                 break;
@@ -170,11 +170,11 @@ i32 ResultScreen::HandleCategorySelectScreen()
                 {
                     if (i == this->unk1c)
                     {
-                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
                     }
                     else
                     {
-                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
                     }
                 }
                 break;
@@ -183,11 +183,11 @@ i32 ResultScreen::HandleCategorySelectScreen()
                 {
                     if (i == this->unk1c)
                     {
-                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
                     }
                     else
                     {
-                        *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
                     }
                 }
 
@@ -240,16 +240,16 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
 
             for (i = 4; i <= 8; i++)
             {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
-                g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i - 4 == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -271,11 +271,11 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
             {
                 if (i - 4 == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -295,11 +295,11 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
             {
                 if (i - 4 == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
                 }
             }
 
@@ -405,16 +405,16 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
 
             for (i = 0xf; i <= 0x1a; i++)
             {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
-                g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i - 0xf == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -436,11 +436,11 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
             {
                 if (i - 0xf == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -453,7 +453,7 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
 
             for (i = 0xf; i <= 0x1a; i++)
             {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
             }
 
             return 1;
@@ -461,17 +461,17 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
 
         if (WAS_PRESSED(0x1001))
         {
-            AnmVm *vmBase = (AnmVm *)((u8 *)this + 0x1a0);
+            AnmVm *vmBase = this->vms;
 
             for (i = 0xf; i <= 0x1a; i++)
             {
                 if (i - 0xf == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
                 }
             }
 
@@ -539,16 +539,16 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
 
             for (i = 0x9; i <= 0xe; i++)
             {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
-                g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i - 0x9 == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -570,11 +570,11 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
             {
                 if (i - 0x9 == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -590,17 +590,17 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
 
         if (WAS_PRESSED(0x1001))
         {
-            AnmVm *vmBase = (AnmVm *)((u8 *)this + 0x1a0);
+            AnmVm *vmBase = this->vms;
 
             for (i = 0x9; i <= 0xe; i++)
             {
                 if (i - 0x9 == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
                 }
             }
 
@@ -631,16 +631,16 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
 
             for (i = 0x1b; i <= 0x27; i++)
             {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x16;
-                g_AnmManager->ExecuteScript((AnmVm *)((u8 *)this + 0x1a0 + i * 0x2a4));
+                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i - 0x1b == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -662,11 +662,11 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
             {
                 if (i - 0x1b == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x14;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x15;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
                 }
             }
         }
@@ -679,7 +679,7 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
 
             for (i = 0x1b; i <= 0x27; i++)
             {
-                *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
             }
 
             return 1;
@@ -687,17 +687,17 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
 
         if (WAS_PRESSED(0x1001))
         {
-            AnmVm *vmBase = (AnmVm *)((u8 *)this + 0x1a0);
+            AnmVm *vmBase = this->vms;
 
             for (i = 0x1b; i <= 0x27; i++)
             {
                 if (i - 0x1b == this->unk1c)
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x17;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
                 }
                 else
                 {
-                    *(u16 *)((u8 *)this + 0x39e + i * 0x2a4) = 0x1;
+                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
                 }
             }
 
