@@ -22,7 +22,12 @@
 // g_PlayerFlags (0x164d0b4) bit positions.
 #define PLAYER_FLAG_SWAP_MODE_BIT 3     // both characters active (swap mode)
 #define PLAYER_FLAG_FORCE_SWITCH_BIT 4  // force a character switch
+#define PLAYER_FLAG_SHOT_MODE_SHIFT 7   // bits 7-8：当前射击形态（2-bit 字段）
+#define PLAYER_FLAG_SHOT_MODE_MASK 0x180
+#define PLAYER_FLAG_ANIM_PAUSE_SHIFT 10 // bit 10：子弹动画暂停（决死结界期间）
+#define PLAYER_FLAG_ANIM_PAUSE_MASK 0x400
 #define PLAYER_FLAG_EXTRA_BIT 14        // extra stage unlocked
+#define PLAYER_FLAG_EXTRA_SHIFT 14      // 同 PLAYER_FLAG_EXTRA_BIT 的位移（`>> 14 & 1`）
 
 // g_Unknown164d2cc special event states (behave like an in-progress event).
 #define GAME_STATE_EVENT_6 6

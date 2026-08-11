@@ -55,6 +55,10 @@ struct ZunImageInfo
 };
 C_ASSERT(sizeof(ZunImageInfo) == 0x14);
 
+/* AnmPrefix.flags 位掩码（位域含义见 AnmPrefix 内联结构）。 */
+#define ANM_FLAG_VISIBLE_MASK 0x1   /* bit 0：可见 */
+#define ANM_FLAG_FLIP_MASK 0x600    /* bits 9-10：翻转方向 */
+
 enum AnmBlendMode
 {
     AnmBlendMode_Unset = -1,

@@ -136,7 +136,7 @@ struct Background
     u8 unk0x834;
     unknown_fields(0x835, 0x3);
     ZunTimer timer0x838;
-    AnmVm unk0x844;
+    AnmVm stageTintVm;          /* 0x844 场景色调 VM（color1 作为物体 VM 的逐通道染色；中断 1=妖/2=人） */
     AnmVm *unk0xae8;
     StageFog fog;
     StageFog fogFadeFrom;
@@ -147,7 +147,7 @@ struct Background
     unknown_fields(0xb21, 0x3);
     u32 unk0xb24;
     i32 unk0xb28;
-    unknown_fields(0xb2c, 0x4);
+    i32 screenClearNeeded;       /* 0xb2c 非 0 时清屏一次（设置视口后清零） */
     i32 unk0xb30;
     unknown_fields(0xb34, 0x4);
     AnmVm objectVms[0x20];
@@ -168,7 +168,8 @@ struct Background
     Float3 unk0x6454;
     unknown_fields(0x6460, 0x4);
     u8 unk0x6464;
-    unknown_fields(0x6465, 0x7);
+    unknown_fields(0x6465, 0x3);
+    ZunColor skyColor;           /* 0x6468 天空/背景颜色，最高字节(alpha)兼作"颜色已设置"标志 */
     u32 unk0x646c;
     f32 unk0x6470;
     u8 unk0x6474;

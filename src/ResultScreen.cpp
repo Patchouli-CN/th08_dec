@@ -66,23 +66,23 @@ i32 ResultScreen::HandleCategorySelectScreen()
         {
             vm = this->vms;
 
-            for (i = 0; i < 0x48; i++, vm = (AnmVm *)((u8 *)vm + 0x2a4))
+            for (i = 0; i < 0x48; i++, vm++)
             {
-                *(u16 *)((u8 *)vm + 0x1fe) = 0x1;
+                vm->prefix.pendingInterrupt = 0x1;
             }
 
             for (i = 0; i <= 3; i++)
             {
-                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -104,11 +104,11 @@ i32 ResultScreen::HandleCategorySelectScreen()
             {
                 if (i == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -132,11 +132,11 @@ i32 ResultScreen::HandleCategorySelectScreen()
             {
                 if (i == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -155,11 +155,11 @@ i32 ResultScreen::HandleCategorySelectScreen()
                 {
                     if (i == this->unk1c)
                     {
-                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
+                        this->vms[i].prefix.pendingInterrupt = 0x17;
                     }
                     else
                     {
-                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
+                        this->vms[i].prefix.pendingInterrupt = 0x1;
                     }
                 }
                 break;
@@ -170,11 +170,11 @@ i32 ResultScreen::HandleCategorySelectScreen()
                 {
                     if (i == this->unk1c)
                     {
-                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
+                        this->vms[i].prefix.pendingInterrupt = 0x17;
                     }
                     else
                     {
-                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
+                        this->vms[i].prefix.pendingInterrupt = 0x1;
                     }
                 }
                 break;
@@ -183,11 +183,11 @@ i32 ResultScreen::HandleCategorySelectScreen()
                 {
                     if (i == this->unk1c)
                     {
-                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
+                        this->vms[i].prefix.pendingInterrupt = 0x17;
                     }
                     else
                     {
-                        * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
+                        this->vms[i].prefix.pendingInterrupt = 0x1;
                     }
                 }
 
@@ -240,16 +240,16 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
 
             for (i = 4; i <= 8; i++)
             {
-                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i - 4 == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -271,11 +271,11 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
             {
                 if (i - 4 == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -295,11 +295,11 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
             {
                 if (i - 4 == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
+                    this->vms[i].prefix.pendingInterrupt = 0x17;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
+                    this->vms[i].prefix.pendingInterrupt = 0x1;
                 }
             }
 
@@ -405,16 +405,16 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
 
             for (i = 0xf; i <= 0x1a; i++)
             {
-                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i - 0xf == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -436,11 +436,11 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
             {
                 if (i - 0xf == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -453,7 +453,7 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
 
             for (i = 0xf; i <= 0x1a; i++)
             {
-                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
+                this->vms[i].prefix.pendingInterrupt = 0x1;
             }
 
             return 1;
@@ -467,15 +467,15 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
             {
                 if (i - 0xf == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
+                    this->vms[i].prefix.pendingInterrupt = 0x17;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
+                    this->vms[i].prefix.pendingInterrupt = 0x1;
                 }
             }
 
-            *(u16 *)((u8 *)this + 0x6d3e) = 0x3;
+            this->vms[0x28].prefix.pendingInterrupt = 0x3;
             this->unk3c |= 0xffffffff;
             this->SetState((ResultScreenState)5);
             g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
@@ -507,16 +507,16 @@ i32 ResultScreen::HandleHighScoreScreen()
     if (this->MoveCursorHorizontally(0xc))
     {
         this->unk4 = 0;
-        *(u16 *)((u8 *)this + 0x6d3e) = (u16)(this->unk44 + 3);
-        *(u16 *)((u8 *)this + 0x39e + (sel + 0xf) * 0x2a4) = 0x18;
-        *(u16 *)((u8 *)this + 0x39e + (this->unk1c + 0xf) * 0x2a4) = 0x19;
+        this->vms[0x28].prefix.pendingInterrupt = (u16)(this->unk44 + 3);
+        this->vms[sel + 0xf].prefix.pendingInterrupt = 0x18;
+        this->vms[this->unk1c + 0xf].prefix.pendingInterrupt = 0x19;
     }
 
     if (WAS_PRESSED(0xa))
     {
         this->unk3c = this->unk1c;
         this->SetState((ResultScreenState)4);
-        *(u16 *)((u8 *)this + 0x6d3e) = 1;
+        this->vms[0x28].prefix.pendingInterrupt = 1;
         g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
         return 1;
     }
@@ -539,16 +539,16 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
 
             for (i = 0x9; i <= 0xe; i++)
             {
-                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i - 0x9 == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -570,11 +570,11 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
             {
                 if (i - 0x9 == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -596,11 +596,11 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
             {
                 if (i - 0x9 == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
+                    this->vms[i].prefix.pendingInterrupt = 0x17;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
+                    this->vms[i].prefix.pendingInterrupt = 0x1;
                 }
             }
 
@@ -631,16 +631,16 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
 
             for (i = 0x1b; i <= 0x27; i++)
             {
-                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x16;
+                this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
                 if (i - 0x1b == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -662,11 +662,11 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
             {
                 if (i - 0x1b == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x14;
+                    this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x15;
+                    this->vms[i].prefix.pendingInterrupt = 0x15;
                 }
             }
         }
@@ -679,7 +679,7 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
 
             for (i = 0x1b; i <= 0x27; i++)
             {
-                * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
+                this->vms[i].prefix.pendingInterrupt = 0x1;
             }
 
             return 1;
@@ -693,18 +693,18 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
             {
                 if (i - 0x1b == this->unk1c)
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x17;
+                    this->vms[i].prefix.pendingInterrupt = 0x17;
                 }
                 else
                 {
-                    * (u16 *)((u8 *)&this->vms[i] + 0x1fe) = 0x1;
+                    this->vms[i].prefix.pendingInterrupt = 0x1;
                 }
             }
 
             this->unk30 = this->unk1c;
             this->SetState((ResultScreenState)8);
             g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
-            *(u16 *)((u8 *)this + 0x6d3e) = 0x3;
+            this->vms[0x28].prefix.pendingInterrupt = 0x3;
             this->unk1c = 0;
             this->unk40 |= 0xffffffff;
             return 1;
@@ -746,19 +746,20 @@ i32 ResultScreen::HandleSpellCardScreen()
 
                     if (*(u32 *)(unk4 * 0x22c + 0x160f69c) == 0)
                     {
-                        g_AnmManager->DrawTextLeft((AnmVm *)((u8 *)this + (unk8 % 0xa) * 0x2a4 + 0xbfc0), 0xffffff, 0, (const char *)0x4b77d8);
+                        g_AnmManager->DrawTextLeft(&this->scoreVms[unk8 % 0xa], 0xffffff, 0, (const char *)0x4b77d8);
                     }
                     else
                     {
-                        g_AnmManager->DrawTextLeft((AnmVm *)((u8 *)this + (unk8 % 0xa) * 0x2a4 + 0xbfc0), 0xffffff, 0, (const char *)(unk4 * 0x22c + 0x160f558));
+                        g_AnmManager->DrawTextLeft(&this->scoreVms[unk8 % 0xa], 0xffffff, 0, (const char *)(unk4 * 0x22c + 0x160f558));
                     }
                 }
 
-                *(u8 *)((u8 *)this + (unk8 % 0xa) * 0x2a4 + 0xc1b3) |= 0xff;
+                this->scoreVms[unk8 % 0xa].prefix.color1.a |= 0xff;
             }
 
-            g_AnmManager->DrawTextLeft((AnmVm *)((u8 *)this + 0xda28), 0xffffff, 0, (const char *)0x4b795c, *(u32 *)((u8 *)this + this->unk48 * 0x34 + 0x64 + this->unk30 * 4), unkC);
-            *(u8 *)((u8 *)this + 0xdc1b) |= 0xff;
+            /* 0x64 + unk30*4 + unk48*0x34：得分表数组索引。 */
+            g_AnmManager->DrawTextLeft(&this->textVm, 0xffffff, 0, (const char *)0x4b795c, *(u32 *)((u8 *)this + this->unk48 * 0x34 + 0x64 + this->unk30 * 4), unkC);
+            this->textVm.prefix.color1.a |= 0xff;
         }
     }
 
@@ -770,14 +771,14 @@ i32 ResultScreen::HandleSpellCardScreen()
     if (this->MoveCursorHorizontally((unkC + 9) / 0xa))
     {
         this->unk4 = 0;
-        *(u16 *)((u8 *)this + 0x6d3e) = 0xa;
+        this->vms[0x28].prefix.pendingInterrupt = 0xa;
     }
     else if (this->MoveShotTypeCursor(0xd))
     {
         this->unk4 = 0;
         this->unk38 = 1;
-        *(u16 *)((u8 *)this + 0x39e + (this->unk34 + 0x1b) * 0x2a4) = 0x18;
-        *(u16 *)((u8 *)this + 0x39e + (this->unk30 + 0x1b) * 0x2a4) = 0x19;
+        this->vms[this->unk34 + 0x1b].prefix.pendingInterrupt = 0x18;
+        this->vms[this->unk30 + 0x1b].prefix.pendingInterrupt = 0x19;
     }
 
     if (WAS_PRESSED(0xa))
@@ -785,7 +786,7 @@ i32 ResultScreen::HandleSpellCardScreen()
         this->unk54 = 1;
         this->unk4 = 0;
         g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
-        *(u16 *)((u8 *)this + 0x6d3e) = 0x1;
+        this->vms[0x28].prefix.pendingInterrupt = 0x1;
         return 1;
     }
 
@@ -838,13 +839,13 @@ ZunResult ResultScreen::CheckConfirmButton()
 case_f:
     if (this->unk4 <= 0x1e)
     {
-        menuTimerField = (u16 *)((u8 *)this + 0xbd1c);
+        menuTimerField = (u16 *)&this->vms[0x47];
         menuTimerField[0xff] = 0x12;
     }
 
     if (this->unk4 >= 0x5a && WAS_PRESSED(0x1001))
     {
-        menuTimerField = (u16 *)((u8 *)this + 0xbd1c);
+        menuTimerField = (u16 *)&this->vms[0x47];
         menuTimerField[0xff] = 0x2;
         this->unk4 = 0;
         this->screenMode = 0x10;

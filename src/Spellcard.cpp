@@ -414,12 +414,12 @@ ZunResult Spellcard::RegisterChain()
 
 i32 Spellcard::spellcard_fun_004178a0()
 {
-    return this->flags & 1;
+    return this->flags & (1 << SPELLCARD_FLAG_ACTIVE_BIT);
 }
 
 void Spellcard::spellcard_fun_00416b10(i32 arg)
 {
-    if (((this->flags >> 0xb) & 1) == 0)
+    if (((this->flags >> SPELLCARD_FLAG_LOCKED_SHIFT) & 1) == 0)
     {
         this->unk0xfc += arg;
         if (this->unk0xfc >= this->unk0x2638)
@@ -444,7 +444,7 @@ void Spellcard::CutChain()
 // STUB: th08 0x44d150
 void Spellcard::FUN_0044d150()
 {
-    this->flags &= ~0x4;
+    this->flags &= ~SPELLCARD_FLAG_RESET_MASK;
     this->unk0xfc = 0;
 }
 } /* namespace th08 */

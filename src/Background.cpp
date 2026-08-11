@@ -528,17 +528,19 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
 {
     i32 i;
 
-    *(i32 *)((u8 *)background + 0x6478) = 0;
+    /* 清除 0x6478..0x647c 的 4 字节临时标志区。 */
+    *(i32 *)&background->unk0x6478 = 0;
 
     for (i = 0; i < 0x10; i++)
     {
         background->unk0x6480[i] = Float3(0.0f, 0.0f, 0.0f);
     }
 
-    *(i32 *)0x17ce820 = 0x20;
-    *(i32 *)0x17ce824 = 0x10;
-    *(i32 *)0x17ce828 = 0x180;
-    *(i32 *)0x17ce82c = 0x1c0;
+    /* 把固定视口 (32,16)-(416,464) 写入 D3D 设备内部视图结构。 */
+    *(i32 *)(D3D_DEVICE_VIEWPORT + 0) = 0x20;
+    *(i32 *)(D3D_DEVICE_VIEWPORT + 4) = 0x10;
+    *(i32 *)(D3D_DEVICE_VIEWPORT + 8) = 0x180;
+    *(i32 *)(D3D_DEVICE_VIEWPORT + 0xc) = 0x1c0;
 
     g_AnmManager->FUN_00462e00();
     g_AnmManager->FUN_0040b9f0();
@@ -557,7 +559,7 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
 
     g_AnmManager->FlushVertexBuffer();
 
-    if (*(i32 *)((u8 *)background + 0xb2c) != 0)
+    if (background->screenClearNeeded != 0)
     {
         ZunRect rect;
 
@@ -566,46 +568,49 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
         *(u32 *)&rect.right = 0x180;
         *(u32 *)&rect.bottom = 0x1c0;
 
-        /* D3D virtual calls @ vtbl+0xa0 / vtbl+0x90 */
-        ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
-            *(void **)0x17ce760, &rect);
-        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)0x17ce760)[0x90 / 4])(
-            *(void **)0x17ce760, 0, 0, 1, 0xff000000, 0x3f800000, 0);
+        /* D3D virtual calls @ vtbl+0xa0 (SetViewport) / vtbl+0x90 (Clear) */
+        ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0xa0 / 4])(
+            *(void **)D3D_DEVICE_OBJ, &rect);
+        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0x90 / 4])(
+            *(void **)D3D_DEVICE_OBJ, 0, 0, 1, 0xff000000, 0x3f800000, 0);
 
-        *(i32 *)((u8 *)background + 0xb2c) = 0;
+        background->screenClearNeeded = 0;
     }
 
-    /* D3D virtual call @ vtbl+0xa0 */
-    ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
-        *(void **)0x17ce760, (void *)0x17ce820);
+    /* D3D virtual call @ vtbl+0xa0 (SetViewport) */
+    ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0xa0 / 4])(
+        *(void **)D3D_DEVICE_OBJ, (void *)D3D_DEVICE_VIEWPORT);
 
-    if (*(u8 *)((u8 *)background + 0x646b) > 0)
+    /* skyColor 最高字节非 0 表示颜色已设置：用它清屏（FUN_0040bad0），随后重置为默认 0x00808080。 */
+    if (background->skyColor.a > 0)
     {
-        ((void(__fastcall *)(AnmManager *, u32))0x40bad0)(g_AnmManager, *(u32 *)((u8 *)background + 0x6468));
+        ((void(__fastcall *)(AnmManager *, u32))0x40bad0)(g_AnmManager, background->skyColor.d3dColor);
     }
 
-    *(u8 *)((u8 *)background + 0x646b) = 0;
-    *(u8 *)((u8 *)background + 0x646a) = 0x80;
-    *(u8 *)((u8 *)background + 0x6469) = 0x80;
-    *(u8 *)((u8 *)background + 0x6468) = 0x80;
+
+    background->skyColor.a = 0;
+    background->skyColor.r = 0x80;
+    background->skyColor.g = 0x80;
+    background->skyColor.b = 0x80;
 
     if ((i32)background->unk0xb24 <= 1)
     {
         if (g_Gui.FUN_00437d87() == 0)
         {
-            if (*(i16 *)((u8 *)background + 0x218) > 0)
+            if (background->unk0x4.activeSpriteIndex > 0)
             {
-                ((void(__fastcall *)(AnmManager *, AnmVm *))0x40baf0)(g_AnmManager, (AnmVm *)((u8 *)background + 0x4));
+                ((void(__fastcall *)(AnmManager *, AnmVm *))0x40baf0)(g_AnmManager, &background->unk0x4);
             }
 
-            if (*(i16 *)((u8 *)background + 0x4bc) > 0)
+            if (background->unk0x2a8.activeSpriteIndex > 0)
             {
-                ((void(__fastcall *)(AnmManager *, AnmVm *))0x40baf0)(g_AnmManager, (AnmVm *)((u8 *)background + 0x2a8));
+                ((void(__fastcall *)(AnmManager *, AnmVm *))0x40baf0)(g_AnmManager, &background->unk0x2a8);
             }
 
             if (background->unk0xae8 != NULL)
             {
                 void *p = background->unk0xae8;
+                /* 0x34c：粒子对象偏移处的每帧更新回调。 */
                 ((void(__fastcall *)(void *)) *(u32 *)((u8 *)p + 0x34c))(p);
             }
         }
@@ -613,8 +618,9 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
 
     if ((background->unk0x830 & 0xff000000) == 0xff000000)
     {
-        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)0x17ce760)[0x90 / 4])(
-            *(void **)0x17ce760, 0, 0, 3, background->unk0x830, 0x3f800000, 0);
+        /* D3D virtual call @ vtbl+0x90 (Clear) */
+        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0x90 / 4])(
+            *(void **)D3D_DEVICE_OBJ, 0, 0, 3, background->unk0x830, 0x3f800000, 0);
     }
     else if (background->unk0x830 != 0)
     {
@@ -622,37 +628,41 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
 
         ScreenEffect::DrawSquare(&rect, background->unk0x830);
 
-        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)0x17ce760)[0x90 / 4])(
-            *(void **)0x17ce760, 0, 0, 2, background->unk0x830, 0x3f800000, 0);
+        /* D3D virtual call @ vtbl+0x90 (Clear) */
+        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0x90 / 4])(
+            *(void **)D3D_DEVICE_OBJ, 0, 0, 2, background->unk0x830, 0x3f800000, 0);
     }
     else
     {
-        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)0x17ce760)[0x90 / 4])(
-            *(void **)0x17ce760, 0, 0, 2, background->unk0x830, 0x3f800000, 0);
+        /* D3D virtual call @ vtbl+0x90 (Clear) */
+        ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0x90 / 4])(
+            *(void **)D3D_DEVICE_OBJ, 0, 0, 2, background->unk0x830, 0x3f800000, 0);
     }
 
     g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x17, 4);
 
-    if (*(u32 *)((u8 *)g_AnmManager + 0x4) == 0)
+    if (g_AnmManager->useMixColor == 0)
     {
-        g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x22, *(u32 *)((u8 *)background + 0xaf4));
+        g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x22, background->fog.color.d3dColor);
     }
     else
     {
-        u32 c = *(u32 *)((u8 *)background + 0xaf4);
+        /* 用混合色 g_AnmManager->color 逐通道调制雾色（0x462750 = 通道相乘）。 */
+        u32 c = background->fog.color.d3dColor;
         u8 c0 = (u8)(c >> 24);
         u8 c1 = (u8)(c >> 16);
         u8 c2 = (u8)(c >> 8);
 
-        c2 = ((u8(__fastcall *)(u8, u8))0x462750)(c2, *(u8 *)((u8 *)g_AnmManager + 0x2));
-        c1 = ((u8(__fastcall *)(u8, u8))0x462750)(c1, *(u8 *)((u8 *)g_AnmManager + 0x1));
-        c0 = ((u8(__fastcall *)(u8, u8))0x462750)(c0, *(u8 *)((u8 *)g_AnmManager + 0x0));
+        c2 = ((u8(__fastcall *)(u8, u8))0x462750)(c2, g_AnmManager->color.r);
+        c1 = ((u8(__fastcall *)(u8, u8))0x462750)(c1, g_AnmManager->color.g);
+        c0 = ((u8(__fastcall *)(u8, u8))0x462750)(c0, g_AnmManager->color.b);
 
         g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x22, (c0 << 24) | (c1 << 16) | (c2 << 8) | (u8)c);
     }
 
-    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x24, *(u32 *)((u8 *)background + 0xaec));
-    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x25, *(u32 *)((u8 *)background + 0xaf0));
+    /* 雾的近/远平面距离（按位传给渲染状态）。 */
+    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x24, *(u32 *)&background->fog.nearPlane);
+    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x25, *(u32 *)&background->fog.farPlane);
 
     if (!g_Supervisor.IsFogDisabled())
     {
@@ -720,7 +730,7 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
     {
         for (i = 0; i < background->unk0xb30; i++)
         {
-            g_AnmManager->FUN_0040baf0((AnmVm *)((u8 *)background + 0xb38 + i * 0x2a4));
+            g_AnmManager->FUN_0040baf0(&background->objectVms[i]);
         }
 
         if (background->unk0x625c != NULL)
@@ -735,9 +745,10 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
     ((void(__fastcall *)(Background *))0x40b5a0)(background);
 
     /* D3D viewport-set virtual call @ vtbl+0xa0 */
-    ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
-        *(void **)0x17ce760, (void *)0x17ce820);
+    ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0xa0 / 4])(
+        *(void **)D3D_DEVICE_OBJ, (void *)D3D_DEVICE_VIEWPORT);
 
+    /* 雾距离（1000.0f / 2000.0f 的位模式），仅低优先级阶段设置。 */
     g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x24, 0x447a0000);
     g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x25, 0x44fa0000);
 
@@ -944,13 +955,13 @@ ZunResult Background::LoadStageData(char *stdPath)
     switch (g_GameManager.currentStage)
     {
     case 2:
-        g_Supervisor.textAnm->SetAndExecuteScriptIdx(&this->unk0x844, 0x21);
+        g_Supervisor.textAnm->SetAndExecuteScriptIdx(&this->stageTintVm, 0x21);
         break;
     default:
-        g_Supervisor.textAnm->SetAndExecuteScriptIdx(&this->unk0x844, 0x21);
+        g_Supervisor.textAnm->SetAndExecuteScriptIdx(&this->stageTintVm, 0x21);
         break;
     }
-    this->unk0x844.SetInterrupt(2);
+    this->stageTintVm.SetInterrupt(2);
     this->unk0x834 = 0;
     this->timer0x838 = 0;
     return ZUN_SUCCESS;
@@ -1025,7 +1036,7 @@ void Background::FUN_00409f40()
         {
             this->unk0x834 = 0;
             this->timer0x838.SetCurrent(0);
-            this->unk0x844.SetInterrupt(2);
+            this->stageTintVm.SetInterrupt(2);
         }
     }
     else
@@ -1034,30 +1045,31 @@ void Background::FUN_00409f40()
         {
             this->unk0x834 = 1;
             this->timer0x838.SetCurrent(0);
-            this->unk0x844.SetInterrupt(1);
+            this->stageTintVm.SetInterrupt(1);
         }
     }
 
     this->timer0x838.Tick();
-    g_AnmManager->ExecuteScript(&this->unk0x844);
+    g_AnmManager->ExecuteScript(&this->stageTintVm);
 
-    for (i = 0; i < *(i32 *)((u8 *)this + 0x7fc); i++)
+    for (i = 0; i < this->objectsCount; i++)
     {
-        void *elem = (*(void ***)((u8 *)this + 0x800))[i];
-        void *cmd;
+        void *elem = this->objects[i];
+        StdRawQuadBasic *quad;
         AnmVm *vm;
         i32 count;
 
-        if (((*(i8 *)((u8 *)elem + 3)) & 1))
+        if (((StdRawObject *)elem)->flags & 1)
         {
             count = 0;
-            cmd = (u8 *)elem + 0x1c;
+            quad = &((StdRawObject *)elem)->firstQuad;
 
-            while (*(i16 *)cmd >= 0)
+            while (quad->type >= 0)
             {
-                vm = (AnmVm *)((u8 *)this + *(i16 *)((u8 *)cmd + 0x6) * 0x2a4);
+                /* 注意：与 LoadStageData 不同，这里按 `this + vmIndex*sizeof(AnmVm)` 取 VM（原版如此）。 */
+                vm = (AnmVm *)((u8 *)this + quad->vmIndex * 0x2a4);
 
-                switch (*(i16 *)cmd)
+                switch (quad->type)
                 {
                 case 0:
                     g_AnmManager->ExecuteScript(vm);
@@ -1067,26 +1079,27 @@ void Background::FUN_00409f40()
                     break;
                 }
 
-                if (*(i32 *)((u8 *)vm + 0x220) != 0)
+                if (vm->currentInstruction != 0)
                 {
                     count++;
                 }
 
-                cmd = (u8 *)cmd + *(i16 *)((u8 *)cmd + 0x2);
+                quad = (StdRawQuadBasic *)((u8 *)quad + quad->byteSize);
             }
 
-            if (*(i16 *)((u8 *)vm + 0x1fc) == 1)
+            /* type==1：用 stageTintVm 的 color1 逐通道给物体 VM 染色。 */
+            if (vm->prefix.type == 1)
             {
-                *(u32 *)((u8 *)vm + 0x1f8) |= 0x20000;
-                *(u8 *)((u8 *)vm + 0x1f6) = (u8)((*(u8 *)((u8 *)vm + 0x1f2) * *(u8 *)((u8 *)this + 0xa36)) >> 8);
-                *(u8 *)((u8 *)vm + 0x1f5) = (u8)((*(u8 *)((u8 *)vm + 0x1f1) * *(u8 *)((u8 *)this + 0xa35)) >> 8);
-                *(u8 *)((u8 *)vm + 0x1f4) = (u8)((*(u8 *)((u8 *)vm + 0x1f0) * *(u8 *)((u8 *)this + 0xa34)) >> 8);
-                *(u8 *)((u8 *)vm + 0x1f7) = (u8)((*(u8 *)((u8 *)vm + 0x1f3) * *(u8 *)((u8 *)this + 0xa37)) >> 8);
+                vm->prefix.flags |= 0x20000;
+                vm->prefix.color2.r = (u8)((vm->prefix.color1.r * this->stageTintVm.prefix.color1.r) >> 8);
+                vm->prefix.color2.g = (u8)((vm->prefix.color1.g * this->stageTintVm.prefix.color1.g) >> 8);
+                vm->prefix.color2.b = (u8)((vm->prefix.color1.b * this->stageTintVm.prefix.color1.b) >> 8);
+                vm->prefix.color2.a = (u8)((vm->prefix.color1.a * this->stageTintVm.prefix.color1.a) >> 8);
             }
 
             if (count == 0)
             {
-                *(u8 *)((u8 *)elem + 3) &= ~0x1;
+                ((StdRawObject *)elem)->flags &= ~0x1;
             }
         }
     }

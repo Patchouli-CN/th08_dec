@@ -78,8 +78,10 @@ struct ResultScreen
     unknown_fields(0x50, 0x4);
     i32 unk54;                     // 0x54
     unknown_fields(0x58, 0x148);
-    AnmVm vms[0x48];               // 0x1a0 (0x2a4 each, ends 0xbfc0)
-    unknown_fields(0xbfc0, 0x548c);
+    AnmVm vms[0x48];               // 0x1a0 (0x2a4 each, ends 0xbfc0; vms[0x28]=menu highlight, vms[0x47]=menu timer)
+    AnmVm scoreVms[0xa];           // 0xbfc0 前十得分文本 VM
+    AnmVm textVm;                  // 0xda28 主文本 VM
+    unknown_fields(0xdccc, 0x3780);
     ScoreListNode scores[5][12];   // 0x1144c
     unknown_fields(0x1171c, 0x34d4c); // 0x1171c
     ChainElem *calcChain;          // 0x46468

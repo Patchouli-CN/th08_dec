@@ -8,6 +8,8 @@
 
 namespace th08
 {
+#define TEXT_OUTLINE_NONE 0xffffffff /* outlineType 哨兵值：无描边 */
+
 struct FormatInfo
 {
     D3DFORMAT format;

@@ -64,11 +64,11 @@ void AnmLoaded::SetAndExecuteScript(AnmVm *vm, AnmRawInstr *beginningOfScript)
         vm->Initialize();
         vm->anmFileIndex = this->anmIdx;
         vm->prefix.anmFile = this;
-        vm->prefix.flags &= 0xfffff9ff;
+        vm->prefix.flags &= ~ANM_FLAG_FLIP_MASK;
         vm->beginningOfScript = beginningOfScript;
         vm->currentInstruction = vm->beginningOfScript;
         vm->prefix.currentTimeInScript = 0;
-        vm->prefix.flags &= 0xfffffffe;
+        vm->prefix.flags &= ~ANM_FLAG_VISIBLE_MASK;
         g_AnmManager->ExecuteScript(vm);
         g_AnmManager->unk0xc++;
     }

@@ -361,7 +361,7 @@ void TextHelper::RenderTextToTextureBold(i32 xPos, i32 yPos, i32 spriteWidth, i3
     SetBkMode(hdc, TRANSPARENT);
 
     // Render outline.
-    if (outlineType != 0xffffffff)
+    if (outlineType != TEXT_OUTLINE_NONE)
     {
         SetTextColor(hdc, 0);
         TextOutA(hdc, xPos * 2 + 4, 2, string, strlen(string));
@@ -382,7 +382,7 @@ void TextHelper::RenderTextToTextureBold(i32 xPos, i32 yPos, i32 spriteWidth, i3
     TextOutA(hdc, xPos * 2 + 2, 2, string, strlen(string));
 
     SelectObject(hdc, h);
-    textHelper.InvertAlpha(0, 0, spriteWidth * 2, fontHeight * 2 + 6, outlineType == 0xffffffff);
+    textHelper.InvertAlpha(0, 0, spriteWidth * 2, fontHeight * 2 + 6, outlineType == TEXT_OUTLINE_NONE);
     textHelper.CopyTextToSurface(g_TextBufferSurface);
     SelectObject(hdc, h);
     DeleteObject(font);
@@ -429,7 +429,7 @@ void TextHelper::RenderTextToTexture(i32 xPos, i32 yPos, i32 spriteWidth, i32 sp
     SetBkMode(hdc, TRANSPARENT);
 
     // Render outline.
-    if (outlineType != 0xffffffff)
+    if (outlineType != TEXT_OUTLINE_NONE)
     {
         SetTextColor(hdc, 0);
         TextOutA(hdc, xPos * 2 + 4, 2, string, strlen(string));
@@ -450,7 +450,7 @@ void TextHelper::RenderTextToTexture(i32 xPos, i32 yPos, i32 spriteWidth, i32 sp
     TextOutA(hdc, xPos * 2 + 2, 2, string, strlen(string));
 
     SelectObject(hdc, h);
-    textHelper.InvertAlpha(0, 0, textSurfaceDesc.Width, fontHeight * 2 + 6, outlineType == 0xffffffff);
+    textHelper.InvertAlpha(0, 0, textSurfaceDesc.Width, fontHeight * 2 + 6, outlineType == TEXT_OUTLINE_NONE);
     textHelper.CopyTextToSurface(g_TextBufferSurface);
     SelectObject(hdc, h);
     DeleteObject(font);

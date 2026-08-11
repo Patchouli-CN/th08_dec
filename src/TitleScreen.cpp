@@ -326,13 +326,13 @@ ChainCallbackResult TitleScreen::OnUpdateStartMenu()
             /* Mark the "Spell Practice" button as grayed out. */
             if (!g_GameManager.IsSpellPracticeUnlocked())
             {
-                this->vms[3].prefix.color1.d3dColor = 0xff404040;
+                this->vms[3].prefix.color1.d3dColor = COLOR_DARK_GREY;
             }
 
             /* Mark the "Extra Start" button as grayed out. */
             if (!g_GameManager.IsExtraUnlocked())
             {
-                this->vms[2].prefix.color1.d3dColor = 0xff404040;
+                this->vms[2].prefix.color1.d3dColor = COLOR_DARK_GREY;
             }
         }
 
@@ -386,13 +386,13 @@ ChainCallbackResult TitleScreen::OnUpdateStartMenu()
             /* Mark the "Spell Practice" button as grayed out. */
             if (!g_GameManager.IsSpellPracticeUnlocked())
             {
-                this->vms[3].prefix.color1.d3dColor = 0xff404040;
+                this->vms[3].prefix.color1.d3dColor = COLOR_DARK_GREY;
             }
 
             /* Mark the "Extra Start" button as grayed out. */
             if (!g_GameManager.IsExtraUnlocked())
             {
-                this->vms[2].prefix.color1.d3dColor = 0xff404040;
+                this->vms[2].prefix.color1.d3dColor = COLOR_DARK_GREY;
             }
         }
 
@@ -2525,7 +2525,7 @@ ChainCallbackResult TitleScreen::DrawReplayMenu()
         }
         else
         {
-            g_AsciiManager.SetColor(0xff808080);
+            g_AsciiManager.SetColor(COLOR_MEDIUM_GREY);
         }
 
         if (this->replays[i].spellcardNumber < 0)
@@ -2573,11 +2573,11 @@ ChainCallbackResult TitleScreen::DrawReplayMenu()
 
                     if (i2 == this->selectedReplayStage)
                     {
-                        g_AsciiManager.SetColor(0xffffffff);
+                        g_AsciiManager.SetColor(COLOR_WHITE);
                     }
                     else
                     {
-                        g_AsciiManager.SetColor(0xff808080);
+                        g_AsciiManager.SetColor(COLOR_MEDIUM_GREY);
                     }
                 }
                 else
@@ -2669,11 +2669,11 @@ ChainCallbackResult TitleScreen::DrawPracticeStageSelect()
         }
         else if (IS_STAGE_CLEARED(clearInfo, i))
         {
-            g_AsciiManager.SetColor(0xffa0a0a0);
+            g_AsciiManager.SetColor(COLOR_LIGHT_GREY);
         }
         else
         {
-            g_AsciiManager.SetColor(0xff404040);
+            g_AsciiManager.SetColor(COLOR_DARK_GREY);
         }
 
         g_AsciiManager.AddFormatText(
@@ -2747,7 +2747,7 @@ ChainCallbackResult TitleScreen::DrawSpellStageSelect()
         }
         else
         {
-            g_AsciiManager.SetColor(0xffa0a0a0);
+            g_AsciiManager.SetColor(COLOR_LIGHT_GREY);
         }
 
         capturesPerStageSpellPracticePerShot = 0;
@@ -2822,7 +2822,7 @@ ChainCallbackResult TitleScreen::DrawSpellStageSelect()
     position.y += 5.0f;
 
     g_AsciiManager.SetIsSelected(FALSE);
-    g_AsciiManager.SetColor(0xffd06060);
+    g_AsciiManager.SetColor(COLOR_SOFT_RED);
 
     g_AsciiManager.AddFormatText(&position, "%sTotal",
                                  (totalCapturesSpellPracticePerShot >= SPELLCARD_COUNT_SPELLCARDS

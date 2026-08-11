@@ -7,6 +7,11 @@
 
 namespace th08
 {
+/* Spellcard::flags 位定义。 */
+#define SPELLCARD_FLAG_ACTIVE_BIT 0      /* bit 0：符卡战斗进行中 */
+#define SPELLCARD_FLAG_LOCKED_SHIFT 0xb  /* bit 11：锁定（不累计时间） */
+#define SPELLCARD_FLAG_RESET_MASK 0x4    /* bit 2：FUN_0044d150 清除 */
+
 // Naming scheme:
 // SPELLCARD_[STAGE]_[ENEMY]_(LAST SPELL)(NUM)(DIFFICULTY)
 // [] fields are mandatory

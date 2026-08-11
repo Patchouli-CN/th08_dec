@@ -1099,14 +1099,14 @@ DRAW_FPS:
             replayFpsPos.z = 0.0f;
             if (g_Supervisor.unk0x33c)
             {
-                g_AsciiManager.color.d3dColor = 0xffff4040;
+                g_AsciiManager.color.d3dColor = COLOR_RED;
             }
             else
             {
-                g_AsciiManager.color.d3dColor = 0xffffffd0;
+                g_AsciiManager.color.d3dColor = COLOR_LIGHT_YELLOW;
             }
             g_AsciiManager.AddString(&replayFpsPos, g_ReplayFpsBuffer);
-            g_AsciiManager.color.d3dColor |= 0xffffffff;
+            g_AsciiManager.color.d3dColor |= COLOR_WHITE;
         }
     }
 }

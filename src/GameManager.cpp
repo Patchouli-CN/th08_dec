@@ -384,7 +384,7 @@ skipStageComplete:
 
     // In the swap mode with a single player alive, drop frames so the game stays
     // at a manageable speed depending on the current FPS.
-    if ((g_PlayerFlags & 0x8) && g_PlayerUnknown0bd == 1)
+    if ((g_PlayerFlags & PLAYER_FLAG_SWAP_MODE_BIT) && g_PlayerUnknown0bd == 1)
     {
         if (g_Gui.FUN_004358bb() == 0)
         {

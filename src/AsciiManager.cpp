@@ -88,7 +88,7 @@ ChainCallbackResult AsciiManager::OnUpdate(AsciiManager *ascii)
 ChainCallbackResult AsciiManager::OnDrawLowPrio(AsciiManager *ascii)
 {
     ascii->DrawStrings();
-    ascii->FUN_00407160();
+    ascii->ResetStringsCount();
     ascii->pauseMenu.OnDrawPauseMenu();
     ascii->retryMenu.OnDrawRetryMenu();
     if (ascii->demoIcon.scriptIndex != 0)
@@ -123,9 +123,10 @@ void AsciiManager::SetIsGuiMode(u32 isGuiMode)
 }
 
 // FUNCTION: th08 0x42f2d0
-void AsciiManager::FUN_0042f2d0(i32 idx, u32 value)
+/* 设置第 idx 个 Boss 标记的状态（OnDrawLowPrioImpl 用 bossMarkerStates[i] 决定闪烁样式）。 */
+void AsciiManager::SetBossMarkerState(i32 idx, u32 state)
 {
-    *(u32 *)((u8 *)this + 0x2254 + idx * 4) = value;
+    this->bossMarkerStates[idx] = state;
 }
 
 // STUB: th08 0x402b20
@@ -134,9 +135,10 @@ void AsciiManager::DrawStrings()
 }
 
 // FUNCTION: th08 0x407160
-void AsciiManager::FUN_00407160()
+/* 清空字符串计数，下一帧从头分配字符串槽位。 */
+void AsciiManager::ResetStringsCount()
 {
-    *(u32 *)((u8 *)this + 0x8264) = 0;
+    this->numStrings = 0;
 }
 
 ChainCallbackResult AsciiManager::OnDrawHighPrio(AsciiManager *ascii)
@@ -164,7 +166,7 @@ void AsciiManager::Reset()
     this->nextPlayerPointPopupIndex = 0;
     /* nextTimePopupIndex is not set to 0?  */
     this->unk0x829c = 0;
-    this->color.d3dColor = 0xffffffff;
+    this->color.d3dColor = COLOR_WHITE;
     this->scaleX = 1.0f;
     this->scaleY = 1.0f;
     this->smallScoreText.prefix.anchor = 3;
@@ -395,7 +397,7 @@ void AsciiManager::OnDrawLowPrioImpl()
                 else
                 {
                     this->largeText.loadedSprite = this->asciiAnm->GetSprite(*text + (170 - ' '));
-                    this->largeText.prefix.color1.d3dColor = 0xffffffff;
+                    this->largeText.prefix.color1.d3dColor = COLOR_WHITE;
                 }
 
                 g_AnmManager->DrawNoRotation(&this->largeText);
@@ -705,36 +707,41 @@ void PauseMenu::OnDrawPauseMenu()
 {
     u32 i;
 
+    /* 0x164d0ba：暂停菜单可见标志（暂停生效时非 0）。 */
     if (*(u8 *)0x164d0ba != 0)
     {
         g_AnmManager->FlushVertexBuffer();
 
-        *(i32 *)0x17ce820 = (i32)*(f32 *)0x164d2dc;
-        *(i32 *)0x17ce824 = (i32)*(f32 *)0x164d2e0;
-        *(i32 *)0x17ce828 = (i32)*(f32 *)0x164d2e4;
-        *(i32 *)0x17ce82c = (i32)*(f32 *)0x164d2e8;
+        /* 把游戏浮点视图矩形（0x164d2dc.. 的 f32 x,y,w,h）写进 D3D 设备内部视图
+         * 结构（0x17ce820），再通过设备 vtable 的 SetViewport（slot 0x28）应用。 */
+        *(i32 *)(D3D_DEVICE_VIEWPORT + 0) = (i32)*(f32 *)(GAME_VIEWPORT_FLOATS + 0);
+        *(i32 *)(D3D_DEVICE_VIEWPORT + 4) = (i32)*(f32 *)(GAME_VIEWPORT_FLOATS + 4);
+        *(i32 *)(D3D_DEVICE_VIEWPORT + 8) = (i32)*(f32 *)(GAME_VIEWPORT_FLOATS + 8);
+        *(i32 *)(D3D_DEVICE_VIEWPORT + 0xc) = (i32)*(f32 *)(GAME_VIEWPORT_FLOATS + 0xc);
 
         /* D3D viewport-set virtual call @ vtbl+0xa0 */
-        ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
-            *(void **)0x17ce760, (void *)0x17ce820);
+        ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0xa0 / 4])(
+            *(void **)D3D_DEVICE_OBJ, (void *)D3D_DEVICE_VIEWPORT);
 
-        if ((*(u32 *)0x17ce8fc >> 1) & 1)
+        /* 0x17ce8fc bit1：本次设置视图后是否要重绘菜单背景。 */
+        if ((*(u32 *)D3D_DEVICE_FLAG_WORD >> 1) & 1)
         {
             if (this->curState != 0)
             {
-                u8 local[0x2a4];
+                u8 local[sizeof(AnmVm)];
 
-                memcpy(local, (u8 *)this + 0x1a70, 0x2a4);
+                /* 复制菜单背景 VM，置位 0xb8 处（AnmPrefix 计时器区）的临时标记后绘制。 */
+                memcpy(local, &this->menuBackground, sizeof(AnmVm));
                 *(u32 *)(local + 0xb8) |= 0x2000;
                 g_AnmManager->DrawNoRotation((AnmVm *)local);
             }
         }
 
-        for (i = 0; i < 0xa; i++)
+        for (i = 0; i < ARRAY_SIZE_SIGNED(this->menuSprites); i++)
         {
-            if (((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4))->IsVisible())
+            if (this->menuSprites[i].IsVisible())
             {
-                g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4));
+                g_AnmManager->DrawNoRotation(&this->menuSprites[i]);
             }
         }
     }
@@ -751,34 +758,38 @@ void RetryMenu::OnDrawRetryMenu()
 {
     u32 i;
 
+    /* 0x164d0bb：重试菜单可见标志（倒地/续关时非 0）。 */
     if (*(u8 *)0x164d0bb != 0)
     {
         g_AnmManager->FlushVertexBuffer();
 
-        *(i32 *)0x17ce820 = (i32)*(f32 *)0x164d2dc;
-        *(i32 *)0x17ce824 = (i32)*(f32 *)0x164d2e0;
-        *(i32 *)0x17ce828 = (i32)*(f32 *)0x164d2e4;
-        *(i32 *)0x17ce82c = (i32)*(f32 *)0x164d2e8;
+        /* 同步游戏浮点视图矩形到 D3D 设备内部视图并调用 SetViewport。 */
+        *(i32 *)(D3D_DEVICE_VIEWPORT + 0) = (i32)*(f32 *)(GAME_VIEWPORT_FLOATS + 0);
+        *(i32 *)(D3D_DEVICE_VIEWPORT + 4) = (i32)*(f32 *)(GAME_VIEWPORT_FLOATS + 4);
+        *(i32 *)(D3D_DEVICE_VIEWPORT + 8) = (i32)*(f32 *)(GAME_VIEWPORT_FLOATS + 8);
+        *(i32 *)(D3D_DEVICE_VIEWPORT + 0xc) = (i32)*(f32 *)(GAME_VIEWPORT_FLOATS + 0xc);
 
         /* D3D viewport-set virtual call @ vtbl+0xa0 */
-        ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)0x17ce760)[0xa0 / 4])(
-            *(void **)0x17ce760, (void *)0x17ce820);
+        ((void(__stdcall *)(void *, void *))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0xa0 / 4])(
+            *(void **)D3D_DEVICE_OBJ, (void *)D3D_DEVICE_VIEWPORT);
 
-        if ((*(u32 *)0x17ce8fc >> 1) & 1)
+        /* 0x17ce8fc bit1：本次设置视图后是否要重绘菜单背景。 */
+        if ((*(u32 *)D3D_DEVICE_FLAG_WORD >> 1) & 1)
         {
             if (this->curState != 0 || this->numFrames > 2)
             {
-                g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this + 0xfe0));
+                g_AnmManager->DrawNoRotation(&this->menuBackground);
             }
         }
 
+        /* 0x160f538：当前进行中的符卡/流程计数，小于 4 时显示 4 个菜单项。 */
         if (g_GameManager.GetFlag14() == 0 && *(i32 *)0x160f538 < 4)
         {
             for (i = 0; i < 4; i++)
             {
-                if (((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4))->IsVisible())
+                if (this->menuSprites[i].IsVisible())
                 {
-                    g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4));
+                    g_AnmManager->DrawNoRotation(&this->menuSprites[i]);
                 }
             }
         }
@@ -786,9 +797,9 @@ void RetryMenu::OnDrawRetryMenu()
         {
             for (i = 0; i < 3; i++)
             {
-                if (((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4))->IsVisible())
+                if (this->menuSprites[i].IsVisible())
                 {
-                    g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this + 0x8 + i * 0x2a4));
+                    g_AnmManager->DrawNoRotation(&this->menuSprites[i]);
                 }
             }
         }

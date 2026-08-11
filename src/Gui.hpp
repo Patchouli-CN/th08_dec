@@ -119,7 +119,16 @@ struct GuiImpl
     GuiPopup popupA;
     GuiPopup popupB;
     GuiPopup popupC;
-    unknown_fields(0x22dec, 0x28);
+    i32 resultStage;            /* 0x22dec 按关卡查表（0x4c7158） */
+    i32 resultPower;            /* 0x22df0 */
+    i32 resultPointItems;       /* 0x22df4 */
+    i32 resultGraze;            /* 0x22df8 */
+    i32 resultTimeOrbs;         /* 0x22dfc */
+    i32 resultTime;             /* 0x22e00 时间（秒增量，也用于时间精灵 +0x80） */
+    i32 resultTimeFrames;       /* 0x22e04 时钟帧数*30+660 */
+    i32 resultTimeFrames2;      /* 0x22e08 */
+    i32 resultTimeFramesCopy;   /* 0x22e0c 0x22e04 的副本 */
+    i32 unk22e10;               /* 0x22e10 */
     AnmVm vmL;
 };
 C_ASSERT(sizeof(GuiImpl) == 0x230b8);

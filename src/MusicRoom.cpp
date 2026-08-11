@@ -362,7 +362,7 @@ ChainCallbackResult MusicRoom::OnDraw(MusicRoom *musicRoom)
         g_AnmManager->DrawNoRotation(&musicRoom->descriptionVms[i]);
     }
 
-    g_AsciiManager.SetColor(0xffffffff);
+    g_AsciiManager.SetColor(COLOR_WHITE);
 
     position.x = 320.0f;
     position.y = 32.0f;
@@ -376,7 +376,7 @@ ChainCallbackResult MusicRoom::OnDraw(MusicRoom *musicRoom)
     musicRoom->descriptionVms[7].pos.x = 320.0f;
     musicRoom->descriptionVms[7].pos.y = 52.0f;
     musicRoom->descriptionVms[7].pos.z = 0.0f;
-    musicRoom->descriptionVms[7].prefix.color1.d3dColor = 0xffffffff;
+    musicRoom->descriptionVms[7].prefix.color1.d3dColor = COLOR_WHITE;
 
     g_AnmManager->DrawNoRotation(&musicRoom->descriptionVms[7]);
 

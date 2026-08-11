@@ -199,11 +199,12 @@ ZunResult Player::RegisterChain(u32 param)
 // FUNCTION: th08 0x44c390 (98.48% FIXME: || 短路跳板布局)
 ChainCallbackResult Player::OnUpdate(Player *player)
 {
+    /* 0x160f534：全局暂停标志（非 0 时冻结所有子弹动画）。 */
     if (*(i8 *)0x160f534 != 0)
     {
         if (player->effectVm != 0)
         {
-            *(u32 *)((u8 *)player->effectVm + 0x1f8) |= 0x80000;
+            player->effectVm->prefix.flags |= 0x80000;
         }
 
         if (player->barrierParticle != 0)
@@ -216,12 +217,12 @@ ChainCallbackResult Player::OnUpdate(Player *player)
 
     if (player->effectVm != 0)
     {
-        *(u32 *)((u8 *)player->effectVm + 0x1f8) &= 0xfff7ffff;
+        player->effectVm->prefix.flags &= ~0x80000;
     }
 
     if (player->barrierParticle != 0)
     {
-        player->barrierParticle->flags &= 0xfff7ffff;
+        player->barrierParticle->flags &= ~0x80000;
     }
 
     player->FUN_0044c5b0();
@@ -275,20 +276,20 @@ void Player::FUN_004512f0()
     {
         if (p->state == 1)
         {
-            if (*(i16 *)((u8 *)&p->vm + 0x1fc) != 0)
+            if (p->vm.prefix.type != 0)
             {
                 p->vm.SetZRotation(p->rotation);
             }
 
-            *(f32 *)((u8 *)&p->vm + 0x208) = g_PlayerPos.x + p->offsetX;
-            *(f32 *)((u8 *)&p->vm + 0x20c) = g_PlayerPos.y + p->offsetY;
-            *(u32 *)((u8 *)&p->vm + 0x210) = 0x3ecccccd;
+            p->vm.pos.x = g_PlayerPos.x + p->offsetX;
+            p->vm.pos.y = g_PlayerPos.y + p->offsetY;
+            p->vm.pos.z = 0.4f;
 
             if (p->hasCustomColor != 0)
             {
-                *(u8 *)((u8 *)&p->vm + 0x1f2) = 0xff;
-                *(u8 *)((u8 *)&p->vm + 0x1f1) = 0x40;
-                *(u8 *)((u8 *)&p->vm + 0x1f0) = 0x40;
+                p->vm.prefix.color1.r = 0xff;
+                p->vm.prefix.color1.g = 0x40;
+                p->vm.prefix.color1.b = 0x40;
             }
 
             g_AnmManager->Draw2D(&p->vm);
@@ -434,7 +435,7 @@ void Player::FUN_0044c650()
         /* 射击进行中：到期则清场/结束，未到期则推进当前射击并涨妖气槽。 */
         if (FUN_0040d3d0(&this->shotTimer) != 0)
         {
-            *(i32 *)0x160f42c = (*(i32 *)0x160f42c & 0xfffffcff) | 0x200;
+            g_GuiDisplayState = (g_GuiDisplayState & ~0x300) | 0x200;
         }
 
         if (this->shotTimer.operator>=(this->shotInterval))
@@ -446,12 +447,14 @@ void Player::FUN_0044c650()
 
             if (this->unkFe0 == 4)
             {
-                *(i32 *)0x164d0b4 &= 0xfffffe7f;
+                /* 切换回人类射击形态，清掉"射击形态"标志位。 */
+                g_PlayerFlags &= ~PLAYER_FLAG_SHOT_MODE_MASK;
                 for (i = 0; i < 8u; i++)
                 {
                     if (g_BulletObjects[i] != 0)
                     {
                         ((StubThiscall42adb0 *)(g_BulletObjects[i]))->FUN_0042adb0(0);
+                        /* 子弹对象内：0x2dfc 状态字清零、0x3324 标志清 bit30。 */
                         *(i32 *)(g_BulletObjects[i] + 0x2dfc) = 0;
                         *(i32 *)(g_BulletObjects[i] + 0x3324) &= 0xbfffffff;
                     }
@@ -480,20 +483,20 @@ void Player::FUN_0044c650()
     }
 
     /* 未射击：检测"按了决死结界键且满足条件"则切换射击。 */
-    if (*(u16 *)0x164d52c & 2 && !g_GameManager.IsTampered() &&
+    if (g_KeyInput & TH_BUTTON_BOMB && !g_GameManager.IsTampered() &&
         !g_Gui.FUN_004358bb() && this->shotIndex != 0 &&
         g_GameManager.GetBombsRemaining() > 0 && this->shotCooldown == 0)
     {
-        if ((g_PlayerFlags >> 7 & 3) == 0)
+        if (((g_PlayerFlags >> PLAYER_FLAG_SHOT_MODE_SHIFT) & 3) == 0)
         {
-            if ((g_PlayerFlags >> 0xe & 1) == 0)
+            if ((g_PlayerFlags >> PLAYER_FLAG_EXTRA_SHIFT & 1) == 0)
             {
                 goto switch_shot;
             }
         }
     }
 sound_check:
-    if (*(u16 *)0x164d52c & 2 && (*(u16 *)0x164d52c & 2) != (*(u16 *)0x164d534 & 2))
+    if (g_KeyInput & TH_BUTTON_BOMB && (g_KeyInput & TH_BUTTON_BOMB) != (g_KeyInput2 & TH_BUTTON_BOMB))
     {
         g_SoundPlayer.PlaySoundByIdx((SoundIdx)0x29, 0);
     }
@@ -503,22 +506,23 @@ sound_check:
 
 switch_shot:
     /* 切换射击：设置射击类型/消耗炸弹/初始化。 */
+    /* 0x18b8a28：某全局对象指针，偏移 0xda 置 bit0（射击切换标记）。 */
     *(u16 *)(*(i32 *)0x18b8a28 + 0xda) |= 1;
     this->unk6 = 0;
 
-    if (g_PlayerFlags >> 7 & 3)
+    if (g_PlayerFlags >> PLAYER_FLAG_SHOT_MODE_SHIFT & 3)
     {
         this->unkFe0 = 4;
     }
     else
     {
-        ((AnmVm *)this->unk_10)->prefix.flags &= 0xfffdffff;
+        ((AnmVm *)this->unk_10)->prefix.flags &= ~0x20000;
         if (this->unkE2b28 != 0)
         {
             *(u8 *)(this->unkE2b28 + 0x350) = 0;
             this->unkE2b28 = 0;
         }
-        *(i32 *)0x164d0b4 &= 0xfffffbff;
+        g_PlayerFlags &= ~PLAYER_FLAG_ANIM_PAUSE_MASK;
         g_AnmManager->FUN_0040bab0();
 
         this->unkFe0 = this->isYoukaiMode;
@@ -545,10 +549,12 @@ switch_shot:
                 this->powerLevel = 2;
                 g_GameManager.AddToBombCount(-2);
             }
+            /* 0x164cfac：妖怪形态累计使用炸弹次数。 */
             *(i32 *)0x164cfac += 1;
         }
         else
         {
+            /* 0x164cfa8：人类形态累计使用炸弹次数。 */
             *(i32 *)0x164cfa8 += 1;
             g_GameManager.AddToBombCount(-1);
         }
@@ -556,7 +562,7 @@ switch_shot:
     }
 
     this->unk4 = 0;
-    *(i32 *)0x160f42c = (*(i32 *)0x160f42c & 0xfffffff3) | 8;
+    g_GuiDisplayState = (g_GuiDisplayState & ~0xc) | 8;
     this->unkFdc = 1;
     this->shotState = 1;
     this->shotTimer.SetCurrent(0);
@@ -597,7 +603,7 @@ i32 Player::FUN_0044cbf0()
             g_EffectManager.FUN_00425870(0xc, &this->positionCenter, 3, 1, 0xff4040ff);
             g_EffectManager.FUN_00425430(0x6, &this->positionCenter, 0x10, -1);
             g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0xf, this->positionCenter.x);
-            g_PlayerFlags &= ~0x400;
+            g_PlayerFlags &= ~PLAYER_FLAG_ANIM_PAUSE_MASK;
             g_AnmManager->FUN_0040bab0();
             ((AnmVm *)this->unk_10)->prefix.flags &= ~0x20000;
             g_ReplayManager->replayEventFlags |= 4;
@@ -735,7 +741,7 @@ void Player::FUN_0044d180()
         ((AnmVm *)this->unk_10)->prefix.color1.d3dColor = 0xffffffff;
         ((Player *)this->unk_10)->FUN_0044e120();
 
-        if (!(g_PlayerFlags >> 0xe & 1))
+        if (!(g_PlayerFlags >> PLAYER_FLAG_EXTRA_SHIFT & 1))
         {
             this->invulnerabilityTimer.SetCurrent(0xf0);
         }
@@ -1199,7 +1205,7 @@ void Player::FUN_00451150()
     PlayerBulletVm *b;
 
     /* 子弹动画暂停标志（0x164d0b4 bit 10）。 */
-    if (g_PlayerFlags >> 0xa & 1)
+    if (g_PlayerFlags >> PLAYER_FLAG_ANIM_PAUSE_SHIFT & 1)
     {
         return;
     }
@@ -1223,8 +1229,8 @@ void Player::FUN_00451150()
         }
 
         /* 按速度推进子弹位置。 */
-        PlayerPosCenter((Float3 *)&b->offsetX)->x += *(f32 *)0x17ce8e0 * b->unk43c;
-        PlayerPosCenter((Float3 *)&b->offsetX)->y += *(f32 *)0x17ce8e0 * b->unk440;
+        PlayerPosCenter((Float3 *)&b->offsetX)->x += g_ShotSpeed * b->unk43c;
+        PlayerPosCenter((Float3 *)&b->offsetX)->y += g_ShotSpeed * b->unk440;
 
         /* 非"遗留型"子弹离开活动区域则销毁。 */
         if (b->state464 != 4 && b->state464 != 5)
@@ -1251,7 +1257,7 @@ void Player::FUN_00451150()
 // FUNCTION: th08 0x451500
 i32 Player::FUN_00451500()
 {
-    if (*(i32 *)0x164d2c8 < 0x14)
+    if (g_Unknown164d2c8 < 0x14)
     {
         return 0;
     }
@@ -1268,6 +1274,7 @@ i32 Player::FUN_00451500()
 
     if (FUN_0040d3d0(&this->shotTimer2) != 0)
     {
+        /* 0x17d6ed4：当前角色是否为"特殊射击型"的标志。 */
         if (*(i32 *)0x17d6ed4 != 0)
         {
             if (g_PlayerCharacter != 1 && g_PlayerCharacter != 7 && g_PlayerCharacter != 6)
@@ -1284,7 +1291,7 @@ i32 Player::FUN_00451500()
         this->shotTimer2.SetCurrent(-1);
     }
 
-    if (*(u16 *)0x164d52c & 1)
+    if (g_KeyInput & TH_BUTTON_SHOOT)
     {
         if (this->shotTimer2.AsFrames() < 0)
         {
@@ -1452,8 +1459,8 @@ ZunResult Player::AddedCallback(Player *player)
     }
 
     /* 原版对 `positionCenter = Float3(...)` 编译成三次构造器调用，见 PlayerPosCenter。 */
-    PlayerPosCenter(&player->positionCenter)->x = *(f32 *)0x164d2e4 / *(f32 *)0x4b42ec;
-    PlayerPosCenter(&player->positionCenter)->y = *(f32 *)0x164d2e8 - *(f32 *)0x4b42c8;
+    PlayerPosCenter(&player->positionCenter)->x = g_PlayerTargetX / *(f32 *)MEM_FLOAT_2_0;
+    PlayerPosCenter(&player->positionCenter)->y = g_PlayerTargetY - *(f32 *)MEM_FLOAT_64_0;
     PlayerPosCenter(&player->positionCenter)->z = 0.48f;
 
     for (i = 0; i < 0x180u; i++)
@@ -1461,13 +1468,14 @@ ZunResult Player::AddedCallback(Player *player)
         ((Player *)&player->shots[i])->FUN_0044e370();
     }
 
-    player->shotSpeed3d8 = *(f32 *)((u8 *)g_PlayerShtFile + 0xc) / *(f32 *)0x4b42ec;
+    /* .sht 文件 0xc/0x10/0x18 处为三档射击速度，除以 2.0f 得帧速度。 */
+    player->shotSpeed3d8 = *(f32 *)((u8 *)g_PlayerShtFile + 0xc) / *(f32 *)MEM_FLOAT_2_0;
     player->shotSpeed3d4 = player->shotSpeed3d8;
     player->unk3dc = 5.0f;
-    player->shotSpeed3e4 = *(f32 *)((u8 *)g_PlayerShtFile + 0x10) / *(f32 *)0x4b42ec;
+    player->shotSpeed3e4 = *(f32 *)((u8 *)g_PlayerShtFile + 0x10) / *(f32 *)MEM_FLOAT_2_0;
     player->shotSpeed3e0 = player->shotSpeed3e4;
     player->unk3e8 = 5.0f;
-    player->shotSpeed3f0 = *(f32 *)((u8 *)g_PlayerShtFile + 0x18) / *(f32 *)0x4b42ec;
+    player->shotSpeed3f0 = *(f32 *)((u8 *)g_PlayerShtFile + 0x18) / *(f32 *)MEM_FLOAT_2_0;
     player->shotSpeed3ec = player->shotSpeed3f0;
     player->unk3f4 = 5.0f;
 
@@ -1497,7 +1505,7 @@ ZunResult Player::AddedCallback(Player *player)
     player->unkE2b0c = -1.57f;
     player->unk408 = 1.0f;
     player->unk404 = 1.0f;
-    player->shotIndex = *(i32 *)((u8 *)g_PlayerShtFile + 0x8);
+    player->shotIndex = g_PlayerShtFile->unk8;
 
     if (g_Supervisor.GetUnk164())
     {

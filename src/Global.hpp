@@ -12,6 +12,19 @@
 namespace th08
 {
 
+/* D3D 设备对象内部固定地址（ZUN 绕过 D3D 封装直接硬编码访问原版地址）。
+ * 注意：只能用 `*(i32 *)ADDR` 解引用形式，不能用 `((i32 *)ADDR)[i]` 下标形式——
+ * 后者会触发 MSVC 的"预缩放常量下标"怪癖，产生 `xor ecx,ecx; [ecx+ADDR]` 而非折叠地址。 */
+#define D3D_DEVICE_OBJ 0x17ce760       /* 存放 D3D 设备对象指针的全局（解引用得设备指针） */
+#define D3D_DEVICE_VIEWPORT 0x17ce820  /* 设备对象内视图矩形 (i32 x, y, w, h) */
+#define D3D_DEVICE_FLAG_WORD 0x17ce8fc /* 设备对象内标志字（bit1 = 视图已设置） */
+#define GAME_VIEWPORT_FLOATS 0x164d2dc /* 游戏浮点视图矩形 (f32 x, y, w, h) */
+
+/* 数据段内存浮点常量地址（ZUN 以 [addr] 直接访问，须按地址解引用保持字节级一致）。 */
+#define MEM_FLOAT_2_0 0x4b42ec  /* 2.0f */
+#define MEM_FLOAT_32_0 0x4b42cc /* 32.0f */
+#define MEM_FLOAT_64_0 0x4b42c8 /* 64.0f */
+
 #define IS_PRESSED(key) (g_CurFrameInput & (key))
 #define WAS_PRESSED(key) (((g_CurFrameInput & (key)) != 0) && (g_CurFrameInput & (key)) != (g_LastFrameInput & (key)))
 #define WAS_PRESSED_SCROLLING(key)                                                                                     \

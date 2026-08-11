@@ -158,8 +158,8 @@ i32 Gui::FUN_00437d87()
 {
     i32 result;
 
-    if (*(i16 *)(*(i32 *)((u8 *)this + 8) + 0x398c) >= 0 &&
-        FUN_004396f8((AnmVm *)(*(i32 *)((u8 *)this + 8) + 0x3778)) != 0)
+    if (this->impl->vmD.activeSpriteIndex >= 0 &&
+        FUN_004396f8(&this->impl->vmD) != 0)
     {
         result = 1;
     }
@@ -176,12 +176,12 @@ i32 Gui::FUN_004358bb()
     i32 result;
 
     /* 无活动对象或对象未处于"等待"状态 → 0。 */
-    if (*(i32 *)((u8 *)this + 8) == 0)
+    if (this->impl == 0)
     {
         return 0;
     }
-    if (*(i32 *)(*(i32 *)((u8 *)this + 8) + 0x2181c) < 0 &&
-        *(i32 *)(*(i32 *)((u8 *)this + 8) + 0x2181c) != -2)
+    if (this->impl->msgState.currentMsgIdx < 0 &&
+        this->impl->msgState.currentMsgIdx != -2)
     {
         result = 0;
     }
@@ -571,6 +571,7 @@ ZunResult GuiImpl::RunMsg()
             {
                 g_Gui.stageTextAnm->SetAndExecuteScriptIdx(&this->vmsB[3], 3);
                 g_Gui.stageTextAnm->SetSprite(&this->vmsB[3], this->msgState.curInstr->args.music.musicIdx + 3);
+                /* 0x4c7240：按 [关卡][BGM] 索引的只读数据表。 */
                 if (g_Supervisor.PlayMusic(this->msgState.curInstr->args.music.musicIdx,
                                            *(i32 *)(0x4c7240 + g_GameManager.currentStage * 12 +
                                                     this->msgState.curInstr->args.music.musicIdx * 4)))
@@ -589,24 +590,25 @@ ZunResult GuiImpl::RunMsg()
             break;
         case 9: // MSG_STAGERESULTS
         {
-            *(i32 *)((u8 *)this + 0x22df0) = g_GameManager.GetPower();
-            *(i32 *)((u8 *)this + 0x22df4) = g_GameManager.globals->pointItemsCollectedInStage;
-            *(i32 *)((u8 *)this + 0x22dfc) = g_GameManager.GetTimeOrbs();
-            *(i32 *)((u8 *)this + 0x22df8) = g_GameManager.globals->grazeInStage;
-            *(i32 *)((u8 *)this + 0x22e04) = g_GameManager.GetClockTime() * 30 + 660;
-            *(i32 *)((u8 *)this + 0x22e00) = g_GameManager.GetClockTimeIncrement();
-            g_GameManager.AddToClockTime((i8)*(i32 *)((u8 *)this + 0x22e00));
-            *(i32 *)((u8 *)this + 0x22dec) = ((i32 *)0x4c7158)[g_GameManager.currentStage];
-            *(i32 *)((u8 *)this + 0x22e08) = g_GameManager.GetClockTime() * 30 + 660;
-            *(i32 *)((u8 *)this + 0x22e0c) = *(i32 *)((u8 *)this + 0x22e04);
-            *(i32 *)((u8 *)this + 0x22e10) = 0;
+            this->resultPower = g_GameManager.GetPower();
+            this->resultPointItems = g_GameManager.globals->pointItemsCollectedInStage;
+            this->resultTimeOrbs = g_GameManager.GetTimeOrbs();
+            this->resultGraze = g_GameManager.globals->grazeInStage;
+            this->resultTimeFrames = g_GameManager.GetClockTime() * 30 + 660;
+            this->resultTime = g_GameManager.GetClockTimeIncrement();
+            g_GameManager.AddToClockTime((i8)this->resultTime);
+            /* 0x4c7158：按关卡索引的只读数据表。 */
+            this->resultStage = ((i32 *)0x4c7158)[g_GameManager.currentStage];
+            this->resultTimeFrames2 = g_GameManager.GetClockTime() * 30 + 660;
+            this->resultTimeFramesCopy = this->resultTimeFrames;
+            this->unk22e10 = 0;
             this->msgState.unk1570 = 1;
             g_GameManager.flags.unk9 = 1;
             if (g_GameManager.currentStage != 6 && g_GameManager.currentStage != 7 &&
                 g_GameManager.currentStage != 8)
             {
                 g_GuiStageClearAnmA->SetAndExecuteScriptIdx(&this->vmJ, 3);
-                g_GuiStageClearAnmA->SetSprite(&this->vmJ, *(i32 *)((u8 *)this + 0x22e00) + 0x80);
+                g_GuiStageClearAnmA->SetSprite(&this->vmJ, this->resultTime + 0x80);
             }
             else
             {
@@ -626,7 +628,7 @@ ZunResult GuiImpl::RunMsg()
                 {
                     g_GuiStageClearAnmB->SetAndExecuteScriptIdx(&this->vmsG[i9], 2);
                     this->vmsG[i9].prefix.counterVar0 = i9 * 4 + 3;
-                    *((u8 *)&this->vmsG[i9].prefix.color1.d3dColor + 3) = 0x40 - i9 * 2;
+                    this->vmsG[i9].prefix.color1.a = 0x40 - i9 * 2;
                 }
             }
             else
@@ -650,7 +652,7 @@ ZunResult GuiImpl::RunMsg()
             g_Supervisor.FadeOutMusic(4.0f);
             break;
         case 14: // MSG_FADE_IN_EFFECT
-            ScreenEffect::RegisterChain(SCREEN_EFFECT_FULL_FADE_OUT, 0x1ba, 0xffffff, 0, 0, 0x15);
+            ScreenEffect::RegisterChain(SCREEN_EFFECT_FULL_FADE_OUT, 0x1ba, COLOR_TEXT_WHITE, 0, 0, 0x15);
             g_Supervisor.unk174 = 0x1ba;
             break;
         case 11: // stage 6/7/8 progress mark
@@ -912,7 +914,7 @@ void Gui::DrawGameScene()
     {
         if (g_GameManager.GetTimeOrbs() >= g_GameManager.GetLastSpellTimeOrbThreshold())
         {
-            g_AsciiManager.SetColor(0xfffff0c0);
+            g_AsciiManager.SetColor(COLOR_TIME_ORBS_LIMIT);
         }
         Float3 textDrawPos = Float3(488.0f, 184.0f, 0.0f);
         g_AsciiManager.AddFormatText2(&textDrawPos, "%d", g_GameManager.GetTimeOrbs());
@@ -922,7 +924,7 @@ void Gui::DrawGameScene()
         g_AsciiManager.SetScale(1.0f, 1.0f);
         textDrawPos.x = textDrawPos.x + 6.0f;
         g_AsciiManager.AddFormatText(&textDrawPos, "%d", g_GameManager.GetLastSpellTimeOrbThreshold());
-        g_AsciiManager.SetColor(0xffffffff);
+        g_AsciiManager.SetColor(COLOR_WHITE);
     }
     g_AnmManager->FlushVertexBuffer();
     if (this->flags.powerDisplayUpdateFrames || g_Supervisor.IsMinimumGraphicsMode())
@@ -935,8 +937,8 @@ void Gui::DrawGameScene()
             powerBarVerts[1].pos = Float3((f32)(g_GameManager.GetPower() + 0x1e8) + 0.0f, 136.0f, 0.1f);
             powerBarVerts[2].pos = Float3(488.0f, 152.0f, 0.1f);
             powerBarVerts[3].pos = Float3((f32)(g_GameManager.GetPower() + 0x1e8) + 0.0f, 152.0f, 0.1f);
-            powerBarVerts[0].diffuse = powerBarVerts[2].diffuse = 0xe0e0e0ff;
-            powerBarVerts[1].diffuse = powerBarVerts[3].diffuse = 0x80e0e0ff;
+            powerBarVerts[0].diffuse = powerBarVerts[2].diffuse = COLOR_POWER_BAR_MAIN;
+            powerBarVerts[1].diffuse = powerBarVerts[3].diffuse = COLOR_POWER_BAR_EDGE;
             powerBarVerts[0].w = powerBarVerts[1].w = powerBarVerts[2].w = powerBarVerts[3].w = 1.0f;
             if (!g_Supervisor.IsColorCompositingDisabled())
             {

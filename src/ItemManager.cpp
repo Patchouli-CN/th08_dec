@@ -319,7 +319,7 @@ void ItemManager::OnUpdate()
                     g_BulletManager.bulletmanager_fun_00415c60();
                     g_Gui.FUN_00437e5d(0, 1);
                     g_SoundPlayer.PlaySoundByIdx(SOUND_POWERUP, 0);
-                    g_AsciiManager.CreateScorePopup(&item->currentPosition, -1, 0xffffc0a0);
+                    g_AsciiManager.CreateScorePopup(&item->currentPosition, -1, COLOR_SCORE_POPUP);
                     this->ConvertAllPowerItemsToTimeOrbs(item);
                 }
                 g_GameManager.SetPower(0x80);
@@ -415,7 +415,7 @@ void Item::CollectPowerSmall()
     }
     if (i != powerLevel)
     {
-        g_AsciiManager.CreateScorePopup(&this->currentPosition, -1, 0xffffc0a0);
+        g_AsciiManager.CreateScorePopup(&this->currentPosition, -1, COLOR_SCORE_POPUP);
         g_SoundPlayer.PlaySoundByIdx(SOUND_POWERUP, 0);
     }
     else
@@ -448,7 +448,7 @@ void Item::CollectPoint()
         itemScore += itemScore;
     }
     g_AsciiManager.CreateScorePopup(&this->currentPosition, itemScore,
-                                    itemScore >= pointItemValue ? 0xffffff00 : 0xffffffff);
+                                    itemScore >= pointItemValue ? COLOR_YELLOW : COLOR_WHITE);
     if (itemScore >= pointItemValue)
     {
         this->isMaxValue = true;
@@ -503,7 +503,7 @@ void Item::CollectPointSmall()
         itemScore += itemScore;
     }
     g_AsciiManager.CreateScorePopup(&this->currentPosition, itemScore,
-                                    itemScore >= pointItemValue ? 0xffffff00 : 0xffffffff);
+                                    itemScore >= pointItemValue ? COLOR_YELLOW : COLOR_WHITE);
     g_GameManager.AddScore(itemScore);
     if (itemScore >= pointItemValue)
     {
@@ -546,7 +546,7 @@ void Item::CollectPowerBig()
     }
     if (i != powerLevel)
     {
-        g_AsciiManager.CreateScorePopup(&this->currentPosition, -1, 0xffffc0a0);
+        g_AsciiManager.CreateScorePopup(&this->currentPosition, -1, COLOR_SCORE_POPUP);
         g_SoundPlayer.PlaySoundByIdx(SOUND_POWERUP, 0);
     }
     else
@@ -685,7 +685,7 @@ void ItemManager::OnDraw()
             {
                 g_BulletAnm->SetSprite(&item->sprite, item->itemType + 0xac);
                 item->isOnscreen = true;
-                item->sprite.prefix.color1.d3dColor = 0xffffffff;
+                item->sprite.prefix.color1.d3dColor = COLOR_WHITE;
                 item->sprite.prefix.zWriteDisabled = true;
             }
         }

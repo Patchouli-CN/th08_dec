@@ -29,10 +29,12 @@ void BulletManager::Initialize()
 {
     memset(this, 0, 0x6ba578);
 
-    this->unk_6ba56c = (i32)((u8 *)this + 0x1a880);
+    /* unk_1a880 是内嵌的子弹池数组起始。 */
+    this->unk_6ba56c = (i32)this->unk_1a880;
     this->unk_660638 = 6;
     this->unk_6ba570 = 6;
 
+    /* 敌弹池：0x600 个 0x10b8 字节的槽位，各槽内若干 u16 索引字段初始化为 -1。 */
     u8 *pool = (u8 *)g_BulletPool;
     for (i32 i = 0; i < 0x600; i++, pool += 0x10b8)
     {
@@ -79,6 +81,7 @@ void BulletManager::RemoveAllBullets(i32 param)
         }
     }
 
+    /* 0x660938：自机弹/激光对象数组，0x100 项、每项 0x59c 字节。 */
     b = (u8 *)this + 0x660938;
 
     Float3 pos;
@@ -106,6 +109,7 @@ void BulletManager::RemoveAllBullets(i32 param)
 
             if (param != 4)
             {
+                /* 沿当前角度每步 32.0f 掉落一组道具。 */
                 speed = *(f32 *)(b + 0x558);
 
                 for (;;)
@@ -121,7 +125,7 @@ void BulletManager::RemoveAllBullets(i32 param)
                     pos.y = sinX * speed + *(f32 *)(b + 0x54c);
                     pos.z = 0;
                     g_ItemManager.SpawnItem(&pos, (ItemType)this->unk_6ba570, (ItemType)param);
-                    speed += *(f32 *)0x4b42cc;
+                    speed += *(f32 *)MEM_FLOAT_32_0;
                 }
             }
         }
@@ -129,6 +133,7 @@ void BulletManager::RemoveAllBullets(i32 param)
         *(u32 *)(b + 0x580) = 0;
     }
 
+    /* 0x6ba53c：清场计数/状态，置 10。 */
     *(i32 *)((u8 *)this + 0x6ba53c) = 0xa;
 }
 
