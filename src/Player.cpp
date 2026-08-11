@@ -215,21 +215,45 @@ i32 Player::FUN_00449ff0(void *unkD34, void *unkD44)
     return 0;
 }
 
-// STUB: th08 0x40bc20
-i32 Player::FUN_0040bc20()
+// FUNCTION: th08 0x40bc20
+i32 Player::IsHuman()
 {
-    return 0;
+    return *(u8 *)((u8 *)this + 0x5) == 0;
 }
 
-// STUB: th08 0x40bc40
-i32 Player::FUN_0040bc40()
+// FUNCTION: th08 0x40bc40
+i32 Player::IsYoukai()
 {
-    return 0;
+    return *(u8 *)((u8 *)this + 0x5);
 }
 
-// STUB: th08 0x44c5b0
+// FUNCTION: th08 0x44e350
+void Player::FUN_0044e350()
+{
+    *(u8 *)((u8 *)this + 0x3c) = 0;
+}
+
+// FUNCTION: th08 0x44c5b0
 void Player::FUN_0044c5b0()
 {
+    i32 i;
+    Player *p = (Player *)((u8 *)this + 0xb8834);
+
+    for (i = 0; i < 0x180; i++, p = (Player *)((u8 *)p + 0x40))
+    {
+        if (*(i32 *)((u8 *)p + 0x24) < 0)
+        {
+            continue;
+        }
+        *(i32 *)((u8 *)p + 0x24) -= 1;
+        *(f32 *)((u8 *)p + 0x8) += *(f32 *)((u8 *)p + 0xc);
+        *(f32 *)((u8 *)p + 0x10) += *(f32 *)((u8 *)p + 0x18);
+        *(f32 *)((u8 *)p + 0x14) += *(f32 *)((u8 *)p + 0x1c);
+        if (*(i32 *)((u8 *)p + 0x24) <= 0)
+        {
+            p->FUN_0044e350();
+        }
+    }
 }
 
 // STUB: th08 0x44c650
@@ -243,9 +267,51 @@ i32 Player::FUN_0044cbf0()
     return 0;
 }
 
-// STUB: th08 0x44d180
+// FUNCTION: th08 0x44e0f0
+void Player::FUN_0044e0f0()
+{
+    *(u32 *)((u8 *)this + 0x1f8) = (*(u32 *)((u8 *)this + 0x1f8) & 0xffffffcf) | 0x10;
+}
+
+// FUNCTION: th08 0x44e120
+void Player::FUN_0044e120()
+{
+    *(u32 *)((u8 *)this + 0x1f8) &= 0xffffffcf;
+}
+
+// FUNCTION: th08 0x44d180
 void Player::FUN_0044d180()
 {
+    *(i32 *)((u8 *)this + 0xe2a70) = 0x3c;
+
+    f32 temp = 1.0f - ((ZunTimer *)((u8 *)this + 0xe2af4))->AsFramesFloat() / 30.0f;
+    *(f32 *)((u8 *)this + 0x2c) = 2.0f * temp + 1.0f;
+    *(f32 *)((u8 *)this + 0x28) = 1.0f - 1.0f * temp;
+
+    ((Player *)((u8 *)this + 0x10))->FUN_0044e0f0();
+
+    *(f32 *)((u8 *)this + 0x408) = 1.0f;
+    *(f32 *)((u8 *)this + 0x404) = 1.0f;
+
+    *(i32 *)((u8 *)this + 0x200) =
+        ((((ZunTimer *)((u8 *)this + 0xe2af4))->AsFrames() * 0xff) / 30 << 0x18) | 0xffffff;
+
+    *(i32 *)((u8 *)this + 0xe2a68) = 0;
+
+    if (((ZunTimer *)((u8 *)this + 0xe2af4))->AsFrames() >= 30)
+    {
+        *(u8 *)((u8 *)this + 0) = 3;
+        *(f32 *)((u8 *)this + 0x28) = 1.0f;
+        *(f32 *)((u8 *)this + 0x2c) = 1.0f;
+        *(i32 *)((u8 *)this + 0x200) = 0xffffffff;
+        ((Player *)((u8 *)this + 0x10))->FUN_0044e120();
+
+        if (!(*(u32 *)0x164d0b4 >> 0xe & 1))
+        {
+            ((ZunTimer *)((u8 *)this + 0xe2af4))->SetCurrent(0xf0);
+        }
+        *(i32 *)((u8 *)this + 0xe2a68) = *(i32 *)((u8 *)g_PlayerShtFile + 8);
+    }
 }
 
 // STUB: th08 0x44d2c0
@@ -268,14 +334,46 @@ void Player::FUN_00451500()
 {
 }
 
-// STUB: th08 0x44d420
+// FUNCTION: th08 0x44d420
 void Player::FUN_0044d420()
 {
+    *(Float3 *)((u8 *)this + 0xe2aa4) = Float3(-999.0f, -999.0f, 0.0f);
+    *(Float3 *)((u8 *)this + 0xe2ab0) = Float3(-999.0f, -999.0f, 0.0f);
+    *(i32 *)((u8 *)this + 0xe2ac0) = 0;
+
+    if (*(f32 *)((u8 *)this + 0x2b8) >= 400.0f)
+    {
+        if (g_AsciiManager.GetGaugeInterrupt() != 2)
+        {
+            if (*(f32 *)((u8 *)this + 0x2b4) < 160.0f)
+            {
+                g_AsciiManager.SetGaugeInterrupt(2);
+                goto merge;
+            }
+        }
+        if (g_AsciiManager.GetGaugeInterrupt() == 2)
+        {
+            if (*(f32 *)((u8 *)this + 0x2b4) > 160.0f)
+            {
+                g_AsciiManager.SetGaugeInterrupt(3);
+            }
+        }
+    merge:;
+    }
+    else
+    {
+        if (g_AsciiManager.GetGaugeInterrupt() == 2)
+        {
+            g_AsciiManager.SetGaugeInterrupt(3);
+        }
+    }
 }
 
-// STUB: th08 0x44e370
+// FUNCTION: th08 0x44e370
 void Player::FUN_0044e370()
 {
+    memset(this, 0, 0x40);
+    *(i32 *)((u8 *)this + 0x38) = 1;
 }
 
 // FUNCTION: th08 0x44d530
@@ -594,6 +692,42 @@ ZunResult __fastcall Player::LoadShtFile(PlayerRawShtFile **header, const char *
     }
 
     return ZUN_SUCCESS;
+}
+
+/* ZunTimer 方法原本在 Supervisor.cpp（/Os），epilogue 会生成 leave；原版这些方法
+ * 用 mov esp,ebp; pop ebp，所以放在 Player.cpp（/Od）编译以匹配。 */
+i32 ZunTimer::AsFrames()
+{
+    return this->current;
+}
+
+f32 ZunTimer::AsFramesFloat()
+{
+    return (f32)this->current + this->subFrame;
+}
+
+void ZunTimer::SetCurrent(i32 value)
+{
+    this->SetCurrentImpl(value);
+}
+
+void ZunTimer::SetCurrentImpl(i32 value)
+{
+    this->current = value;
+    *(i32 *)&this->subFrame = 0;
+    this->previous = -999;
+}
+
+void ZunTimer::Tick(i32 unused)
+{
+    this->TickImpl();
+}
+
+u32 ZunTimer::TickImpl()
+{
+    this->previous = this->current;
+    g_Supervisor.TickTimer(&this->current, &this->subFrame);
+    return this->current;
 }
 
 } /* namespace th08 */

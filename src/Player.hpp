@@ -123,8 +123,8 @@ struct Player
     f32 AngleToPlayer(Float3 *pos);
     void FUN_004512f0();
     i32 FUN_00449ff0(void *unkD34, void *unkD44);
-    i32 FUN_0040bc20();
-    i32 FUN_0040bc40();
+    i32 IsHuman();
+    i32 IsYoukai();
     void FUN_0044c5b0();
     void FUN_0044c650();
     i32 FUN_0044cbf0();
@@ -134,6 +134,9 @@ struct Player
     void FUN_00451150();
     void FUN_00451500();
     void FUN_0044d420();
+    void FUN_0044e0f0();
+    void FUN_0044e120();
+    void FUN_0044e350();
     void FUN_0044e370();
 };
 

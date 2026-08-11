@@ -1021,7 +1021,7 @@ void Background::FUN_00409f40()
 
     if (this->unk0x834 != 0)
     {
-        if (g_Player.FUN_0040bc20() != 0)
+        if (g_Player.IsHuman() != 0)
         {
             this->unk0x834 = 0;
             this->timer0x838.SetCurrent(0);
@@ -1030,7 +1030,7 @@ void Background::FUN_00409f40()
     }
     else
     {
-        if (g_Player.FUN_0040bc40() != 0)
+        if (g_Player.IsYoukai() != 0)
         {
             this->unk0x834 = 1;
             this->timer0x838.SetCurrent(0);

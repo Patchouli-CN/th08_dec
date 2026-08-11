@@ -431,6 +431,8 @@ struct ZunTimer
 
     void Increment(i32 value);
     void Decrement(i32 value);
+    i32 AsFrames();
+    f32 AsFramesFloat();
 
     void operator=(i32 value)
     {

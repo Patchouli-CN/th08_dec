@@ -63,3 +63,13 @@
   循环、sht 表数据除法拷贝、GetFlag14 条件 SetCurrent、bullets state 清零、两张射击
   回调表 memcpy、角色颜色覆盖、0x10 位置拷贝、4 个 option 初始化、结尾 e2b2c/全局
   0x57ad30。新增全局 `g_Unknown57ad30`（0x57ad30）。
+
+## 2026-08-11
+
+- **Player 一批小函数 100%**：`IsHuman`/`IsYoukai`、`FUN_0044e370`（shot 槽清零）、
+  `FUN_0044e350`、`FUN_0044c5b0`（0x180 槽计时）、`FUN_0044d420`（gauge 分层设置）、
+  `FUN_0044e0f0`/`FUN_0044e120`（AnmVm flags）、`FUN_0044d180`（重生初始化）。
+- **ZunTimer 方法系统性修复**：Supervisor.cpp 的 `/Os` 使简单方法 epilogue 生成
+  `leave`，与原版 `mov esp,ebp; pop ebp` 不符；将 SetCurrent/SetCurrentImpl/Tick/
+  TickImpl/AsFrames/AsFramesFloat 移到 Player.cpp（`/Od`）后全部 100%。
+- `FUN_0040bc20`/`FUN_0040bc40` 更名 `Player::IsHuman`/`IsYoukai`（统一 mapping/reccmp/源码）。

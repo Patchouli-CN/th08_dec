@@ -36,10 +36,10 @@ th08::Supervisor::IsSoftwareTexturing,0x406550,function
 th08::Supervisor::IsFogDisabled,0x406580,function
 th08::ZunTimer::ZunTimer,0x4065a0,function
 th08::ZunTimer::Initialize,0x4065c0,function
-th08::ZunTimer::operator=,0x4065f0,function
-th08::ZunTimer::SetCurrent,0x406610,function
-th08::ZunTimer::operator++,0x406640,function
-th08::ZunTimer::Tick,0x406660,function
+th08::ZunTimer::SetCurrent,0x4065f0,function
+th08::ZunTimer::SetCurrentImpl,0x406610,function
+th08::ZunTimer::Tick,0x406640,function
+th08::ZunTimer::TickImpl,0x406660,function
 th08::ZunTimer::operator<,0x4066a0,function
 th08::ZunTimer::operator>,0x4066c0,function
 th08::AnmVm::IsVisible,0x4066e0,function
@@ -115,7 +115,8 @@ th08::Background::SetCamera2,0x40b6d0,function
 D3DXVec3Cross,0x40b7f0,function
 th08::ZunMemory::Alloc,0x40b880,function
 th08::ZunMemory::Free,0x40b8a0,function
-th08::ZunTimer::operator float,0x40b8c0,function
+th08::ZunTimer::AsFramesFloat,0x40b8c0,function
+th08::ZunTimer::AsFrames,0x40d3b0,function
 th08::ZunTimer::operator>=,0x40b8e0,function
 th08::IsDisableResourceReload,0x40b900,function
 th08::AnmLoaded::ExecuteAnmIdx,0x40b910,function

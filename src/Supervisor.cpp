@@ -1978,28 +1978,7 @@ void Supervisor::DeleteCriticalSections()
     }
 }
 
-void ZunTimer::Tick(i32 unused)
-{
-    this->TickImpl();
-}
-
-u32 ZunTimer::TickImpl()
-{
-    this->previous = this->current;
-    g_Supervisor.TickTimer(&this->current, &this->subFrame);
-    return this->current;
-}
-
-void ZunTimer::SetCurrent(i32 value)
-{
-    this->SetCurrentImpl(value);
-}
-
-void ZunTimer::SetCurrentImpl(i32 value)
-{
-    this->current = value;
-    this->previous = -999;
-    *(i32 *)&this->subFrame = 0;
-}
+/* SetCurrent / SetCurrentImpl / Tick / TickImpl moved to Player.cpp (/Od) to match
+ * the original mov esp,ebp epilogue; Supervisor.cpp is compiled /Os which emits leave. */
 
 }; // namespace th08
