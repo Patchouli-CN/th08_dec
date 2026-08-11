@@ -533,6 +533,10 @@ restart:
                 enemy->unk3311 = instr->args[0].b[1];
                 enemy->unk3312 = instr->args[0].b[2];
                 goto skipInstr;
+            case 155: // opcode 156 = 设置 unk3324 bit7 + unk332f=2
+                enemy->unk3324 = (enemy->unk3324 & ~0x80) | ((instr->args[0].b[0] & 1) << 7);
+                enemy->unk332f = 2;
+                goto skipInstr;
             case 177: // opcode 178 = 子脚本 (FUN_004224a0)
                 FUN_004224a0(enemy, instr);
                 goto skipInstr;

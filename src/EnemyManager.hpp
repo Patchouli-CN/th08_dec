@@ -73,7 +73,8 @@ struct Enemy
     unknown_fields(0x3314, 0x10);      // 0x3314-0x3324
     u32 unk3324;                       // 0x3324  bit26 = don't save context on interrupt
     u32 unk3328;                       // 0x3328  (anm script flags, bit2 cleared by SET_ANM)
-    unknown_fields(0x332c, 0x4);       // 0x332c-0x3330
+    unknown_fields(0x332c, 0x3);       // 0x332c-0x332f
+    u8 unk332f;                        // 0x332f
     u8 eclFlags;                       // 0x3330
     unknown_fields(0x3331, 0xb);       // 0x3331-0x333c
     i16 unk333c;                       // 0x333c  current animation id
