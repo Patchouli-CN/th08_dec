@@ -1897,15 +1897,15 @@ void Supervisor::FUN_0044886f(u32 *param)
     if (am->captureSurfaceIdx < 0)
     {
         am->captureSurfaceIdx = 8;
-        // Two 640x480 capture regions (x/y/w/h each).
-        *(i32 *)((u8 *)am + 0x2a2550) = 0;
-        *(i32 *)((u8 *)am + 0x2a2554) = 0;
-        *(i32 *)((u8 *)am + 0x2a2558) = 0x280;
-        *(i32 *)((u8 *)am + 0x2a255c) = 0x1e0;
-        *(i32 *)((u8 *)am + 0x2a2560) = 0;
-        *(i32 *)((u8 *)am + 0x2a2564) = 0;
-        *(i32 *)((u8 *)am + 0x2a2568) = 0x280;
-        *(i32 *)((u8 *)am + 0x2a256c) = 0x1e0;
+        // Default 640x480 capture source/dest regions.
+        am->textureCaptureSrcX = 0;
+        am->textureCaptureSrcY = 0;
+        am->textureCaptureSrcW = 0x280;
+        am->textureCaptureSrcH = 0x1e0;
+        am->textureCaptureDstX = 0;
+        am->textureCaptureDstY = 0;
+        am->textureCaptureDstW = 0x280;
+        am->textureCaptureDstH = 0x1e0;
     }
 }
 

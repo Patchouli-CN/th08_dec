@@ -55,7 +55,8 @@ struct PlayerRawShtFile
     unknown_fields(0x0, 0x2);
     u16 entryCount;
     f32 unk4;
-    unknown_fields(0x8, 0xc);
+    i32 unk8;                     // 0x8
+    unknown_fields(0xc, 0x8);
     f32 itemCollectSpeed;
     f32 itemCollectRadius;
     f32 pocY;
@@ -65,6 +66,7 @@ struct PlayerRawShtFile
 };
 
 struct Player;
+struct EffectManagerParticle;
 
 // The player's 128 option/bullet sprite VMs, iterated by the draw helper.
 struct PlayerBulletVm
@@ -227,7 +229,7 @@ struct Player
     ChainElem *drawChainLowPrio;
     i32 unkE2b1c;                // 0xe2b1c
     unknown_fields(0xe2b20, 0x4);
-    i32 unkE2b24;                // 0xe2b24
+    EffectManagerParticle *barrierParticle;  // 0xe2b24  (EffectManager::FUN_00425870 handle)
     i32 unkE2b28;                // 0xe2b28
     i32 unkE2b2c;                // 0xe2b2c
     unknown_fields(0xe2b30, 0x18c);

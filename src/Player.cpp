@@ -203,9 +203,9 @@ ChainCallbackResult Player::OnUpdate(Player *player)
             *(u32 *)((u8 *)player->effectVm + 0x1f8) |= 0x80000;
         }
 
-        if (player->unkE2b24 != 0)
+        if (player->barrierParticle != 0)
         {
-            *(u32 *)(player->unkE2b24 + 0x1f8) |= 0x80000;
+            player->barrierParticle->unk1f8 |= 0x80000;
         }
 
         return CHAIN_CALLBACK_RESULT_CONTINUE;
@@ -216,9 +216,9 @@ ChainCallbackResult Player::OnUpdate(Player *player)
         *(u32 *)((u8 *)player->effectVm + 0x1f8) &= 0xfff7ffff;
     }
 
-    if (player->unkE2b24 != 0)
+    if (player->barrierParticle != 0)
     {
-        *(u32 *)(player->unkE2b24 + 0x1f8) &= 0xfff7ffff;
+        player->barrierParticle->unk1f8 &= 0xfff7ffff;
     }
 
     player->FUN_0044c5b0();
@@ -236,7 +236,7 @@ ChainCallbackResult Player::OnUpdate(Player *player)
         player->FUN_0044aec0();
     }
 
-    g_AnmManager->ExecuteScript((AnmVm *)((u8 *)player + 0x10));
+    g_AnmManager->ExecuteScript((AnmVm *)player->unk_10);
     player->FUN_00451150();
     player->FUN_00451500();
     player->FUN_0044d420();
@@ -426,7 +426,7 @@ void Player::FUN_0044c650()
         this->shotCooldown -= 1;
     }
 
-    if (*(i32 *)((u8 *)this + 0xfdc) != 0)
+    if (this->unkFdc != 0)
     {
         /* 射击进行中：到期则清场/结束，未到期则推进当前射击并涨妖气槽。 */
         if (FUN_0040d3d0(&this->shotTimer) != 0)
@@ -437,11 +437,11 @@ void Player::FUN_0044c650()
         if (this->shotTimer.operator>=(this->shotInterval))
         {
             FUN_00416130(&g_Spellcard);
-            *(i32 *)((u8 *)this + 0xfdc) = 0;
+            this->unkFdc = 0;
             this->unk408 = 1.0f;
             this->unk404 = 1.0f;
 
-            if (*(i32 *)((u8 *)this + 0xfe0) == 4)
+            if (this->unkFe0 == 4)
             {
                 *(i32 *)0x164d0b4 &= 0xfffffe7f;
                 for (i = 0; i < 8u; i++)
@@ -462,9 +462,9 @@ void Player::FUN_0044c650()
             this->shotTimer.Tick(0);
         }
 
-        if (*(i32 *)((u8 *)this + 0xfe0) < 4)
+        if (this->unkFe0 < 4)
         {
-            if (*(i32 *)((u8 *)this + 0xfe0) & 1)
+            if (this->unkFe0 & 1)
             {
                 g_GameManager.AddToYoukaiGauge(0x6590 / this->shotInterval, 1);
             }
@@ -505,11 +505,11 @@ switch_shot:
 
     if (g_PlayerFlags >> 7 & 3)
     {
-        *(i32 *)((u8 *)this + 0xfe0) = 4;
+        this->unkFe0 = 4;
     }
     else
     {
-        *(u32 *)((u8 *)this + 0x208) &= 0xfffdffff;
+        ((AnmVm *)this->unk_10)->prefix.flags &= 0xfffdffff;
         if (this->unkE2b28 != 0)
         {
             *(u8 *)(this->unkE2b28 + 0x350) = 0;
@@ -518,15 +518,15 @@ switch_shot:
         *(i32 *)0x164d0b4 &= 0xfffffbff;
         g_AnmManager->FUN_0040bab0();
 
-        *(i32 *)((u8 *)this + 0xfe0) = *(u8 *)((u8 *)this + 0x3);
+        this->unkFe0 = this->isYoukaiMode;
         if (this->unk4 != 0)
         {
-            *(i32 *)((u8 *)this + 0xfe0) = 1 - *(i32 *)((u8 *)this + 0xfe0);
+            this->unkFe0 = 1 - this->unkFe0;
         }
 
         if (this->unk4 != 0)
         {
-            *(i32 *)((u8 *)this + 0xfe0) += 2;
+            this->unkFe0 += 2;
             if (flag)
             {
                 this->powerLevel = g_GameManager.GetBombsRemaining();
@@ -554,7 +554,7 @@ switch_shot:
 
     this->unk4 = 0;
     *(i32 *)0x160f42c = (*(i32 *)0x160f42c & 0xfffffff3) | 8;
-    *(i32 *)((u8 *)this + 0xfdc) = 1;
+    this->unkFdc = 1;
     this->shotState = 1;
     this->shotTimer.SetCurrent(0);
     this->shotInterval = 0x3e7;
@@ -563,9 +563,9 @@ switch_shot:
     g_GameManager.DecreaseSubrank(0xc8);
     FUN_0044cba0(&g_Spellcard);
     this->shotIndex += 6;
-    if (this->shotIndex > *(i32 *)((u8 *)g_PlayerShtFile + 8))
+    if (this->shotIndex > g_PlayerShtFile->unk8)
     {
-        this->shotIndex = *(i32 *)((u8 *)g_PlayerShtFile + 8);
+        this->shotIndex = g_PlayerShtFile->unk8;
     }
 }
 
@@ -596,7 +596,7 @@ i32 Player::FUN_0044cbf0()
             g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0xf, this->positionCenter.x);
             g_PlayerFlags &= ~0x400;
             g_AnmManager->FUN_0040bab0();
-            *(u32 *)((u8 *)this + 0x208) &= ~0x20000;
+            ((AnmVm *)this->unk_10)->prefix.flags &= ~0x20000;
             g_ReplayManager->replayEventFlags |= 4;
             g_PlayerUnknown0b0 = 0;
             this->unk4 = 0;
@@ -648,11 +648,11 @@ i32 Player::FUN_0044cbf0()
     /* Respawn: interpolate the invulnerability flash, then place the player at the
      * respawn point and hand back control. */
     invulnRatio = this->invulnerabilityTimer.AsFramesFloat() / 120.0f;
-    *(f32 *)((u8 *)this + 0x2c) = 3.0f * invulnRatio + 1.0f;
-    *(f32 *)((u8 *)this + 0x28) = 1.0f - 1.0f * invulnRatio;
-    *(u32 *)((u8 *)this + 0x200) =
+    ((AnmVm *)this->unk_10)->prefix.scale.y = 3.0f * invulnRatio + 1.0f;
+    ((AnmVm *)this->unk_10)->prefix.scale.x = 1.0f - 1.0f * invulnRatio;
+    ((AnmVm *)this->unk_10)->prefix.color1.d3dColor =
         (u32)((i32)(255.0f - this->invulnerabilityTimer.AsFramesFloat() * 255.0f / 120.0f) << 24) | 0xffffff;
-    ((Player *)((u8 *)this + 0x10))->FUN_0044e0f0();
+    ((Player *)this->unk_10)->FUN_0044e0f0();
     this->velocityX = 0;
     this->velocityY = 0;
     if (this->invulnerabilityTimer.AsFrames() < 0x1e)
@@ -666,8 +666,8 @@ i32 Player::FUN_0044cbf0()
     PlayerPosCenter(&this->positionCenter)->y = targetY;
     PlayerPosCenter(&this->positionCenter)->z = 0.2f;
     this->invulnerabilityTimer.SetCurrent(0);
-    *(f32 *)((u8 *)this + 0x28) = 3.0f;
-    *(f32 *)((u8 *)this + 0x2c) = 3.0f;
+    ((AnmVm *)this->unk_10)->prefix.scale.x = 3.0f;
+    ((AnmVm *)this->unk_10)->prefix.scale.y = 3.0f;
     if (g_PlayerCharacter < 4 && this->isYoukaiMode == 0)
         goto setForm0;
     if (g_PlayerCharacter & 1)
@@ -696,13 +696,13 @@ ret0:
 // FUNCTION: th08 0x44e0f0
 void Player::FUN_0044e0f0()
 {
-    *(u32 *)((u8 *)this + 0x1f8) = (*(u32 *)((u8 *)this + 0x1f8) & 0xffffffcf) | 0x10;
+    ((AnmVm *)this)->prefix.flags = (((AnmVm *)this)->prefix.flags & ~0x30) | 0x10;
 }
 
 // FUNCTION: th08 0x44e120
 void Player::FUN_0044e120()
 {
-    *(u32 *)((u8 *)this + 0x1f8) &= 0xffffffcf;
+    ((AnmVm *)this)->prefix.flags &= ~0x30;
 }
 
 // FUNCTION: th08 0x44d180
@@ -710,33 +710,33 @@ void Player::FUN_0044d180()
 {
     this->unkE2a70 = 0x3c;
 
-    f32 temp = 1.0f - ((ZunTimer *)((u8 *)this + 0xe2af4))->AsFramesFloat() / 30.0f;
-    *(f32 *)((u8 *)this + 0x2c) = 2.0f * temp + 1.0f;
-    *(f32 *)((u8 *)this + 0x28) = 1.0f - 1.0f * temp;
+    f32 temp = 1.0f - this->invulnerabilityTimer.AsFramesFloat() / 30.0f;
+    ((AnmVm *)this->unk_10)->prefix.scale.y = 2.0f * temp + 1.0f;
+    ((AnmVm *)this->unk_10)->prefix.scale.x = 1.0f - 1.0f * temp;
 
-    ((Player *)((u8 *)this + 0x10))->FUN_0044e0f0();
+    ((Player *)this->unk_10)->FUN_0044e0f0();
 
     this->unk408 = 1.0f;
     this->unk404 = 1.0f;
 
-    *(i32 *)((u8 *)this + 0x200) =
-        ((((ZunTimer *)((u8 *)this + 0xe2af4))->AsFrames() * 0xff) / 30 << 0x18) | 0xffffff;
+    ((AnmVm *)this->unk_10)->prefix.color1.d3dColor =
+        ((this->invulnerabilityTimer.AsFrames() * 0xff) / 30 << 0x18) | 0xffffff;
 
     this->shotIndex = 0;
 
-    if (((ZunTimer *)((u8 *)this + 0xe2af4))->AsFrames() >= 30)
+    if (this->invulnerabilityTimer.AsFrames() >= 30)
     {
-        *(u8 *)((u8 *)this + 0) = 3;
-        *(f32 *)((u8 *)this + 0x28) = 1.0f;
-        *(f32 *)((u8 *)this + 0x2c) = 1.0f;
-        *(i32 *)((u8 *)this + 0x200) = 0xffffffff;
-        ((Player *)((u8 *)this + 0x10))->FUN_0044e120();
+        this->playerState = 3;
+        ((AnmVm *)this->unk_10)->prefix.scale.x = 1.0f;
+        ((AnmVm *)this->unk_10)->prefix.scale.y = 1.0f;
+        ((AnmVm *)this->unk_10)->prefix.color1.d3dColor = 0xffffffff;
+        ((Player *)this->unk_10)->FUN_0044e120();
 
         if (!(g_PlayerFlags >> 0xe & 1))
         {
-            ((ZunTimer *)((u8 *)this + 0xe2af4))->SetCurrent(0xf0);
+            this->invulnerabilityTimer.SetCurrent(0xf0);
         }
-        this->shotIndex = *(i32 *)((u8 *)g_PlayerShtFile + 8);
+        this->shotIndex = g_PlayerShtFile->unk8;
     }
 }
 
@@ -782,8 +782,8 @@ void Player::FUN_0044d2c0()
         {
             *(Float3 *)(this->unkE2b1c + 0x2a4) = this->positionCenter;
         }
-        ((ZunTimer *)((u8 *)this + 0xe2af4))->operator--(0);
-        if (((ZunTimer *)((u8 *)this + 0xe2af4))->AsFrames() <= 0)
+        this->invulnerabilityTimer.operator--(0);
+        if (this->invulnerabilityTimer.AsFrames() <= 0)
         {
             if (this->unkE2b1c != 0)
             {
@@ -791,24 +791,24 @@ void Player::FUN_0044d2c0()
                 this->unkE2b1c = 0;
             }
             *(u8 *)((u8 *)this) = 0;
-            ((ZunTimer *)((u8 *)this + 0xe2af4))->SetCurrent(0);
-            *(i32 *)((u8 *)this + 0x200) = 0xffffffff;
+            this->invulnerabilityTimer.SetCurrent(0);
+            ((AnmVm *)this->unk_10)->prefix.color1.d3dColor = 0xffffffff;
         }
         else
         {
-            if (((ZunTimer *)((u8 *)this + 0xe2af4))->AsFrames() % 8 < 2)
+            if (this->invulnerabilityTimer.AsFrames() % 8 < 2)
             {
-                *(i32 *)((u8 *)this + 0x200) = 0xfff02020;
+                ((AnmVm *)this->unk_10)->prefix.color1.d3dColor = 0xfff02020;
             }
             else
             {
-                *(i32 *)((u8 *)this + 0x200) = 0xffffffff;
+                ((AnmVm *)this->unk_10)->prefix.color1.d3dColor = 0xffffffff;
             }
         }
     }
     else
     {
-        ((ZunTimer *)((u8 *)this + 0xe2af4))->Tick(0);
+        this->invulnerabilityTimer.Tick(0);
     }
 }
 
@@ -1157,18 +1157,18 @@ i32 Player::FUN_0044aec0()
     /* While the gauge is extreme, keep a barrier effect on the player. */
     if (g_GameManager.GaugeIsExtremelyHuman() != 0 || g_GameManager.GaugeIsExtremelyYoukai() != 0)
     {
-        if (this->unkE2b24 == 0)
+        if (this->barrierParticle == 0)
         {
-            this->unkE2b24 = (i32)g_EffectManager.FUN_00425870(0x19, &this->positionCenter, 8, 1, -1);
+            this->barrierParticle = (EffectManagerParticle *)g_EffectManager.FUN_00425870(0x19, &this->positionCenter, 8, 1, -1);
         }
     }
-    if (this->unkE2b24 != 0)
+    if (this->barrierParticle != 0)
     {
-        *(Float3 *)(this->unkE2b24 + 0x2a4) = this->positionCenter;
+        this->barrierParticle->unk2a4 = this->positionCenter;
         if (g_GameManager.GaugeIsExtremelyHuman() == 0 && g_GameManager.GaugeIsExtremelyYoukai() == 0)
         {
-            *(u8 *)(this->unkE2b24 + 0x350) = 0;
-            this->unkE2b24 = 0;
+            this->barrierParticle->unk350 = 0;
+            this->barrierParticle = NULL;
         }
     }
 
@@ -1229,8 +1229,8 @@ void Player::FUN_00451150()
             if (!g_GameManager.IsWithinPlayfield(
                     PlayerPosCenter((Float3 *)&b->offsetX)->x,
                     PlayerPosCenter((Float3 *)&b->offsetX)->y,
-                    *(f32 *)(*(i32 *)((u8 *)b + 0x224) + 0x30),
-                    *(f32 *)(*(i32 *)((u8 *)b + 0x224) + 0x34)))
+                    b->vm.loadedSprite->heightPx,
+                    b->vm.loadedSprite->widthPx))
             {
                 b->state = 0;
             }
@@ -1307,11 +1307,11 @@ void Player::FUN_0044d420()
     this->unkE2ab0 = Float3(-999.0f, -999.0f, 0.0f);
     this->unkE2ac0 = 0;
 
-    if (*(f32 *)((u8 *)this + 0x2b8) >= 400.0f)
+    if (this->positionCenter.y >= 400.0f)
     {
         if (g_AsciiManager.GetGaugeInterrupt() != 2)
         {
-            if (*(f32 *)((u8 *)this + 0x2b4) < 160.0f)
+            if (this->positionCenter.x < 160.0f)
             {
                 g_AsciiManager.SetGaugeInterrupt(2);
                 goto merge;
@@ -1319,7 +1319,7 @@ void Player::FUN_0044d420()
         }
         if (g_AsciiManager.GetGaugeInterrupt() == 2)
         {
-            if (*(f32 *)((u8 *)this + 0x2b4) > 160.0f)
+            if (this->positionCenter.x > 160.0f)
             {
                 g_AsciiManager.SetGaugeInterrupt(3);
             }
@@ -1426,26 +1426,26 @@ ZunResult Player::AddedCallback(Player *player)
             return (ZunResult)-1;
         }
 
-        *(AnmLoaded **)((u8 *)player + 0xc) =
+        player->anm =
             g_AnmManager->PreloadAnm(5, *(const char **)(0x4c7cb0 + g_PlayerCharacter * 4));
 
-        if (*(AnmLoaded **)((u8 *)player + 0xc) == NULL)
+        if (player->anm == NULL)
         {
             return (ZunResult)-1;
         }
     }
     else
     {
-        *(AnmLoaded **)((u8 *)player + 0xc) = g_AnmManager->GetAnm(5);
+        player->anm = g_AnmManager->GetAnm(5);
     }
 
     if (!(g_PlayerCharacter >= 4 && (g_PlayerCharacter & 1)))
     {
-        (*(AnmLoaded **)((u8 *)player + 0xc))->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 0);
+        (player->anm)->SetAndExecuteScriptIdx((AnmVm *)player->unk_10, 0);
     }
     else
     {
-        (*(AnmLoaded **)((u8 *)player + 0xc))->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 5);
+        (player->anm)->SetAndExecuteScriptIdx((AnmVm *)player->unk_10, 5);
     }
 
     /* 原版对 `positionCenter = Float3(...)` 编译成三次构造器调用，见 PlayerPosCenter。 */
@@ -1472,7 +1472,7 @@ ZunResult Player::AddedCallback(Player *player)
 
     player->playerState = 1;
 
-    ((ZunTimer *)((u8 *)player + 0xe2af4))->SetCurrent(g_GameManager.GetFlag14() ? 0xa : 0x78);
+    player->invulnerabilityTimer.SetCurrent(g_GameManager.GetFlag14() ? 0xa : 0x78);
 
     player->unk2 = 1;
 
@@ -1487,10 +1487,10 @@ ZunResult Player::AddedCallback(Player *player)
     player->unkE2ae8.SetCurrent(0);
 
     /* 角色射击回调表拷贝（两次，均为 5 dword）。 */
-    memcpy((u8 *)player + 0x1000, (void *)(0x4c7ad0 + (g_PlayerCharacter * 2) * 0x14), 0x14);
-    memcpy((u8 *)player + 0x1014, (void *)(0x4c7ad0 + (g_PlayerCharacter * 2 + 1) * 0x14), 0x14);
+    memcpy((u8 *)player->shotFuncs, (void *)(0x4c7ad0 + (g_PlayerCharacter * 2) * 0x14), 0x14);
+    memcpy((u8 *)player->unk_1014, (void *)(0x4c7ad0 + (g_PlayerCharacter * 2 + 1) * 0x14), 0x14);
 
-    *(i32 *)((u8 *)player + 0xfdc) = 0;
+    player->unkFdc = 0;
     player->unkE2b0c = -1.57f;
     player->unk408 = 1.0f;
     player->unk404 = 1.0f;
@@ -1541,14 +1541,14 @@ ZunResult Player::AddedCallback(Player *player)
         g_PlayerPalette[4] = 0xf82f;
     }
 
-    player->unkE2b24 = 0;
+    player->barrierParticle = NULL;
 
     for (i = 0; i < 0x10u; i++)
     {
-        *(Float3 *)((u8 *)player + 0x2cc + i * 0xc) = player->positionCenter;
+        player->trailPos[i] = player->positionCenter;
     }
 
-    *(u8 *)((u8 *)player + 0x3) = 2;
+    player->isYoukaiMode = 2;
 
     if (g_PlayerCharacter > 3)
     {
