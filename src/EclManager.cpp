@@ -995,6 +995,27 @@ restart:
                 }
                 enemy->unk2e14.SetCurrent(0);
                 goto skipInstr;
+            case 134: // opcode 135 = 分配/释放数据缓冲 (dataPtrs[v0])
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    if (enemy->dataPtrs[v0] != 0)
+                        g_ZunMemory.Free(enemy->dataPtrs[v0]);
+                    enemy->dataPtrs[v0] = NULL;
+                    if (ECL_IVAL(1) >= 0)
+                    {
+                        enemy->dataPtrs[v0] = g_ZunMemory.Alloc(0x24b0, "ECLInt");
+                        if (enemy->dataPtrs[v0] != 0)
+                        {
+                            memset(enemy->dataPtrs[v0], 0, 0x24b0);
+                            *(i32 *)enemy->dataPtrs[v0] = ECL_IVAL(1);
+                            g_EclInterruptTable.SetupEclContext(
+                                (EclContext *)((u8 *)enemy->dataPtrs[v0] + 0x8), *(i16 *)enemy->dataPtrs[v0]);
+                            memcpy((u8 *)enemy->dataPtrs[v0] + 0x20, &enemy->curContextPtr->eclContextArgs,
+                                   0x1e * 4);
+                        }
+                    }
+                }
+                goto skipInstr;
             case 136: // opcode 137 = 设置 curContextPtr->func/eclExInstr (依函数表 0x4c6cb0)
                 if (ECL_IVAL(0) >= 0)
                 {
