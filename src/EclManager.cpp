@@ -18,6 +18,7 @@ i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask);      // 0x
 f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused); // 0x420950
 void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr);           // 0x421300
 void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr);           // 0x4213f0
+EclRawInstr *__fastcall FUN_004215f0(Enemy *enemy, EclRawInstr *instr);   // 0x4215f0 子脚本 (op40-51)
 void __fastcall FUN_00420f40(Enemy *enemy, EclRawInstr *instr);           // 0x420f40
 void __fastcall FUN_00421bd0(Enemy *enemy, EclRawInstr *instr);           // 0x421bd0
 void __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr);           // 0x421cb0
@@ -81,6 +82,11 @@ void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr)
 
 void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr)
 {
+}
+
+EclRawInstr *__fastcall FUN_004215f0(Enemy *enemy, EclRawInstr *instr)
+{
+    return NULL;
 }
 
 void __fastcall FUN_00420f40(Enemy *enemy, EclRawInstr *instr)
@@ -299,6 +305,18 @@ restart:
                 *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
                     sqrtf((ECL_FVAL(1) - ECL_FVAL(3)) * (ECL_FVAL(1) - ECL_FVAL(3)) +
                           (ECL_FVAL(2) - ECL_FVAL(4)) * (ECL_FVAL(2) - ECL_FVAL(4)));
+                goto skipInstr;
+            case 39: case 40: case 41: case 42: case 43: case 44:
+            case 45: case 46: case 47: case 48: case 49: case 50:
+                // opcode 40-51: 子脚本处理 (FUN_004215f0 内部再分派)
+                {
+                    EclRawInstr *subInstr = FUN_004215f0(enemy, instr);
+                    if (subInstr != NULL)
+                    {
+                        instr = subInstr;
+                        continue;
+                    }
+                }
                 goto skipInstr;
             case 53: // ECL_SET_ANM: play animation arg0
                 g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
