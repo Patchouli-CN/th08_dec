@@ -2,6 +2,7 @@
 
 #include "Player.hpp"
 #include "AsciiManager.hpp"
+#include "EffectManager.hpp"
 #include "GameManager.hpp"
 #include "Gui.hpp"
 #include "ScreenEffect.hpp"
@@ -32,11 +33,40 @@ DIFFABLE_STATIC(ChainElem *, g_PlayerCalcChain);
 DIFFABLE_STATIC(ChainElem *, g_PlayerDrawChainHighPrio);
 DIFFABLE_STATIC(ChainElem *, g_PlayerDrawChainLowPrio);
 DIFFABLE_STATIC(i32, g_Unknown57ad30);
+DIFFABLE_STATIC(f32, g_PlayerBoundaryLeft);    // 0x164d2ec player movement x minimum
+DIFFABLE_STATIC(f32, g_PlayerBoundaryTop);     // 0x164d2f0 player movement y minimum
+DIFFABLE_STATIC(f32, g_PlayerBoundaryWidth);   // 0x164d2f4 movement x extent
+DIFFABLE_STATIC(f32, g_PlayerBoundaryHeight);  // 0x164d2f8 movement y extent
+// Per-character option callback tables (indexed by [g_PlayerCharacter][option idx]).
+DIFFABLE_STATIC(i32, g_OptionInitCallbacks[8][4]);      // 0x4c7d40
+DIFFABLE_STATIC(i32, g_OptionUpdateCallbacks[8][4]);    // 0x4c7e10
+DIFFABLE_STATIC_ARRAY(i32, 4, g_SpiritOptionInitCallbacks);   // 0x4c7e00
+DIFFABLE_STATIC_ARRAY(i32, 4, g_SpiritOptionUpdateCallbacks); // 0x4c7ed0
 
 // Simulates D3DXVECTOR3::D3DXVECTOR3() (0x40b460) at the per-field positionCenter construction.
 Float3 *__fastcall PlayerPosCenter(Float3 *vec)
 {
     return vec;
+}
+
+// Out-of-line D3DXVECTOR3 operator-/operator+ (thiscall: this in ecx, both args on
+// stack, callee cleans up). Original code at 0x4090d0 / 0x409080. fn_diff normalizes
+// the call target to T, so the stub bodies never get compared.
+class D3DVectorOps
+{
+  public:
+    Float3 *Sub(Float3 *subtrahend, Float3 *result);
+    Float3 *Add(Float3 *addend, Float3 *result);
+};
+
+Float3 *D3DVectorOps::Sub(Float3 *subtrahend, Float3 *result)
+{
+    return NULL;
+}
+
+Float3 *D3DVectorOps::Add(Float3 *addend, Float3 *result)
+{
+    return NULL;
 }
 
 // STUB: th08 0x40d3d0
@@ -74,6 +104,11 @@ void StubThiscall42adb0::FUN_0042adb0(i32 arg)
 
 // STUB: th08 0x44cba0
 void __fastcall FUN_0044cba0(void *p)
+{
+}
+
+// STUB: th08 0x451640
+void Player::FUN_00451640()
 {
 }
 
@@ -122,19 +157,19 @@ f32 Player::AngleToPlayer(Float3 *pos)
 ZunResult Player::RegisterChain(u32 param)
 {
     Player *player = &g_Player;
-    u32 savedUnkE2a74;
-    u32 savedUnkE2a78;
+    u32 savedSpeedNormal;
+    u32 savedSpeedSpirit;
 
     if (IsUnk164Clear())
     {
-        savedUnkE2a74 = player->unkE2a74;
-        savedUnkE2a78 = player->unkE2a78;
+        savedSpeedNormal = (u32)player->moveSpeedNormal;
+        savedSpeedSpirit = (u32)player->moveSpeedSpirit;
     }
     memset(player, 0, offsetof(Player, unkE2ab0));
     if (IsUnk164Clear())
     {
-        player->unkE2a74 = savedUnkE2a74;
-        player->unkE2a78 = savedUnkE2a78;
+        player->moveSpeedNormal = (PlayerMoveSpeed *)savedSpeedNormal;
+        player->moveSpeedSpirit = (PlayerMoveSpeedSpirit *)savedSpeedSpirit;
     }
     player->invulnerabilityTimer.SetCurrent(0);
     player->initParam = param;
@@ -160,9 +195,9 @@ ChainCallbackResult Player::OnUpdate(Player *player)
 {
     if (*(i8 *)0x160f534 != 0)
     {
-        if (*(u32 *)((u8 *)player + 0xbe834) != 0)
+        if (player->effectVm != 0)
         {
-            *(u32 *)(*(u32 *)((u8 *)player + 0xbe834) + 0x1f8) |= 0x80000;
+            *(u32 *)((u8 *)player->effectVm + 0x1f8) |= 0x80000;
         }
 
         if (player->unkE2b24 != 0)
@@ -173,9 +208,9 @@ ChainCallbackResult Player::OnUpdate(Player *player)
         return CHAIN_CALLBACK_RESULT_CONTINUE;
     }
 
-    if (*(u32 *)((u8 *)player + 0xbe834) != 0)
+    if (player->effectVm != 0)
     {
-        *(u32 *)(*(u32 *)((u8 *)player + 0xbe834) + 0x1f8) &= 0xfff7ffff;
+        *(u32 *)((u8 *)player->effectVm + 0x1f8) &= 0xfff7ffff;
     }
 
     if (player->unkE2b24 != 0)
@@ -594,14 +629,39 @@ void Player::FUN_0044d2c0()
     }
 }
 
-// FUNCTION: th08 0x44aec0 (Player main update: direction -> option init -> firing.
-// FIXME: 0x12a1 超大，目前只实现方向检测部分)
-void Player::FUN_0044aec0()
+// Pick the movement animation (normal 1-4, youkai 6-9) based on the x-velocity
+// change between this frame (speedX) and the last one (velocityX).
+#define SET_MOVE_ANIM(a, b, c, d)                                                    \
+    if (speedX < 0.0f && this->velocityX >= 0.0f)                                    \
+        this->anm->SetAndExecuteScriptIdx((AnmVm *)this->unk_10, a);                 \
+    else if (speedX == 0.0f && this->velocityX < 0.0f)                               \
+        this->anm->SetAndExecuteScriptIdx((AnmVm *)this->unk_10, b);                 \
+    else if (speedX > 0.0f && this->velocityX <= 0.0f)                               \
+        this->anm->SetAndExecuteScriptIdx((AnmVm *)this->unk_10, c);                 \
+    else if (speedX == 0.0f && this->velocityX > 0.0f)                               \
+        this->anm->SetAndExecuteScriptIdx((AnmVm *)this->unk_10, d)
+
+// FUNCTION: th08 0x44aec0 (Player main update: direction input, shot swap,
+// movement with per-form speeds, shot direction vectors, option update,
+// youkai-gauge logic and the afterimage trail)
+i32 Player::FUN_0044aec0()
 {
     i32 oldDirection;
+    i32 swapInput;
+    f32 speedX = 0.0f;
+    f32 speedY = 0.0f;
+    PlayerOption *opt;
+    PlayerOption *opt2;
+    i32 i, i2, i3, j, k;
+    f32 local1[3], local2[3], local3[3], local4[3], local5[3], local6[3];
+    i32 youkaiDelta;
+    f32 varA0;
+    i32 gauge;
+    i32 trailI;
 
-    /* 方向输入 → PlayerDirection。优先级：斜向 > 单方向。 */
     oldDirection = this->movementDirection;
+
+    /* Direction input -> PlayerDirection. Diagonals take priority over singles. */
     if ((g_KeyInput & 0x50) == 0x50)
         this->movementDirection = MOVEMENT_UP_LEFT;
     else if ((g_KeyInput & 0x60) == 0x60)
@@ -618,7 +678,333 @@ void Player::FUN_0044aec0()
         this->movementDirection = MOVEMENT_LEFT;
     else if (g_KeyInput & 0x80)
         this->movementDirection = MOVEMENT_RIGHT;
+    else
+        this->movementDirection = MOVEMENT_NONE;
+
+    /* Shot-swap input: while a shot is active the held shot type decides, else the
+     * Swap key (input bit 2). */
+    swapInput = (this->unkFdc != 0) ? (this->unkFe0 & 1) : (g_KeyInput & 0x4);
+
+    if (swapInput != 0)
+    {
+        if (this->isYoukaiMode != 1)
+        {
+            /* Begin shot-swap: re-arm the options for the new shot type. */
+            if (g_PlayerCharacter <= 3)
+            {
+                opt = &this->options[0];
+                for (i = 0; i < 4u; i++, opt++)
+                {
+                    memset(opt, 0, sizeof(PlayerOption));
+                    *(i32 *)&opt->unk2ec = g_OptionInitCallbacks[g_PlayerCharacter][i];
+                    (i32 &)opt->func = g_OptionUpdateCallbacks[g_PlayerCharacter][i];
+                    if (*(i32 *)&opt->unk2ec != 0)
+                    {
+                        opt->unk2c8 = 1;
+                        opt->timer2e0.SetCurrent(0);
+                        opt->unk2d0 = i;
+                    }
+                    else
+                    {
+                        opt->unk2c8 = 0;
+                    }
+                }
+            }
+            if (g_PlayerCharacter < 4)
+            {
+                this->anm->SetAndExecuteScriptIdx((AnmVm *)this->unk_10, 5);
+                this->velocityX = 0;
+                if (this->unk8 >= 4)
+                {
+                    g_EffectManager.FUN_00425430(0x1d, &this->positionCenter, 1, 0x80ff8080);
+                }
+            }
+            if (this->effectVm == 0)
+            {
+                this->effectVm = g_EffectManager.FUN_00425870(0x16, &this->positionCenter, 2, 1, -1);
+            }
+            this->unk8 = 0;
+            this->unkE2ae8.SetCurrent(0);
+        }
+        else
+        {
+            this->unk8++;
+        }
+        if (this->unk8 >= 7)
+        {
+            this->unk5 = 1;
+        }
+        this->isYoukaiMode = 1;
+    }
+    else
+    {
+        if (this->isYoukaiMode != 0)
+        {
+            /* End shot-swap: retire the now-inactive options. */
+            opt2 = &this->options[0];
+            if (g_PlayerCharacter < 3)
+            {
+                for (i2 = 0; i2 < 4u; i2++, opt2++)
+                {
+                    if (opt2->unk2c8 != 0 && opt2->unk2c8 != 3)
+                    {
+                        opt2->unk2c8 = 3;
+                        opt2->timer2e0.SetCurrent(0);
+                    }
+                }
+            }
+            else if (g_PlayerCharacter == 3)
+            {
+                for (i3 = 0; i3 < 2; i3++, opt2++)
+                {
+                    if (opt2->unk2c8 != 0 && opt2->unk2c8 != 3)
+                    {
+                        opt2->unk2c8 = 3;
+                        opt2->timer2e0.SetCurrent(0);
+                    }
+                }
+                memset(opt2, 0, sizeof(PlayerOption));
+                *(i32 *)&opt2->unk2ec = g_SpiritOptionInitCallbacks[i3];
+                (i32 &)opt2->func = g_SpiritOptionUpdateCallbacks[i3];
+                opt2->unk2c8 = 1;
+                opt2->timer2e0.SetCurrent(0);
+                opt2->unk2d0 = i3;
+                for (j = 0; j < 0x10u; j++)
+                {
+                    this->trailPos[j] = this->positionCenter;
+                }
+            }
+            if (g_PlayerCharacter < 4)
+            {
+                this->anm->SetAndExecuteScriptIdx((AnmVm *)this->unk_10, 5);
+                this->velocityX = 0;
+                if (this->unk8 >= 4)
+                {
+                    g_EffectManager.FUN_00425430(0x1c, &this->positionCenter, 1, 0x808080ff);
+                }
+            }
+            if (this->effectVm != 0)
+            {
+                this->effectVm->SetInterrupt(1);
+            }
+            this->effectVm = 0;
+            this->unk8 = 0;
+            this->unkE2ae8.SetCurrent(0);
+        }
+        else
+        {
+            this->unk8++;
+        }
+        if (this->unk8 >= 7)
+        {
+            this->unk5 = 0;
+        }
+        this->isYoukaiMode = 0;
+    }
+
+    /* Solo characters always keep the form marker of their forced character. */
+    if (g_PlayerCharacter >= 4)
+    {
+        if (g_PlayerCharacter & 1)
+            this->unk5 = 1;
+        else
+            this->unk5 = 0;
+    }
+
+    /* Movement speed from the table of the currently active form. */
+    if (this->isYoukaiMode != 0)
+    {
+        switch (this->movementDirection - 1)
+        {
+        case 0: speedX = this->moveSpeedSpirit->speed; break;
+        case 1: speedX = -this->moveSpeedSpirit->speed; break;
+        case 2: speedY = -this->moveSpeedSpirit->speed; break;
+        case 3: speedY = this->moveSpeedSpirit->speed; break;
+        case 4: speedX = -this->moveSpeedSpirit->diagonalSpeed; speedY = speedX; break;
+        case 5: speedY = this->moveSpeedSpirit->diagonalSpeed; speedX = -speedY; break;
+        case 6: speedX = this->moveSpeedSpirit->diagonalSpeed; speedY = -speedX; break;
+        case 7: speedX = this->moveSpeedSpirit->diagonalSpeed; speedY = speedX; break;
+        }
+    }
+    else
+    {
+        switch (this->movementDirection - 1)
+        {
+        case 0: speedX = this->moveSpeedNormal->speed; break;
+        case 1: speedX = -this->moveSpeedNormal->speed; break;
+        case 2: speedY = -this->moveSpeedNormal->speed; break;
+        case 3: speedY = this->moveSpeedNormal->speed; break;
+        case 4: speedX = -this->moveSpeedNormal->diagonalSpeed; speedY = speedX; break;
+        case 5: speedY = this->moveSpeedNormal->diagonalSpeed; speedX = -speedY; break;
+        case 6: speedX = this->moveSpeedNormal->diagonalSpeed; speedY = -speedX; break;
+        case 7: speedX = this->moveSpeedNormal->diagonalSpeed; speedY = speedX; break;
+        }
+    }
+
+    speedX *= this->unk404;
+    speedY *= this->unk408;
+
+    /* Movement animation: compare this frame's x velocity against the last one. */
+    if (g_PlayerCharacter < 4)
+    {
+        if (this->isYoukaiMode != 0)
+        {
+            SET_MOVE_ANIM(6, 7, 8, 9);
+        }
+        else
+        {
+            SET_MOVE_ANIM(1, 2, 3, 4);
+        }
+    }
+    else
+    {
+        if (g_PlayerCharacter & 1)
+        {
+            SET_MOVE_ANIM(6, 7, 8, 9);
+        }
+        else
+        {
+            SET_MOVE_ANIM(1, 2, 3, 4);
+        }
+    }
+
+    this->velocityX = speedX;
+    this->velocityY = speedY;
+    this->moveSpeedX = speedX * g_ShotSpeed;
+    this->moveSpeedY = speedY * g_ShotSpeed;
+
+    PlayerPosCenter(&this->positionCenter)->x += this->moveSpeedX;
+    PlayerPosCenter(&this->positionCenter)->y += this->moveSpeedY;
+
+    /* Clamp position to the movement field. */
+    if (PlayerPosCenter(&this->positionCenter)->x < g_PlayerBoundaryLeft)
+        PlayerPosCenter(&this->positionCenter)->x = g_PlayerBoundaryLeft;
+    else if (PlayerPosCenter(&this->positionCenter)->x > g_PlayerBoundaryLeft + g_PlayerBoundaryWidth)
+        PlayerPosCenter(&this->positionCenter)->x = g_PlayerBoundaryLeft + g_PlayerBoundaryWidth;
+    if (PlayerPosCenter(&this->positionCenter)->y < g_PlayerBoundaryTop)
+        PlayerPosCenter(&this->positionCenter)->y = g_PlayerBoundaryTop;
+    else if (PlayerPosCenter(&this->positionCenter)->y > g_PlayerBoundaryTop + g_PlayerBoundaryHeight)
+        PlayerPosCenter(&this->positionCenter)->y = g_PlayerBoundaryTop + g_PlayerBoundaryHeight;
+
+    /* Recompute the shot direction vectors (and the item grab box) for the three
+     * shot speed settings. The temporaries are uninitialized like in the original. */
+    this->shotVector1 = *((D3DVectorOps *)&this->positionCenter)->Sub((Float3 *)local1, (Float3 *)&this->shotSpeed3d4);
+    this->shotVector2 = *((D3DVectorOps *)&this->positionCenter)->Add((Float3 *)local2, (Float3 *)&this->shotSpeed3d4);
+    this->shotVector3 = *((D3DVectorOps *)&this->positionCenter)->Sub((Float3 *)local3, (Float3 *)&this->shotSpeed3e0);
+    this->shotVector4 = *((D3DVectorOps *)&this->positionCenter)->Add((Float3 *)local4, (Float3 *)&this->shotSpeed3e0);
+    this->grabItemTopLeft = *((D3DVectorOps *)&this->positionCenter)->Sub((Float3 *)local5, (Float3 *)&this->shotSpeed3ec);
+    this->grabItemBottomRight = *((D3DVectorOps *)&this->positionCenter)->Add((Float3 *)local6, (Float3 *)&this->shotSpeed3ec);
+
+    /* Run the update callback of each armed option. */
+    for (k = 0; k < 4u; k++)
+    {
+        if (*(i32 *)&this->options[k].unk2ec != 0)
+        {
+            (this->*this->options[k].unk2ec)();
+            g_AnmManager->ExecuteScript((AnmVm *)&this->options[k]);
+            this->options[k].timer2e0.Tick(0);
+        }
+    }
+
+    /* Firing: grant the invulnerability border while the gauge is charging. */
+    if ((g_KeyInput & 0x1) != 0 && g_Gui.FUN_004358bb() == 0 && g_GameManager.IsTampered() == 0)
+    {
+        this->FUN_00451640();
+    }
+
+    if (g_Gui.FUN_004358bb() == 0 && this->unk8 >= 0x1e && this->unkFdc == 0)
+    {
+        youkaiDelta = 0;
+        if (this->shotTimer2.operator>=(0))
+        {
+            if (this->unkE2ad0.operator>(0))
+            {
+                this->unkE2ad0.operator--(0);
+            }
+            else
+            {
+                if (this->unkE2ae8.AsFramesFloat() < 300.0f)
+                    varA0 = this->unkE2ae8.AsFramesFloat() / 15.0f;
+                else
+                    varA0 = 21.0f;
+                youkaiDelta = (i32)varA0;
+                if (this->isYoukaiMode == 0)
+                    youkaiDelta = -youkaiDelta;
+                g_GameManager.AddToYoukaiGauge((i32)(youkaiDelta * g_ShotSpeed), 0);
+                this->unkE2ae8.Tick(0);
+            }
+        }
+        else
+        {
+            if (this->unkE2ad0.operator>=(4))
+            {
+                this->unkE2ae8.SetCurrent(0);
+            }
+            if (this->unkE2ad0.operator>=(0x1e))
+            {
+                gauge = g_GameManager.GetYoukaiGauge();
+                if (fabs((double)gauge) > 9.0)
+                    goto spellJudge;
+                g_GameManager.SetYoukaiGauge(0);
+                goto gaugeDone;
+            spellJudge:
+                if (g_GameManager.GaugeIsExtremelyYoukai())
+                    youkaiDelta = -5;
+                else if (g_GameManager.GaugeIsModeratelyYoukai())
+                    youkaiDelta = -3;
+                else if (g_GameManager.GetYoukaiGauge() > 0)
+                    youkaiDelta = -2;
+                else if (g_GameManager.GaugeIsModeratelyHuman() == 0)
+                    youkaiDelta = 2;
+                else if (g_GameManager.GaugeIsExtremelyHuman() == 0)
+                    youkaiDelta = 3;
+                else
+                    youkaiDelta = 5;
+                g_GameManager.AddToYoukaiGauge((i32)(youkaiDelta * g_ShotSpeed), 0);
+            gaugeDone:
+                (void)0;
+            }
+            else
+            {
+                this->unkE2ad0.Tick(0);
+            }
+        }
+    }
+
+    /* While the gauge is extreme, keep a barrier effect on the player. */
+    if (g_GameManager.GaugeIsExtremelyHuman() != 0 || g_GameManager.GaugeIsExtremelyYoukai() != 0)
+    {
+        if (this->unkE2b24 == 0)
+        {
+            this->unkE2b24 = (i32)g_EffectManager.FUN_00425870(0x19, &this->positionCenter, 8, 1, -1);
+        }
+    }
+    if (this->unkE2b24 != 0)
+    {
+        *(Float3 *)(this->unkE2b24 + 0x2a4) = this->positionCenter;
+        if (g_GameManager.GaugeIsExtremelyHuman() == 0 && g_GameManager.GaugeIsExtremelyYoukai() == 0)
+        {
+            *(u8 *)(this->unkE2b24 + 0x350) = 0;
+            this->unkE2b24 = 0;
+        }
+    }
+
+    /* When not moving, shift the afterimage trail. */
+    if (speedY == 0.0f)
+        goto doTrail;
+    if (speedX != 0.0f)
+        goto done;
+doTrail:
+    for (trailI = 0xf; trailI > 0; trailI--)
+    {
+        this->trailPos[trailI] = this->trailPos[trailI - 1];
+    }
+    this->trailPos[0] = this->positionCenter;
+done:
+    return 0;
 }
+
+#undef SET_MOVE_ANIM
 
 // FUNCTION: th08 0x451150 (68% FIXME: 寄存器分配差异)
 void Player::FUN_00451150()
@@ -845,13 +1231,13 @@ ZunResult Player::AddedCallback(Player *player)
 
     if (g_Supervisor.GetUnk164())
     {
-        if (Player::LoadShtFile((PlayerRawShtFile **)&player->unkE2a74,
+        if (Player::LoadShtFile((PlayerRawShtFile **)&player->moveSpeedNormal,
                                 *(const char **)(0x4c7ce0 + g_PlayerCharacter * 4)) != 0)
         {
             return (ZunResult)-1;
         }
 
-        if (Player::LoadShtFile((PlayerRawShtFile **)&player->unkE2a78,
+        if (Player::LoadShtFile((PlayerRawShtFile **)&player->moveSpeedSpirit,
                                 *(const char **)(0x4c7d10 + g_PlayerCharacter * 4)) != 0)
         {
             return (ZunResult)-1;
@@ -987,9 +1373,9 @@ ZunResult Player::AddedCallback(Player *player)
         for (u32 k = 0; k < 4; k++, opt++)
         {
             memset(opt, 0, 0x2f4);
-            opt->unk2ec = *(i32 *)(0x4c7d40 + g_PlayerCharacter * 0x10 + k * 4);
-            (i32 &)opt->func = *(i32 *)(0x4c7e10 + g_PlayerCharacter * 0x10 + k * 4);
-            if (opt->unk2ec != 0)
+            *(i32 *)&opt->unk2ec = g_OptionInitCallbacks[g_PlayerCharacter][k];
+            (i32 &)opt->func = g_OptionUpdateCallbacks[g_PlayerCharacter][k];
+            if (*(i32 *)&opt->unk2ec != 0)
             {
                 opt->unk2c8 = 1;
                 opt->timer2e0.SetCurrent(0);

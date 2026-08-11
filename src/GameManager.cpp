@@ -972,6 +972,12 @@ ZunBool GameManager::GaugeIsExtremelyYoukai()
     return FALSE;
 }
 
+// FUNCTION: th08 0x406da0
+i32 GameManager::GaugeIsModeratelyYoukai()
+{
+    return this->globals->youkaiGauge >= this->youkaiGaugeYoukaiEffectsThreshold;
+}
+
 // FUNCTION: th08 0x40bb80
 ZunBool GameManager::IsTampered()
 {
@@ -1067,7 +1073,7 @@ i32 GameManager::GetYoukaiGauge()
     return this->globals->youkaiGauge;
 }
 
-bool GameManager::GaugeIsModeratelyHuman()
+i32 GameManager::GaugeIsModeratelyHuman()
 {
     return this->globals->youkaiGauge <= this->youkaiGaugeHumanEffectsThreshold;
 }

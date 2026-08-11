@@ -80,3 +80,24 @@
   函数改用字段访问替代裸偏移。
 - **`FUN_00451500`** 反编译完成：0 → **100%**（决死结界检测，条件分支+音效）。
 - **`FUN_0044c650`** 射击状态机实现至 70%（FIXME：寄存器/跳板布局差异）。
+
+## 2026-08-11
+
+- **`Player::FUN_0044aec0`（0x12a1 巨型主更新）9.5% → 66%**：方向检测 + 换机（双人系统）
+  完整实现。逆向出 TH08 换机逻辑：`unkFdc`/`unkFe0` 换机输入、`unk8` 换机动画帧计数、
+  `isYoukaiMode` 换机中标志、`unk5` human/youkai 形态标记、`moveSpeedNormal`(0xe2a74)/
+  `moveSpeedSpirit`(0xe2a78) 双速度表。movementDirection switch → 速度、动画选择
+  （当前帧 vs 上帧 x 速度）、位置更新+边界钳制、6 个方向向量、option 回调表更新、
+  妖力槽逻辑（决死结界判断）、结界特效、残影轨迹。剩余差异为寄存器分配/switch 判别式
+  中转（编译器决策）。
+- **关键逆向发现**：6 个方向向量（0x38c-0x3c8）就是 `shotVector1-4` +
+  `grabItemTopLeft/BottomRight`（第 5/6 个向量）；option 回调表是二维
+  `[g_PlayerCharacter][option]`（`shl eax,4` 寻址，改二维数组声明后 fn_diff 提升 36%）。
+- **GaugeIsModeratelyHuman/Youkai 返回类型 bool→i32**：原版 `setle al` 但调用处无
+  `movzx`（i32 返回），bool 生成 movzx 不匹配。改 i32 后 FUN_0044aec0 提升约 4%。
+- **Player 结构字段化**：0x7/0x8/0xc、`trailPos[0x10]`、`shotVector1-4`、`moveSpeedX/Y`、
+  `velocityX/Y`、`moveSpeedNormal/Spirit` 指针、`effectVm`(0xbe834)、PlayerMoveSpeed 结构。
+- 新增全局：`g_PlayerBoundaryLeft/Top/Width/Height`(0x164d2ec-2f8)、
+  `g_OptionInitCallbacks[8][4]`/`g_OptionUpdateCallbacks[8][4]`/`g_SpiritOptionInitCallbacks[4]`/
+  `g_SpiritOptionUpdateCallbacks[4]`。
+- **新 stub**：`Player::FUN_00451640`(0x451640)、`D3DVectorOps`（D3DXVECTOR3 operator-/+ 0x4090d0/409080 的 thiscall stub）、`GameManager::GaugeIsModeratelyYoukai`。

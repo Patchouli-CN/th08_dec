@@ -86,7 +86,7 @@ struct GameManager
     u32 GetFlag3();
     u32 GetFlag14();
     i32 GetYoukaiGauge();
-    bool GaugeIsModeratelyHuman();
+    i32 GaugeIsModeratelyHuman();
     void SetLives(i32 lives);
     void SetYoukaiGauge(u16 gauge);
 
@@ -181,6 +181,7 @@ struct GameManager
     }
 
     ZunBool GaugeIsExtremelyYoukai();
+    i32 GaugeIsModeratelyYoukai();
 
     ZunBool GaugeIsExtremelyHuman()
     {
