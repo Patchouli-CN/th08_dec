@@ -565,6 +565,9 @@ restart:
             case 150: // opcode 151 = 设置 unk3324 bit26
                 enemy->unk3324 = (enemy->unk3324 & ~0x4000000) | ((instr->args[0].b[0] & 1) << 0x1a);
                 goto skipInstr;
+            case 148: // opcode 149 = 写 enemy+0x20a (i16)
+                *(i16 *)((u8 *)enemy + 0x20a) = (i16)ECL_IVAL(0);
+                goto skipInstr;
             case 146: // opcode 147 = 写全局 0x4ea290
                 *(volatile u32 *)0x4ea290 = ECL_IVAL(0);
                 goto skipInstr;
