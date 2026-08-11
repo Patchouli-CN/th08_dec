@@ -75,6 +75,13 @@ struct EclContext
 };
 C_ASSERT(sizeof(EclContext) == 0x228);
 
+// The scratch sub-ID → EclContext table at 0x4eccb8 (op125/op135 interrupt setup).
+struct EclInterruptTable
+{
+    void SetupEclContext(EclContext *ctx, i16 subId); // 0x418450
+};
+DIFFABLE_EXTERN(EclInterruptTable, g_EclInterruptTable); // 0x4eccb8
+
 struct EclManager
 {
     ZunResult Load(const char *path);

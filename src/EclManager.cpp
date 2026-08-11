@@ -18,6 +18,7 @@ namespace th08
 DIFFABLE_STATIC(EclManager, g_EclManager);
 DIFFABLE_STATIC_ARRAY(EclExInstr, 32, g_EclExInsn); // 0x4c6cb0
 DIFFABLE_STATIC(EclGlobalObj, g_EclGlobalObj);      // 0x4ea670
+DIFFABLE_STATIC(EclInterruptTable, g_EclInterruptTable); // 0x4eccb8
 
 // ECL variable access helpers (th08 standalone functions; th07 had these as
 // EclManager static methods). Stubs for now; RunEcl's call targets normalize to
@@ -174,6 +175,10 @@ f32 EclGlobalObj::SetGlobalFlag(i32 a0)
 }
 
 void EclGlobalObj::SetTargetPos(f32 a0, f32 a1, f32 a2)
+{
+}
+
+void EclInterruptTable::SetupEclContext(EclContext *ctx, i16 subId)
 {
 }
 
@@ -917,6 +922,16 @@ restart:
             case 123: // opcode 124 = 播放音效 (声音索引 v0, 位置 pos.x)
                 g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_IVAL(0), enemy->pos.x);
                 goto skipInstr;
+            case 124: // opcode 125 = 触发中断子程序
+                enemy->runInterrupt = (i16)ECL_IVAL(0);
+                enemy->curContextPtr->curInstr = (EclRawInstr *)((u8 *)instr + instr->size);
+                if (((enemy->unk3324 >> 0x1a) & 1) == 0)
+                    enemy->savedContextStack[enemy->stackDepth] = enemy->eclContext;
+                g_EclInterruptTable.SetupEclContext(&enemy->eclContext, enemy->interrupts[enemy->runInterrupt]);
+                if (enemy->stackDepth < 0xf)
+                    enemy->stackDepth++;
+                enemy->runInterrupt = 0xffff;
+                goto restart;
             case 127: // opcode 128 = 生成特效并存入 unk5360 槽
                 {
                     i32 idx = enemy->unk53c0;

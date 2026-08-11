@@ -215,3 +215,4 @@ th08::g_f54cec,0xf54cec,global
 th08::g_4ecca8,0x4ecca8,global
 th08::g_164d30c,0x164d30c,global
 th08::g_EclGlobalObj,0x4ea670,global
+th08::g_EclInterruptTable,0x4eccb8,global
