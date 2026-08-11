@@ -18,6 +18,12 @@ i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask);      // 0x
 f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused); // 0x420950
 void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr);           // 0x421300
 void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr);           // 0x4213f0
+void __fastcall FUN_00420f40(Enemy *enemy, EclRawInstr *instr);           // 0x420f40
+void __fastcall FUN_00421bd0(Enemy *enemy, EclRawInstr *instr);           // 0x421bd0
+void __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr);           // 0x421cb0
+void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr);           // 0x421e50
+void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr);           // 0x422020
+void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr);           // 0x4224a0
 
 f32 __cdecl EclAtan2(f32 a, f32 b); // th08 0x41f090 (wraps CRT atan2)
 
@@ -38,7 +44,7 @@ f32 __fastcall EclAngleFromDxDy(f32 dx, f32 dy)
     return 0.0f;
 }
 
-void Enemy::FUN_00421de0(u8 *a, u8 *b, u8 *c, u8 *d, u8 *e)
+void Enemy::FUN_00421de0(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5)
 {
 }
 
@@ -74,6 +80,30 @@ void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr)
 }
 
 void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+void __fastcall FUN_00420f40(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+void __fastcall FUN_00421bd0(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+void __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
@@ -274,13 +304,33 @@ restart:
                 g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
                 enemy->unk3328 &= ~0x4;
                 goto skipInstr;
-            case 54: // ECL_SUB_CALL
-                enemy->FUN_00421de0((u8 *)instr, (u8 *)instr + 1, (u8 *)instr + 2, (u8 *)instr + 3, (u8 *)instr + 4);
+            case 54: // opcode 55 = ECL_SUB_CALL
+                enemy->FUN_00421de0(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                enemy->unk3328 &= ~0x4;
+                goto skipInstr;
+            case 55: // opcode 56 = ECL_SUB_CALL
+                enemy->FUN_00421de0(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                enemy->unk3328 &= ~0x4;
+                goto skipInstr;
+            case 56: // opcode 57 = 子脚本 (FUN_00421e50)
+                FUN_00421e50(enemy, instr);
                 enemy->unk3328 &= ~0x4;
                 goto skipInstr;
             case 57: // ECL_SET_ANM_SUB: play on the secondary animation set
                 g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
                 enemy->unk3328 |= 0x4;
+                goto skipInstr;
+            case 58: // opcode 59 = ECL_SUB_CALL
+                enemy->FUN_00421de0(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                enemy->unk3328 &= ~0x4;
+                goto skipInstr;
+            case 59: // opcode 60 = ECL_SUB_CALL
+                enemy->FUN_00421de0(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                enemy->unk3328 &= ~0x4;
+                goto skipInstr;
+            case 60: // opcode 61 = 子脚本 (FUN_00421e50)
+                enemy->unk3328 |= 0x4;
+                FUN_00421e50(enemy, instr);
                 goto skipInstr;
             case 61: // ECL_SET_ANM_SWITCH: play anim on the set chosen by unk3328 bit2
                 if (((enemy->unk3328 >> 2) & 1) == 0)
@@ -292,12 +342,34 @@ restart:
                     g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, enemy->unk333c);
                 }
                 goto skipInstr;
+            case 62: // opcode 63 = ECL_SET_POS: set position + move init
+                enemy->pos.x = ECL_FVAL(0);
+                enemy->pos.y = ECL_FVAL(1);
+                enemy->pos.z = 0;
+                enemy->FUN_0042c180();
+                goto skipInstr;
+            case 63: // opcode 64 = 移动插值 (FUN_00420f40)
+                FUN_00420f40(enemy, instr);
+                goto skipInstr;
+            case 64: // opcode 65 = SET_MOVE_ANGLE (与 op66 相同)
+                enemy->unk2d94 = AddNormalizeAngle(ECL_FVAL(0), 0);
+                enemy->unk2da8 = ECL_FVAL(1);
+                enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
+                enemy->unk2de8 = 0;
+                enemy->unk2ddc.SetCurrent(0);
+                goto skipInstr;
             case 65: // ECL_SET_MOVE_ANGLE: set angle + speed
                 enemy->unk2d94 = AddNormalizeAngle(ECL_FVAL(0), 0);
                 enemy->unk2da8 = ECL_FVAL(1);
                 enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
                 enemy->unk2de8 = 0;
                 enemy->unk2ddc.SetCurrent(0);
+                goto skipInstr;
+            case 66: // opcode 67 = 子脚本 (FUN_00422020)
+                FUN_00422020(enemy, instr);
+                goto skipInstr;
+            case 177: // opcode 178 = 子脚本 (FUN_004224a0)
+                FUN_004224a0(enemy, instr);
                 goto skipInstr;
             default:
                 goto skipInstr;

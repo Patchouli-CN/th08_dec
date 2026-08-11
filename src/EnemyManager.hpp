@@ -13,7 +13,7 @@ struct Enemy
     void FUN_0042bc90();
     void FUN_00422c40();
     void FUN_00423150();
-    void FUN_00421de0(u8 *a, u8 *b, u8 *c, u8 *d, u8 *e); // ECL sub-call (0x421de0)
+    void FUN_00421de0(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5); // ECL sub-call (0x421de0)
     void FUN_0042c180(); // move init after SET_POS (0x42c180)
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
