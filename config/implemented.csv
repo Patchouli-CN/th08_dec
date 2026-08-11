@@ -524,3 +524,4 @@ th08::ResultScreen::HandleSpellCardCharacterSelect
 th08::EnemyManager::Initialize
 th08::Gui::FUN_004358bb
 FUN_00437d87
+th08::Gui::FUN_00438f58

@@ -986,4 +986,15 @@ void Gui::FUN_00438a89()
 {
 }
 
+// FUNCTION: th08 0x438f58 (stage-clear text: run script and set the capture region)
+void Gui::FUN_00438f58()
+{
+    g_GuiStageClearAnmB->SetAndExecuteScriptIdx((AnmVm *)((u8 *)this->impl + 0x3cc0), 1);
+    g_AnmManager->SetTextureCaptureParams(
+        0x3, 0x20, 0x10, 0x180, 0x1c0, (i32)*(f32 *)(*(u8 **)((u8 *)this->impl + 0x3ee4) + 0x8),
+        (i32)*(f32 *)(*(u8 **)((u8 *)this->impl + 0x3ee4) + 0xc),
+        (i32)*(f32 *)(*(u8 **)((u8 *)this->impl + 0x3ee4) + 0x34),
+        (i32)*(f32 *)(*(u8 **)((u8 *)this->impl + 0x3ee4) + 0x30));
+}
+
 } /* namespace th08 */

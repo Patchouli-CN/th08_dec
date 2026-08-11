@@ -160,6 +160,7 @@ struct Gui
     void FUN_00437e5d(i32, i32);
     void FUN_0043826b();
     void FUN_00438a89();
+    void FUN_00438f58();
 
     u32 unk_0;
     GuiFlags flags;

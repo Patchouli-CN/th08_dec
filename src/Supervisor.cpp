@@ -1878,6 +1878,37 @@ void Supervisor::FUN_004489ca(i32 param)
     }
 }
 
+// FUNCTION: th08 0x44886f (97.81% FIXME: captureSurfaceIdx<0 的 if 布局 jl vs jge)
+void Supervisor::FUN_0044886f(u32 *param)
+{
+    AnmManager *am;
+
+    if (this->loadingVmsHaveBeenSetup == 0)
+    {
+        this->loadingAnm->ExecuteAnmIdx(&g_SupervisorLoadingVms[0], 0);
+        this->loadingAnm->ExecuteAnmIdx(&g_SupervisorLoadingVms[1], 1);
+        this->loadingAnm->ExecuteAnmIdx(&g_SupervisorLoadingVms[2], 2);
+        this->loadingVmsHaveBeenSetup = 1;
+        memcpy(&g_SupervisorLoadingVms[0].pos, param, sizeof(Float3));
+        memcpy(&g_SupervisorLoadingVms[1].pos, param, sizeof(Float3));
+        memcpy(&g_SupervisorLoadingVms[2].pos, param, sizeof(Float3));
+    }
+    am = g_AnmManager;
+    if (am->captureSurfaceIdx < 0)
+    {
+        am->captureSurfaceIdx = 8;
+        // Two 640x480 capture regions (x/y/w/h each).
+        *(i32 *)((u8 *)am + 0x2a2550) = 0;
+        *(i32 *)((u8 *)am + 0x2a2554) = 0;
+        *(i32 *)((u8 *)am + 0x2a2558) = 0x280;
+        *(i32 *)((u8 *)am + 0x2a255c) = 0x1e0;
+        *(i32 *)((u8 *)am + 0x2a2560) = 0;
+        *(i32 *)((u8 *)am + 0x2a2564) = 0;
+        *(i32 *)((u8 *)am + 0x2a2568) = 0x280;
+        *(i32 *)((u8 *)am + 0x2a256c) = 0x1e0;
+    }
+}
+
 // FUNCTION: th08 0x44881a
 void Supervisor::FUN_0044881a()
 {

@@ -159,6 +159,7 @@ struct Supervisor
     void SetupLoadingVms(Float3 *position);
     void HideLoadingVms(void);
     void FUN_0044881a();
+    void FUN_0044886f(u32 *param);
     void FUN_004489ca(i32 param);
     void SetupLoadingVmsAndInitCapture(Float3 *position);
     void StartEffect(i32 idx);
