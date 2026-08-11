@@ -16,6 +16,8 @@ DIFFABLE_STATIC(u8, g_PlayerUnknown0bb);
 DIFFABLE_STATIC(Float2, g_PlayerPos);
 DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile);
 DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile2);
+DIFFABLE_STATIC(u8, g_PlayerCharacter); // 0x164d0b1
+DIFFABLE_STATIC(u32, g_PlayerFlags);    // 0x164d0b4
 DIFFABLE_STATIC(ChainElem *, g_PlayerCalcChain);
 DIFFABLE_STATIC(ChainElem *, g_PlayerDrawChainHighPrio);
 DIFFABLE_STATIC(ChainElem *, g_PlayerDrawChainLowPrio);
@@ -369,9 +371,9 @@ void Player::FUN_0044c650()
         !((Gui *)0x160f428)->FUN_004358bb() && this->shotIndex != 0 &&
         g_GameManager.GetBombsRemaining() > 0 && this->shotCooldown == 0)
     {
-        if ((*(u32 *)0x164d0b4 >> 7 & 3) == 0)
+        if ((g_PlayerFlags >> 7 & 3) == 0)
         {
-            if ((*(u32 *)0x164d0b4 >> 0xe & 1) == 0)
+            if ((g_PlayerFlags >> 0xe & 1) == 0)
             {
                 goto switch_shot;
             }
@@ -391,7 +393,7 @@ switch_shot:
     *(u16 *)(*(i32 *)0x18b8a28 + 0xda) |= 1;
     this->unk6 = 0;
 
-    if (*(u32 *)0x164d0b4 >> 7 & 3)
+    if (g_PlayerFlags >> 7 & 3)
     {
         *(i32 *)((u8 *)this + 0xfe0) = 4;
     }
@@ -502,7 +504,7 @@ void Player::FUN_0044d180()
         *(i32 *)((u8 *)this + 0x200) = 0xffffffff;
         ((Player *)((u8 *)this + 0x10))->FUN_0044e120();
 
-        if (!(*(u32 *)0x164d0b4 >> 0xe & 1))
+        if (!(g_PlayerFlags >> 0xe & 1))
         {
             ((ZunTimer *)((u8 *)this + 0xe2af4))->SetCurrent(0xf0);
         }
@@ -594,7 +596,7 @@ void Player::FUN_00451150()
     PlayerBulletVm *b;
 
     /* 子弹动画暂停标志（0x164d0b4 bit 10）。 */
-    if (*(u32 *)0x164d0b4 >> 0xa & 1)
+    if (g_PlayerFlags >> 0xa & 1)
     {
         return;
     }
@@ -665,7 +667,7 @@ i32 Player::FUN_00451500()
     {
         if (*(i32 *)0x17d6ed4 != 0)
         {
-            if (*(u8 *)0x164d0b1 != 1 && *(u8 *)0x164d0b1 != 7 && *(u8 *)0x164d0b1 != 6)
+            if (g_PlayerCharacter != 1 && g_PlayerCharacter != 7 && g_PlayerCharacter != 6)
             {
                 FUN_00450f60(this, this->shotTimer2.AsFrames());
             }
@@ -813,19 +815,19 @@ ZunResult Player::AddedCallback(Player *player)
     if (g_Supervisor.GetUnk164())
     {
         if (Player::LoadShtFile((PlayerRawShtFile **)&player->unkE2a74,
-                                *(const char **)(0x4c7ce0 + *(u8 *)0x164d0b1 * 4)) != 0)
+                                *(const char **)(0x4c7ce0 + g_PlayerCharacter * 4)) != 0)
         {
             return (ZunResult)-1;
         }
 
         if (Player::LoadShtFile((PlayerRawShtFile **)&player->unkE2a78,
-                                *(const char **)(0x4c7d10 + *(u8 *)0x164d0b1 * 4)) != 0)
+                                *(const char **)(0x4c7d10 + g_PlayerCharacter * 4)) != 0)
         {
             return (ZunResult)-1;
         }
 
         *(AnmLoaded **)((u8 *)player + 0xc) =
-            g_AnmManager->PreloadAnm(5, *(const char **)(0x4c7cb0 + *(u8 *)0x164d0b1 * 4));
+            g_AnmManager->PreloadAnm(5, *(const char **)(0x4c7cb0 + g_PlayerCharacter * 4));
 
         if (*(AnmLoaded **)((u8 *)player + 0xc) == NULL)
         {
@@ -837,7 +839,7 @@ ZunResult Player::AddedCallback(Player *player)
         *(AnmLoaded **)((u8 *)player + 0xc) = g_AnmManager->GetAnm(5);
     }
 
-    if (!(*(u8 *)0x164d0b1 >= 4 && (*(u8 *)0x164d0b1 & 1)))
+    if (!(g_PlayerCharacter >= 4 && (g_PlayerCharacter & 1)))
     {
         (*(AnmLoaded **)((u8 *)player + 0xc))->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 0);
     }
@@ -885,8 +887,8 @@ ZunResult Player::AddedCallback(Player *player)
     player->unkE2ae8.SetCurrent(0);
 
     /* 角色射击回调表拷贝（两次，均为 5 dword）。 */
-    memcpy((u8 *)player + 0x1000, (void *)(0x4c7ad0 + (*(u8 *)0x164d0b1 * 2) * 0x14), 0x14);
-    memcpy((u8 *)player + 0x1014, (void *)(0x4c7ad0 + (*(u8 *)0x164d0b1 * 2 + 1) * 0x14), 0x14);
+    memcpy((u8 *)player + 0x1000, (void *)(0x4c7ad0 + (g_PlayerCharacter * 2) * 0x14), 0x14);
+    memcpy((u8 *)player + 0x1014, (void *)(0x4c7ad0 + (g_PlayerCharacter * 2 + 1) * 0x14), 0x14);
 
     *(i32 *)((u8 *)player + 0xfdc) = 0;
     player->unkE2b0c = -1.57f;
@@ -911,13 +913,13 @@ ZunResult Player::AddedCallback(Player *player)
     *(u16 *)0x164d306 = 0x1f40;
     *(u16 *)0x164d30a = 0x7d0;
 
-    if (*(u8 *)0x164d0b1 == 3)
+    if (g_PlayerCharacter == 3)
     {
         *(u16 *)0x164d300 = 0xec78;
         *(u16 *)0x164d304 = 0xf448;
         *(u16 *)0x164d308 = 0xf830;
     }
-    else if (*(u8 *)0x164d0b1 == 0xa)
+    else if (g_PlayerCharacter == 0xa)
     {
         *(u16 *)0x164d300 = 0xec78;
         *(u16 *)0x164d304 = 0xf448;
@@ -948,14 +950,14 @@ ZunResult Player::AddedCallback(Player *player)
 
     *(u8 *)((u8 *)player + 0x3) = 2;
 
-    if (*(u8 *)0x164d0b1 > 3)
+    if (g_PlayerCharacter > 3)
     {
         PlayerOption *opt = &player->options[0];
         for (u32 k = 0; k < 4; k++, opt++)
         {
             memset(opt, 0, 0x2f4);
-            *(i32 *)((u8 *)opt + 0x2ec) = *(i32 *)(0x4c7d40 + *(u8 *)0x164d0b1 * 0x10 + k * 4);
-            *(i32 *)((u8 *)opt + 0x2f0) = *(i32 *)(0x4c7e10 + *(u8 *)0x164d0b1 * 0x10 + k * 4);
+            *(i32 *)((u8 *)opt + 0x2ec) = *(i32 *)(0x4c7d40 + g_PlayerCharacter * 0x10 + k * 4);
+            *(i32 *)((u8 *)opt + 0x2f0) = *(i32 *)(0x4c7e10 + g_PlayerCharacter * 0x10 + k * 4);
             if (*(i32 *)((u8 *)opt + 0x2ec) != 0)
             {
                 *(i32 *)((u8 *)opt + 0x2c8) = 1;
