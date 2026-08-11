@@ -35,13 +35,20 @@ struct Enemy
     Float3 unk2d40;                    // 0x2d40  per-frame movement vector
     f32 unk2d4c;                       // 0x2d4c  (dx from laser interp)
     f32 unk2d50;                       // 0x2d50  (dy)
-    unknown_fields(0x2d54, 0x34);      // 0x2d54-0x2d88
+    unknown_fields(0x2d54, 0x1c);      // 0x2d54-0x2d70
+    f32 unk2d70;                       // 0x2d70
+    f32 unk2d74;                       // 0x2d74
+    unknown_fields(0x2d78, 0x4);       // 0x2d78-0x2d7c
+    f32 unk2d7c;                       // 0x2d7c
+    f32 unk2d80;                       // 0x2d80
+    unknown_fields(0x2d84, 0x4);       // 0x2d84-0x2d88
     Float3 unk2d88;                    // 0x2d88  pos + unk2d40 (computed each ECL frame)
     f32 unk2d94;                       // 0x2d94  (angle from dx/dy)
     f32 unk2d98;                       // 0x2d98  (move speed)
     unknown_fields(0x2d9c, 0xc);       // 0x2d9c-0x2da8
     f32 unk2da8;                       // 0x2da8  (move angle)
-    unknown_fields(0x2dac, 0x30);      // 0x2dac-0x2ddc
+    f32 unk2dac;                       // 0x2dac
+    unknown_fields(0x2db0, 0x2c);      // 0x2db0-0x2ddc
     ZunTimer unk2ddc;                  // 0x2ddc
     i32 unk2de8;                       // 0x2de8
     unknown_fields(0x2dec, 0x10);      // 0x2dec-0x2dfc
@@ -53,7 +60,9 @@ struct Enemy
     u8 eclFlags;                       // 0x3330
     unknown_fields(0x3331, 0xb);       // 0x3331-0x333c
     i16 unk333c;                       // 0x333c  current animation id
-    unknown_fields(0x333e, 0x46);      // 0x333e-0x3384
+    unknown_fields(0x333e, 0x12);      // 0x333e-0x3350
+    f32 unk3350;                       // 0x3350
+    unknown_fields(0x3354, 0x30);      // 0x3354-0x3384
     void *dataPtrs[4];                 // 0x3384
     unknown_fields(0x3394, 0x203c);    // 0x3394-0x53d0
 };

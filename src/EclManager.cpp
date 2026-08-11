@@ -372,8 +372,30 @@ restart:
                 enemy->unk2d98 = ECL_FVAL(0);
                 enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
                 goto skipInstr;
+            case 70: // opcode 71 = 移动角度 (unk2dac) + flag bit12
+                enemy->unk2dac = ECL_FVAL(0);
+                enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
+                goto skipInstr;
             case 75: // opcode 76 = 清除移动标志 (unk3324 bit19)
                 enemy->unk3324 &= ~0x80000;
+                goto skipInstr;
+            case 76: // opcode 77 = 写两个 float 字段
+                enemy->unk2d70 = ECL_FVAL(0);
+                enemy->unk2d74 = ECL_FVAL(1);
+                goto skipInstr;
+            case 77: // opcode 78 = 写两个 float 字段
+                enemy->unk2d7c = ECL_FVAL(0);
+                enemy->unk2d80 = ECL_FVAL(1);
+                goto skipInstr;
+            case 81: // opcode 82 = 速度平方: unk3350 = f0*f0
+                enemy->unk3350 = ECL_FVAL(0);
+                enemy->unk3350 *= enemy->unk3350;
+                goto skipInstr;
+            case 82: // opcode 83 = 设置 unk3328 bit1
+                enemy->unk3328 = (enemy->unk3328 & ~0x2) | ((ECL_IVAL(0) & 1) << 1);
+                goto skipInstr;
+            case 83: // opcode 84 = NOP
+            case 84: // opcode 85 = NOP
                 goto skipInstr;
             case 177: // opcode 178 = 子脚本 (FUN_004224a0)
                 FUN_004224a0(enemy, instr);
