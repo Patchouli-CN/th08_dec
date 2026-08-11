@@ -14,6 +14,7 @@ namespace th08
 
 DIFFABLE_STATIC(EnemyManager, g_EnemyManager);
 DIFFABLE_STATIC(AnmLoaded, g_EnemyAnmLoaded);
+DIFFABLE_STATIC(AnmLoaded, g_EnemyAnmLoaded2);
 DIFFABLE_STATIC(ChainElem, g_EnemyManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_EnemyManagerDrawChainHighPrio);
 DIFFABLE_STATIC(ChainElem, g_EnemyManagerDrawChainLowPrio);

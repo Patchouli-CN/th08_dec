@@ -230,6 +230,10 @@ restart:
                 enemy->FUN_00421de0((u8 *)instr, (u8 *)instr + 1, (u8 *)instr + 2, (u8 *)instr + 3, (u8 *)instr + 4);
                 enemy->unk3328 &= ~0x4;
                 goto skipInstr;
+            case 57: // ECL_SET_ANM_SUB: play on the secondary animation set
+                g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
+                enemy->unk3328 |= 0x4;
+                goto skipInstr;
             default:
                 goto skipInstr;
             }

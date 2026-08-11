@@ -68,5 +68,6 @@ struct EnemyManager
 
 DIFFABLE_EXTERN(EnemyManager, g_EnemyManager);
 DIFFABLE_EXTERN(AnmLoaded, g_EnemyAnmLoaded); // 0xf54e0c (enemy sprite animations)
+DIFFABLE_EXTERN(AnmLoaded, g_EnemyAnmLoaded2); // 0xf54e10
 
 } /* namespace th08 */
