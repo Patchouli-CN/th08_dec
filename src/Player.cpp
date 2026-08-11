@@ -594,9 +594,30 @@ void Player::FUN_0044d2c0()
     }
 }
 
-// STUB: th08 0x44aec0
+// FUNCTION: th08 0x44aec0 (Player main update: direction -> option init -> firing.
+// FIXME: 0x12a1 超大，目前只实现方向检测部分)
 void Player::FUN_0044aec0()
 {
+    i32 oldDirection;
+
+    /* 方向输入 → PlayerDirection。优先级：斜向 > 单方向。 */
+    oldDirection = this->movementDirection;
+    if ((g_KeyInput & 0x50) == 0x50)
+        this->movementDirection = MOVEMENT_UP_LEFT;
+    else if ((g_KeyInput & 0x60) == 0x60)
+        this->movementDirection = MOVEMENT_DOWN_LEFT;
+    else if ((g_KeyInput & 0x90) == 0x90)
+        this->movementDirection = MOVEMENT_UP_RIGHT;
+    else if ((g_KeyInput & 0xa0) == 0xa0)
+        this->movementDirection = MOVEMENT_DOWN_RIGHT;
+    else if (g_KeyInput & 0x20)
+        this->movementDirection = MOVEMENT_DOWN;
+    else if (g_KeyInput & 0x10)
+        this->movementDirection = MOVEMENT_UP;
+    else if (g_KeyInput & 0x40)
+        this->movementDirection = MOVEMENT_LEFT;
+    else if (g_KeyInput & 0x80)
+        this->movementDirection = MOVEMENT_RIGHT;
 }
 
 // FUNCTION: th08 0x451150 (68% FIXME: 寄存器分配差异)
@@ -878,7 +899,7 @@ ZunResult Player::AddedCallback(Player *player)
     player->shotSpeed3ec = player->shotSpeed3f0;
     player->unk3f4 = 5.0f;
 
-    player->unkE2a98 = 0;
+    player->movementDirection = 0;
 
     player->playerState = 1;
 

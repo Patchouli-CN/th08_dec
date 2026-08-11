@@ -15,6 +15,21 @@ enum PlayerState
     PLAYER_STATE_BORDER,
 };
 
+// 8-direction movement, values 1-8 map to the input bits in g_KeyInput.
+// Matches TH07's PlayerDirection.
+enum PlayerDirection
+{
+    MOVEMENT_NONE = 0,
+    MOVEMENT_UP = 1,
+    MOVEMENT_DOWN = 2,
+    MOVEMENT_LEFT = 3,
+    MOVEMENT_RIGHT = 4,
+    MOVEMENT_UP_LEFT = 5,
+    MOVEMENT_UP_RIGHT = 6,
+    MOVEMENT_DOWN_LEFT = 7,
+    MOVEMENT_DOWN_RIGHT = 8,
+};
+
 // A player shot behavior entry in the .sht file. The fields at 0x28-0x34 are
 // indices into the player shot callback tables, replaced with pointers on load.
 struct PlayerShotEntry
@@ -163,7 +178,7 @@ struct Player
     unknown_fields(0xe2a80, 0x10);
     i32 unkE2a90;                // 0xe2a90
     unknown_fields(0xe2a94, 0x4);
-    i32 unkE2a98;                // 0xe2a98
+    i32 movementDirection;       // 0xe2a98 (PlayerDirection)
     unknown_fields(0xe2a9c, 0x8);
     Float3 unkE2aa4;             // 0xe2aa4
     Float3 unkE2ab0;             // 0xe2ab0
