@@ -477,6 +477,21 @@ restart:
                     if (flags & 0x20) enemy->unk3328 |= 0x40;
                 }
                 goto skipInstr;
+            case 80: // opcode 81 = 混合设置/清除特效标志
+                {
+                    i32 flags = ECL_IVAL(0);
+                    if (flags & 1) enemy->unk3324 |= 0x40;
+                    if (flags & 2)
+                    {
+                        enemy->unk3324 |= 0x4;
+                        if (enemy->unk53c8) *(u32 *)((u8 *)enemy->unk53c8 + 0x1f8) |= 0x20000;
+                    }
+                    if (flags & 4) enemy->unk3324 |= 0x8;
+                    if (flags & 8) enemy->unk3324 &= ~0x10;
+                    if (flags & 0x10) enemy->unk3324 &= ~0x10000000;
+                    if (flags & 0x20) enemy->unk3328 &= ~0x40;
+                }
+                goto skipInstr;
             case 81: // opcode 82 = 速度平方: unk3350 = f0*f0
                 enemy->unk3350 = ECL_FVAL(0);
                 enemy->unk3350 *= enemy->unk3350;
