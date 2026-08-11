@@ -335,22 +335,21 @@ ChainCallbackResult Player::OnDrawLowPrio(Player *player)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
-// FUNCTION: th08 0x44d650 (32% FIXME: 初步实现，LoadShtFile 约定/anm 变量/字段待迭代)
+// FUNCTION: th08 0x44d650 (36% FIXME: 字段/分支待迭代)
 ZunResult Player::AddedCallback(Player *player)
 {
-    AnmLoaded *anm;
     i32 i;
 
     if (g_Supervisor.GetUnk164())
     {
-        if (((ZunResult(__fastcall *)(PlayerRawShtFile **, const char *))0x44dd70)(
-                (PlayerRawShtFile **)&player->unkE2a74, *(const char **)(0x4c7ce0 + *(u8 *)0x164d0b1 * 4)) != 0)
+        if (Player::LoadShtFile((PlayerRawShtFile **)&player->unkE2a74,
+                                *(const char **)(0x4c7ce0 + *(u8 *)0x164d0b1 * 4)) != 0)
         {
             return (ZunResult)-1;
         }
 
-        if (((ZunResult(__fastcall *)(PlayerRawShtFile **, const char *))0x44dd70)(
-                (PlayerRawShtFile **)&player->unkE2a78, *(const char **)(0x4c7d10 + *(u8 *)0x164d0b1 * 4)) != 0)
+        if (Player::LoadShtFile((PlayerRawShtFile **)&player->unkE2a78,
+                                *(const char **)(0x4c7d10 + *(u8 *)0x164d0b1 * 4)) != 0)
         {
             return (ZunResult)-1;
         }
@@ -368,15 +367,13 @@ ZunResult Player::AddedCallback(Player *player)
         *(AnmLoaded **)((u8 *)player + 0xc) = g_AnmManager->GetAnm(5);
     }
 
-    anm = *(AnmLoaded **)((u8 *)player + 0xc);
-
     if (*(u8 *)0x164d0b1 >= 4 && (*(u8 *)0x164d0b1 & 1))
     {
-        anm->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 5);
+        (*(AnmLoaded **)((u8 *)player + 0xc))->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 5);
     }
     else
     {
-        anm->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 0);
+        (*(AnmLoaded **)((u8 *)player + 0xc))->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 0);
     }
 
     {
@@ -458,7 +455,9 @@ ZunResult Player::AddedCallback(Player *player)
 
     for (i = 0; i < 0x10; i++)
     {
-        *(Float3 *)((u8 *)player + 0x3d4 + i * 0xc) = Float3(0.0f, 0.0f, 0.0f);
+        Float3 zero = Float3(0.0f, 0.0f, 0.0f);
+
+        *(Float3 *)((u8 *)player + 0x3d4 + i * 0xc) = zero;
     }
 
     *(u8 *)((u8 *)player + 0x3) = 2;
@@ -527,7 +526,7 @@ DIFFABLE_STATIC_ARRAY_ASSIGN(u32, 8, g_PlayerShotTable4) = {
 };
 
 // FUNCTION: th08 0x44dd70
-ZunResult Player::LoadShtFile(PlayerRawShtFile **header, const char *path)
+ZunResult __fastcall Player::LoadShtFile(PlayerRawShtFile **header, const char *path)
 {
     *header = (PlayerRawShtFile *)FileSystem::OpenFile(path, NULL, FALSE);
     if (*header == NULL)

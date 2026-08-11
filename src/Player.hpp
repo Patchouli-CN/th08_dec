@@ -118,7 +118,7 @@ struct Player
     static void CutChain();
     void DrawBulletVms();
 
-    static ZunResult LoadShtFile(PlayerRawShtFile **header, const char *path);
+    static ZunResult __fastcall LoadShtFile(PlayerRawShtFile **header, const char *path);
     ZunBool CalcItemBoxCollision(Float3 *pos, Float3 *size);
     f32 AngleToPlayer(Float3 *pos);
     void FUN_004512f0();
