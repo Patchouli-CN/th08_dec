@@ -236,7 +236,7 @@ ZunResult EclManager::Load(const char *path)
 
 // FUNCTION: th08 0x4184b0 (逆向中)
 #pragma var_order(arg, subCtxIdx, instr, p4,                                                                            \
-                  p5, p6, p7, p8, v89node, v89head, v90node, v90head, v91node, v91head, p15, p16, p17, p18, p19,       \
+                  p5, p6, p7, p8, v89node, v89head, v90node, v90head, v91node, v91head, v110ld, p16, p17, p18, p19,    \
                   p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
                   p50, p51, p52, p53, p54, p55, p56, iInterp, t, flag, interp, savedPos, i, p65, p66,                 \
@@ -265,7 +265,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     Enemy *v90head;       // slot 12 (case 90: 弹幕生成 head)
     Enemy *v91node;       // slot 13 (case 91: 弹幕生成 node)
     Enemy *v91head;       // slot 14 (case 91: 弹幕生成 head)
-    i32 p15, p16, p17, p18, p19;
+    EnemyLaserData *v110ld; // slot 15 (case 110: 激光数据指针)
+    i32 p16, p17, p18, p19;
     i32 p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34;
     i32 p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49;
     i32 p50, p51, p52, p53, p54, p55, p56;
@@ -1301,15 +1302,41 @@ restart:
                 }
                 goto skipInstr;
             case 110: // opcode 111 = 写激光数据槽 (0x2e44 + v0*0x18)
-                {
-                    EnemyLaserData *ld = &enemy->laserPatterns[ECL_IVAL(0)];
-                    ld->c = ECL_IVAL(1);
-                    ld->d = ECL_IVAL(2);
-                    ld->a = ECL_IVAL(3);
-                    ld->b = ECL_IVAL(4);
-                    ld->x = ECL_FVAL(5);
-                    ld->y = ECL_FVAL(6);
-                }
+                if (instr->paramMask & 0x1)
+                    v110a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v110a = instr->args[0].i;
+                v110ld = &enemy->laserPatterns[v110a];
+                if (instr->paramMask & 0x2)
+                    v110b = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v110b = instr->args[1].i;
+                v110ld->c = v110b;
+                if (instr->paramMask & 0x4)
+                    v110c = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v110c = instr->args[2].i;
+                v110ld->d = v110c;
+                if (instr->paramMask & 0x8)
+                    v110d = GetVarValue(enemy, instr->args[3].i);
+                else
+                    v110d = instr->args[3].i;
+                v110ld->a = v110d;
+                if (instr->paramMask & 0x10)
+                    v110e = GetVarValue(enemy, instr->args[4].i);
+                else
+                    v110e = instr->args[4].i;
+                v110ld->b = v110e;
+                if (instr->paramMask & 0x20)
+                    v110f = enemy->GetEclFloatVar(instr->args[5].i);
+                else
+                    v110f = instr->args[5].f;
+                v110ld->x = v110f;
+                if (instr->paramMask & 0x40)
+                    v110g = enemy->GetEclFloatVar(instr->args[6].i);
+                else
+                    v110g = instr->args[6].f;
+                v110ld->y = v110g;
                 goto skipInstr;
             case 137: // opcode 138 = 复制 3 字节到 unk3310/3311/3312
                 enemy->unk3310 = instr->args[0].b[0];
