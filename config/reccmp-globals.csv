@@ -181,3 +181,13 @@ th08::g_PlayerPos,0x164d2dc,global
 th08::g_Unknown57ad30,0x57ad30,global
 th08::g_PlayerCharacter,0x164d0b1,global
 th08::g_PlayerFlags,0x164d0b4,global
+th08::g_PlayerPalette,0x164d300,global
+th08::g_GaugeStats,0x164d318,global
+th08::g_KeyInput,0x164d52c,global
+th08::g_KeyInput2,0x164d534,global
+th08::g_GuiDisplayState,0x160f42c,global
+th08::g_BulletObjects,0xf54cc0,global
+th08::g_ShotSpeed,0x17ce8e0,global
+th08::g_Unknown164d2c8,0x164d2c8,global
+th08::g_PlayerTargetX,0x164d2e4,global
+th08::g_PlayerTargetY,0x164d2e8,global

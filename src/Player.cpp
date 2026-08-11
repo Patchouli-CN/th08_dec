@@ -18,6 +18,16 @@ DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile);
 DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile2);
 DIFFABLE_STATIC(u8, g_PlayerCharacter); // 0x164d0b1
 DIFFABLE_STATIC(u32, g_PlayerFlags);    // 0x164d0b4
+DIFFABLE_STATIC_ARRAY(u16, 6, g_PlayerPalette);   // 0x164d300 main/sub colors
+DIFFABLE_STATIC_ARRAY(u32, 6, g_GaugeStats);      // 0x164d318
+DIFFABLE_STATIC(u16, g_KeyInput);                 // 0x164d52c
+DIFFABLE_STATIC(u16, g_KeyInput2);                // 0x164d534
+DIFFABLE_STATIC(i32, g_GuiDisplayState);          // 0x160f42c
+DIFFABLE_STATIC_ARRAY(u32, 8, g_BulletObjects);   // 0xf54cc0
+DIFFABLE_STATIC(f32, g_ShotSpeed);                // 0x17ce8e0
+DIFFABLE_STATIC(i32, g_Unknown164d2c8);           // 0x164d2c8
+DIFFABLE_STATIC(f32, g_PlayerTargetX);            // 0x164d2e4
+DIFFABLE_STATIC(f32, g_PlayerTargetY);            // 0x164d2e8
 DIFFABLE_STATIC(ChainElem *, g_PlayerCalcChain);
 DIFFABLE_STATIC(ChainElem *, g_PlayerDrawChainHighPrio);
 DIFFABLE_STATIC(ChainElem *, g_PlayerDrawChainLowPrio);
@@ -195,19 +205,19 @@ ChainCallbackResult Player::OnUpdate(Player *player)
 
     if (g_Gui.FUN_004358bb() == 0)
     {
-        *(u32 *)0x164d318 += 1;
-        *(u32 *)0x164d31c += 1;
+        g_GaugeStats[0] += 1;
+        g_GaugeStats[1] += 1;
 
         if (g_GameManager.GaugeIsExtremelyHuman())
         {
-            *(u32 *)0x164d324 += 1;
-            *(u32 *)0x164d32c += 1;
+            g_GaugeStats[3] += 1;
+            g_GaugeStats[5] += 1;
             g_GameManager.AddScore(0x64);
         }
         else if (g_GameManager.GaugeIsExtremelyYoukai())
         {
-            *(u32 *)0x164d320 += 1;
-            *(u32 *)0x164d328 += 1;
+            g_GaugeStats[2] += 1;
+            g_GaugeStats[4] += 1;
             g_GameManager.AddScore(0x64);
         }
     }
@@ -326,7 +336,7 @@ void Player::FUN_0044c650()
 
         if (this->shotTimer.operator>=(this->shotInterval))
         {
-            FUN_00416130((void *)0x4ea670);
+            FUN_00416130(&g_Spellcard);
             *(i32 *)((u8 *)this + 0xfdc) = 0;
             *(f32 *)((u8 *)this + 0x408) = 1.0f;
             *(f32 *)((u8 *)this + 0x404) = 1.0f;
@@ -336,11 +346,11 @@ void Player::FUN_0044c650()
                 *(i32 *)0x164d0b4 &= 0xfffffe7f;
                 for (i = 0; i < 8u; i++)
                 {
-                    if (*(i32 *)(0xf54cc0 + i * 4) != 0)
+                    if (g_BulletObjects[i] != 0)
                     {
-                        ((StubThiscall42adb0 *)(*(i32 *)(0xf54cc0 + i * 4)))->FUN_0042adb0(0);
-                        *(i32 *)(*(i32 *)(0xf54cc0 + i * 4) + 0x2dfc) = 0;
-                        *(i32 *)(*(i32 *)(0xf54cc0 + i * 4) + 0x3324) &= 0xbfffffff;
+                        ((StubThiscall42adb0 *)(g_BulletObjects[i]))->FUN_0042adb0(0);
+                        *(i32 *)(g_BulletObjects[i] + 0x2dfc) = 0;
+                        *(i32 *)(g_BulletObjects[i] + 0x3324) &= 0xbfffffff;
                     }
                 }
                 ScreenEffect::RegisterChain((ScreenEffectType)0x3, 0x1e, 0x1, 0xffffffff, 0, 0x15);
@@ -368,7 +378,7 @@ void Player::FUN_0044c650()
 
     /* 未射击：检测"按了决死结界键且满足条件"则切换射击。 */
     if (*(u16 *)0x164d52c & 2 && !g_GameManager.IsTampered() &&
-        !((Gui *)0x160f428)->FUN_004358bb() && this->shotIndex != 0 &&
+        !g_Gui.FUN_004358bb() && this->shotIndex != 0 &&
         g_GameManager.GetBombsRemaining() > 0 && this->shotCooldown == 0)
     {
         if ((g_PlayerFlags >> 7 & 3) == 0)
@@ -451,7 +461,7 @@ switch_shot:
     (this->*this->shotFuncs[this->unkFe0])();
     this->shotTimer.Tick(0);
     g_GameManager.DecreaseSubrank(0xc8);
-    FUN_0044cba0((void *)0x4ea670);
+    FUN_0044cba0(&g_Spellcard);
     this->shotIndex += 6;
     if (this->shotIndex > *(i32 *)((u8 *)g_PlayerShtFile + 8))
     {
@@ -685,7 +695,7 @@ i32 Player::FUN_00451500()
     {
         if (this->shotTimer2.AsFrames() < 0)
         {
-            if (((Gui *)0x160f428)->FUN_004358bb() == 0)
+            if (g_Gui.FUN_004358bb() == 0)
             {
                 this->shotTimer2.SetCurrent(0);
             }
@@ -906,39 +916,39 @@ ZunResult Player::AddedCallback(Player *player)
     g_AsciiManager.SetBossMarkerInterrupt(2, 2);
 
     /* 主/次颜色默认值，再按角色覆盖。 */
-    *(u16 *)0x164d300 = 0xd8f0;
-    *(u16 *)0x164d304 = 0xe0c0;
-    *(u16 *)0x164d308 = 0xf830;
-    *(u16 *)0x164d302 = 0x2710;
-    *(u16 *)0x164d306 = 0x1f40;
-    *(u16 *)0x164d30a = 0x7d0;
+    g_PlayerPalette[0] = 0xd8f0;
+    g_PlayerPalette[2] = 0xe0c0;
+    g_PlayerPalette[4] = 0xf830;
+    g_PlayerPalette[1] = 0x2710;
+    g_PlayerPalette[3] = 0x1f40;
+    g_PlayerPalette[5] = 0x7d0;
 
     if (g_PlayerCharacter == 3)
     {
-        *(u16 *)0x164d300 = 0xec78;
-        *(u16 *)0x164d304 = 0xf448;
-        *(u16 *)0x164d308 = 0xf830;
+        g_PlayerPalette[0] = 0xec78;
+        g_PlayerPalette[2] = 0xf448;
+        g_PlayerPalette[4] = 0xf830;
     }
     else if (g_PlayerCharacter == 0xa)
     {
-        *(u16 *)0x164d300 = 0xec78;
-        *(u16 *)0x164d304 = 0xf448;
-        *(u16 *)0x164d308 = 0xf830;
-        *(u16 *)0x164d302 = 0x1388;
-        *(u16 *)0x164d306 = 0xbb8;
-        *(u16 *)0x164d30a = 0x7d0;
+        g_PlayerPalette[0] = 0xec78;
+        g_PlayerPalette[2] = 0xf448;
+        g_PlayerPalette[4] = 0xf830;
+        g_PlayerPalette[1] = 0x1388;
+        g_PlayerPalette[3] = 0xbb8;
+        g_PlayerPalette[5] = 0x7d0;
     }
     else if (g_GameManager.IsSoloHuman())
     {
-        *(u16 *)0x164d302 = 0x7d0;
-        *(u16 *)0x164d306 = 0x1f40;
-        *(u16 *)0x164d30a = 0x7d1;
+        g_PlayerPalette[1] = 0x7d0;
+        g_PlayerPalette[3] = 0x1f40;
+        g_PlayerPalette[5] = 0x7d1;
     }
     else if (g_GameManager.IsSoloYoukai())
     {
-        *(u16 *)0x164d300 = 0xf830;
-        *(u16 *)0x164d304 = 0xe0c0;
-        *(u16 *)0x164d308 = 0xf82f;
+        g_PlayerPalette[0] = 0xf830;
+        g_PlayerPalette[2] = 0xe0c0;
+        g_PlayerPalette[4] = 0xf82f;
     }
 
     player->unkE2b24 = 0;
