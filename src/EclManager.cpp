@@ -239,7 +239,9 @@ ZunResult EclManager::Load(const char *path)
                   v6, v7, v8a, v8b, v8c, v9a, v9b, v14a, v14b, v10a, v10b, v15a, v15b, v11a, v11b, v16a, v16b, \
                   v12a, v12b, v17a, v17b, v13a, v13b, v18b, v18a, v18c, v19a, v19b, v24a, v24b, v24c, v20a, v20b, \
                   v25a, v25b, v25c, v21a, v21b, v26a, v26b, v26c, v22a, v22b, v27a, v27b, v27c, v23a, v23b, \
-                  v28a, v28b, v28c, v29a, v30a, v31a, p141, v32a)
+                  v28a, v28b, v28c, v29a, v30a, v31a, p141, v32a, p143, v33a, v33b, v33c, v33d, v33e, v36a, v36b, \
+                  p151, p152, p153, p154, p155, p156, p157, p158, p159, v53a, v54a, v55a, v55b, v55c, v55d, v55e, \
+                  v55f, v57a, v58a, v59a, v59b, v59c, v59d, v59e, v59f, v62a, v62b)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -284,6 +286,17 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     f32 v31a;           // slot 140 (case 31: SIN)
     i32 p141;           // slot 141 (unused)
     f32 v32a;           // slot 142 (case 32: COS)
+    i32 p143;           // slot 143 (unused)
+    f32 v33a, v33b, v33c, v33d, v33e; // slots 144-148 (case 33: 两点角度; read order f3,f1,f4,f2,result)
+    f32 v36a, v36b; // slots 149-150 (case 36: NORMALIZE_ANGLE; ECL_FVAL(0), result)
+    i32 p151, p152, p153, p154, p155, p156, p157, p158, p159; // slots 151-159 (case 37/38, not yet converted)
+    i32 v53a;       // slot 160 (case 53: SET_ANM)
+    i32 v54a;       // slot 161 (case 54: SET_ANM arg0 temp)
+    i32 v55a, v55b, v55c, v55d, v55e, v55f; // slots 162-167 (case 55: SUB_CALL; eval order arg5..arg0)
+    i32 v57a;       // slot 168 (case 57: SET_ANM_SUB)
+    i32 v58a;       // slot 169 (case 58)
+    i32 v59a, v59b, v59c, v59d, v59e, v59f; // slots 170-175 (case 59: SUB_CALL; eval order arg5..arg0)
+    f32 v62a, v62b; // slots 176-177 (case 62: SET_POS)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -595,12 +608,33 @@ restart:
                 *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = cosf(v32a);
                 goto skipInstr;
             case 33: // opcode 34 = 两点角度: *float[0]=EclAngleFromDxDy(f4-f2, f3-f1)
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    EclAngleFromDxDy(ECL_FVAL(4) - ECL_FVAL(2), ECL_FVAL(3) - ECL_FVAL(1));
+                // 读取序: f3(144) f1(145) f4(146) f2(147) → 结果(148)
+                if (instr->paramMask & 0x8)
+                    v33a = enemy->GetEclFloatVar(instr->args[3].i);
+                else
+                    v33a = instr->args[3].f;
+                if (instr->paramMask & 0x2)
+                    v33b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v33b = instr->args[1].f;
+                if (instr->paramMask & 0x10)
+                    v33c = enemy->GetEclFloatVar(instr->args[4].i);
+                else
+                    v33c = instr->args[4].f;
+                if (instr->paramMask & 0x4)
+                    v33d = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v33d = instr->args[2].f;
+                v33e = EclAngleFromDxDy(v33c - v33d, v33a - v33b);
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v33e;
                 goto skipInstr;
-            case 36: // opcode 37 = ECL_NORMALIZE_ANGLE: *float[0] = AddNormalizeAngle(f1, f2)
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    AddNormalizeAngle(ECL_FVAL(1), ECL_FVAL(2));
+            case 36: // opcode 37 = ECL_NORMALIZE_ANGLE: *float[0] = AddNormalizeAngle(f0, 0)
+                if (instr->paramMask & 0x1)
+                    v36a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v36a = instr->args[0].f;
+                v36b = AddNormalizeAngle(v36a, 0);
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v36b;
                 goto skipInstr;
             case 34: // opcode 35 = 子脚本 (FUN_00421300)
                 FUN_00421300(enemy, instr);
@@ -642,15 +676,48 @@ restart:
                 }
                 goto restart;
             case 53: // ECL_SET_ANM: play animation arg0
-                g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
+                if (instr->paramMask & 0x1)
+                    v53a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v53a = instr->args[0].i;
+                g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, v53a);
                 enemy->anmFlags &= ~ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
-            case 54: // opcode 55 = ECL_SUB_CALL
-                enemy->EclSubCall(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+            case 54: // opcode 55 = ECL_SUB_CALL: arg = arg0; EclSubCall(arg+5..arg)
+                if (instr->paramMask & 0x1)
+                    v54a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v54a = instr->args[0].i;
+                arg = v54a;
+                enemy->EclSubCall(arg + 5, arg + 4, arg + 3, arg + 2, arg + 1, arg);
                 enemy->anmFlags &= ~ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
             case 55: // opcode 56 = ECL_SUB_CALL
-                enemy->EclSubCall(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                if (instr->paramMask & 0x20)
+                    v55a = GetVarValue(enemy, instr->args[5].i);
+                else
+                    v55a = instr->args[5].i;
+                if (instr->paramMask & 0x10)
+                    v55b = GetVarValue(enemy, instr->args[4].i);
+                else
+                    v55b = instr->args[4].i;
+                if (instr->paramMask & 0x8)
+                    v55c = GetVarValue(enemy, instr->args[3].i);
+                else
+                    v55c = instr->args[3].i;
+                if (instr->paramMask & 0x4)
+                    v55d = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v55d = instr->args[2].i;
+                if (instr->paramMask & 0x2)
+                    v55e = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v55e = instr->args[1].i;
+                if (instr->paramMask & 0x1)
+                    v55f = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v55f = instr->args[0].i;
+                enemy->EclSubCall(v55f, v55e, v55d, v55c, v55b, v55a);
                 enemy->anmFlags &= ~ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
             case 56: // opcode 57 = 子脚本 (FUN_00421e50)
@@ -658,15 +725,48 @@ restart:
                 enemy->anmFlags &= ~ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
             case 57: // ECL_SET_ANM_SUB: play on the secondary animation set
-                g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
+                if (instr->paramMask & 0x1)
+                    v57a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v57a = instr->args[0].i;
+                g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->primaryVm, v57a);
                 enemy->anmFlags |= ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
             case 58: // opcode 59 = ECL_SUB_CALL
-                enemy->EclSubCall(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                if (instr->paramMask & 0x1)
+                    v58a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v58a = instr->args[0].i;
+                arg = v58a;
+                enemy->EclSubCall(arg + 5, arg + 4, arg + 3, arg + 2, arg + 1, arg);
                 enemy->anmFlags &= ~ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
             case 59: // opcode 60 = ECL_SUB_CALL
-                enemy->EclSubCall(ECL_IVAL(0), ECL_IVAL(1), ECL_IVAL(2), ECL_IVAL(3), ECL_IVAL(4), ECL_IVAL(5));
+                if (instr->paramMask & 0x20)
+                    v59a = GetVarValue(enemy, instr->args[5].i);
+                else
+                    v59a = instr->args[5].i;
+                if (instr->paramMask & 0x10)
+                    v59b = GetVarValue(enemy, instr->args[4].i);
+                else
+                    v59b = instr->args[4].i;
+                if (instr->paramMask & 0x8)
+                    v59c = GetVarValue(enemy, instr->args[3].i);
+                else
+                    v59c = instr->args[3].i;
+                if (instr->paramMask & 0x4)
+                    v59d = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v59d = instr->args[2].i;
+                if (instr->paramMask & 0x2)
+                    v59e = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v59e = instr->args[1].i;
+                if (instr->paramMask & 0x1)
+                    v59f = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v59f = instr->args[0].i;
+                enemy->EclSubCall(v59f, v59e, v59d, v59c, v59b, v59a);
                 enemy->anmFlags &= ~ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
             case 60: // opcode 61 = 子脚本 (FUN_00421e50)
@@ -684,15 +784,23 @@ restart:
                 }
                 goto skipInstr;
             case 62: // opcode 63 = ECL_SET_POS: set position + move init
-                enemy->pos.x = ECL_FVAL(0);
-                enemy->pos.y = ECL_FVAL(1);
+                if (instr->paramMask & 0x1)
+                    v62a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v62a = instr->args[0].f;
+                if (instr->paramMask & 0x2)
+                    v62b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v62b = instr->args[1].f;
+                enemy->pos.x = v62a;
+                enemy->pos.y = v62b;
                 enemy->pos.z = 0;
                 enemy->InitMoveAfterSetPos();
                 goto skipInstr;
             case 63: // opcode 64 = 移动插值 (MoveInterp)
                 MoveInterp(enemy, instr);
                 goto skipInstr;
-            case 64: // opcode 65 = SET_MOVE_ANGLE (与 op66 相同)
+            case 64: // opcode 65 = SET_MOVE_ANGLE
                 enemy->moveAngle = AddNormalizeAngle(ECL_FVAL(0), 0);
                 enemy->unk2da8 = ECL_FVAL(1);
                 enemy->flags = (enemy->flags & ~ECL_FLAG_MOVE_MODE_MASK) | ECL_FLAG_MOVE_MODE_ANGLE;
