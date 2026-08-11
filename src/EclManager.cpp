@@ -10,6 +10,7 @@
 #include "Gui.hpp"
 #include "ItemManager.hpp"
 #include "EffectManager.hpp"
+#include "AsciiManager.hpp"
 
 namespace th08
 {
@@ -864,6 +865,36 @@ restart:
                 goto skipInstr;
             case 125: // opcode 126 = 设置 interrupts 数组元素
                 enemy->interrupts[ECL_IVAL(1)] = (i16)ECL_IVAL(0);
+                goto skipInstr;
+            case 126: // opcode 127 = 设置/清除 boss 血条标记
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    if (v0 >= 0)
+                    {
+                        i32 idx = ECL_IVAL(0);
+                        g_BulletObjects[idx] = (u32)enemy;
+                        if (ECL_IVAL(0) == 0)
+                        {
+                            g_Gui.FUN_00422c20(1);
+                            g_Gui.FUN_004230c0(1.0f);
+                        }
+                        enemy->unk3324 |= 0x2;
+                        enemy->unk3313 = (u8)ECL_IVAL(0);
+                        g_AsciiManager.SetBossMarkerInterrupt(enemy->unk3313, 1);
+                        enemy->unk3350 = 0;
+                    }
+                    else
+                    {
+                        if (enemy->unk3313 < 4)
+                            g_Gui.FUN_00422c20(0);
+                        g_BulletObjects[enemy->unk3313] = 0;
+                        enemy->unk3324 &= ~0x2;
+                        g_AsciiManager.SetBossMarkerInterrupt(enemy->unk3313, 2);
+                        enemy->ClearEffectSlots();
+                        Float3 offscreenPos(-1000.0f, -1000.0f, 0.0f);
+                        g_AsciiManager.SetBossMarkerPosition(enemy->unk3313, &offscreenPos);
+                    }
+                }
                 goto skipInstr;
             case 120: // opcode 121 = RUN_EX_INS (子弹对象: unk598<2 时设状态)
                 {
