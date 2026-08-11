@@ -8,6 +8,12 @@
 namespace th08
 {
 
+// STUB: th08 0x4396f8 (AnmVm::FUN_004396f8)
+u32 __fastcall FUN_004396f8(AnmVm *vm)
+{
+    return 0;
+}
+
 DIFFABLE_STATIC(Gui, g_Gui);
 DIFFABLE_STATIC(ChainElem, g_GuiCalcChain);
 DIFFABLE_STATIC(ChainElem, g_GuiDrawChain);
@@ -147,16 +153,43 @@ void Gui::FreeMsgFile(void)
     }
 }
 
-// STUB: th08 0x437d87
+// FUNCTION: th08 0x437d87
 i32 Gui::FUN_00437d87()
 {
-    return 0;
+    i32 result;
+
+    if (*(i16 *)(*(i32 *)((u8 *)this + 8) + 0x398c) >= 0 &&
+        FUN_004396f8((AnmVm *)(*(i32 *)((u8 *)this + 8) + 0x3778)) != 0)
+    {
+        result = 1;
+    }
+    else
+    {
+        result = 0;
+    }
+    return result;
 }
 
-// STUB: th08 0x4358bb
+// FUNCTION: th08 0x4358bb
 i32 Gui::FUN_004358bb()
 {
-    return 0;
+    i32 result;
+
+    /* 无活动对象或对象未处于"等待"状态 → 0。 */
+    if (*(i32 *)((u8 *)this + 8) == 0)
+    {
+        return 0;
+    }
+    if (*(i32 *)(*(i32 *)((u8 *)this + 8) + 0x2181c) < 0 &&
+        *(i32 *)(*(i32 *)((u8 *)this + 8) + 0x2181c) != -2)
+    {
+        result = 0;
+    }
+    else
+    {
+        result = 1;
+    }
+    return result;
 }
 
 // FUNCTION: th08 0x43587e
