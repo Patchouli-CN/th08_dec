@@ -20,8 +20,8 @@ void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr);           // 0x4
 void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr);           // 0x4213f0
 EclRawInstr *__fastcall FUN_004215f0(Enemy *enemy, EclRawInstr *instr);   // 0x4215f0 子脚本 (op40-51)
 void __fastcall FUN_00420f40(Enemy *enemy, EclRawInstr *instr);           // 0x420f40
-void __fastcall FUN_00421bd0(Enemy *enemy, EclRawInstr *instr);           // 0x421bd0
-void __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr);           // 0x421cb0
+void __fastcall FUN_00421bd0(Enemy *enemy, EclRawInstr *instr, i32 arg0); // 0x421bd0
+i32 __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr);            // 0x421cb0
 void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr);           // 0x421e50
 void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr);           // 0x422020
 void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr);           // 0x4224a0
@@ -94,12 +94,13 @@ void __fastcall FUN_00420f40(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-void __fastcall FUN_00421bd0(Enemy *enemy, EclRawInstr *instr)
+void __fastcall FUN_00421bd0(Enemy *enemy, EclRawInstr *instr, i32 arg0)
 {
 }
 
-void __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr)
+i32 __fastcall FUN_00421cb0(Enemy *enemy, EclRawInstr *instr)
 {
+    return 0;
 }
 
 void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr)
@@ -323,6 +324,16 @@ restart:
                     }
                 }
                 goto skipInstr;
+            case 51: // opcode 52 = 子脚本上下文切换 (FUN_00421bd0)
+                FUN_00421bd0(enemy, instr, instr->args[0].i);
+                goto restart;
+            case 52: // opcode 53 = 子脚本 (FUN_00421cb0)
+                if (FUN_00421cb0(enemy, instr))
+                {
+                    enemy->curContextPtr->curInstr = instr;
+                    goto exit;
+                }
+                goto restart;
             case 53: // ECL_SET_ANM: play animation arg0
                 g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
                 enemy->unk3328 &= ~0x4;
