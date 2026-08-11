@@ -236,7 +236,7 @@ ZunResult EclManager::Load(const char *path)
 
 // FUNCTION: th08 0x4184b0 (逆向中)
 #pragma var_order(arg, subCtxIdx, instr, p4,                                                                            \
-                  p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19,                              \
+                  p5, p6, p7, p8, v89node, v89head, v90node, v90head, v91node, v91head, p15, p16, p17, p18, p19,       \
                   p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
                   p50, p51, p52, p53, p54, p55, p56, iInterp, t, flag, interp, savedPos, i, p65, p66,                 \
@@ -249,7 +249,8 @@ ZunResult EclManager::Load(const char *path)
                   v55f, v57a, v58a, v59a, v59b, v59c, v59d, v59e, v59f, v62a, v62b, v64a, v64b, v65a, v65b, v65c, \
                   v67a, v67b, v68a, v68b, v68c, v68d, v69a, v70a, v71a, v71b, v71c, v71d, v71e, v71f, v71g, \
                   v72a, v72b, v72c, v72d, v73a, v73b, v73c, v74a, v74b, v74c, v74d, v76a, v76b, v77a, v77b, \
-                  v78a, v79a, v80a, v85a, v85b, v86a, v86b, v86c, v87a, v88a, v88b, v88c)
+                  v78a, v79a, v80a, v85a, v85b, v86a, v86b, v86c, v87a, v88a, v88b, v88c, v89a, v90a, v91a, \
+                  v110a, v110b, v110c, v110d, v110e, v110f, v110g, v104a, v105a, v109a, v109b)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -257,7 +258,14 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 subCtxIdx = -1;
     i32 i;
     i32 p4;               // slot 4 (case 37/38 低槽临时, 尚未转换)
-    i32 p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19;
+    i32 p5, p6, p7, p8;
+    Enemy *v89node;       // slot 9 (case 89: 弹幕生成 node)
+    Enemy *v89head;       // slot 10 (case 89: 弹幕生成 head)
+    Enemy *v90node;       // slot 11 (case 90: 弹幕生成 node)
+    Enemy *v90head;       // slot 12 (case 90: 弹幕生成 head)
+    Enemy *v91node;       // slot 13 (case 91: 弹幕生成 node)
+    Enemy *v91head;       // slot 14 (case 91: 弹幕生成 head)
+    i32 p15, p16, p17, p18, p19;
     i32 p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34;
     i32 p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49;
     i32 p50, p51, p52, p53, p54, p55, p56;
@@ -331,6 +339,10 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v86a, v86b, v86c; // slots 218-220 (case 86: 子弹对象 float 变量)
     i32 v87a;       // slot 221 (case 87: 子弹对象子脚本)
     i32 v88a, v88b, v88c; // slots 222-224 (case 88: 子弹对象 interrupt)
+    i32 v89a, v90a, v91a; // slots 225-227 (case 89-91: IsYoukai 临时)
+    i32 v110a, v110b, v110c, v110d, v110e, v110f, v110g; // slots 228-234 (case 110: 激光数据)
+    i32 v104a, v105a;     // slots 235-236 (case 104/105: unk3060)
+    f32 v109a, v109b;     // slots 237-238 (case 109: 激光 moveVec2)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1175,106 +1187,103 @@ restart:
                 }
                 goto skipInstr;
             case 89: // opcode 90 = 生成弹幕子敌人 (GetLastSubEnemy/41f110 + 425b70)
+                v89head = GetLastSubEnemy(enemy);
+                v89node = InitBulletPattern(enemy, instr);
+                if (g_BulletSpawnFlag == 0)
                 {
-                    Enemy *head = GetLastSubEnemy(enemy);
-                    Enemy *node = InitBulletPattern(enemy, instr);
-                    if (g_BulletSpawnFlag == 0)
+                    v89node->flags |= ECL_FLAG_BULLET_SPAWNED;
+                    v89a = g_Player.IsYoukai();
+                    v89node->flags = (v89node->flags & ~ECL_FLAG_ISYOUKAI_MODE) | ((v89a & 1) << 0xb);
+                    v89node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
+                    v89node->flags &= ~0x4;
+                    if (v89node->unk53c8 == 0)
                     {
-                        node->flags |= ECL_FLAG_BULLET_SPAWNED;
-                        node->flags = (node->flags & ~ECL_FLAG_ISYOUKAI_MODE) | ((g_Player.IsYoukai() & 1) << 0xb);
-                        node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
-                        node->flags &= ~0x4;
-                        if (node->unk53c8 == 0)
+                        v89node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &v89node->pos, 1, -1);
+                        if (v89node->unk53c8 != 0)
                         {
-                            node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->pos, 1, -1);
-                            if (node->unk53c8 != 0)
-                            {
-                                AnmVm *obj = (AnmVm *)node->unk53c8;
-                                obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
-                                // 弹幕标志 bit2 → 特效 flags bit17 (屏幕方向)
-                                ((EffectManagerParticle *)obj)->flags =
-                                    (((EffectManagerParticle *)obj)->flags & ~0x20000) |
-                                    (((node->flags >> 2) & 1) << 0x11);
-                                if (node->unk2e0c & 1)
-                                    obj->prefix.angleVel.z = -obj->prefix.angleVel.z; // 反转角速度
-                            }
+                            AnmVm *obj = (AnmVm *)v89node->unk53c8;
+                            obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                            // 弹幕标志 bit2 → 特效 flags bit17 (屏幕方向)
+                            ((EffectManagerParticle *)obj)->flags =
+                                (((EffectManagerParticle *)obj)->flags & ~0x20000) |
+                                (((v89node->flags >> 2) & 1) << 0x11);
+                            if (v89node->unk2e0c & 1)
+                                obj->prefix.angleVel.z = -obj->prefix.angleVel.z; // 反转角速度
                         }
-                        node->ownerEnemy = enemy;
-                        head->unk8 = (i32)node;
-                        node->unk4 = (i32)head;
-                        enemy->subEnemyCount++;
                     }
-                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_SOUND_ENEMY_SPAWN, enemy->pos.x);
+                    v89node->ownerEnemy = enemy;
+                    v89head->unk8 = (i32)v89node;
+                    v89node->unk4 = (i32)v89head;
+                    enemy->subEnemyCount++;
                 }
+                g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_SOUND_ENEMY_SPAWN, enemy->pos.x);
                 goto skipInstr;
             case 90: // opcode 91 = 生成弹幕子敌人 (41f280 变体)
+                v90head = GetLastSubEnemy(enemy);
+                v90node = InitBulletPatternAbs(enemy, instr);
+                if (g_BulletSpawnFlag == 0)
                 {
-                    Enemy *head = GetLastSubEnemy(enemy);
-                    Enemy *node = InitBulletPatternAbs(enemy, instr);
-                    if (g_BulletSpawnFlag == 0)
+                    v90node->flags |= ECL_FLAG_BULLET_SPAWNED;
+                    v90a = g_Player.IsYoukai();
+                    v90node->flags = (v90node->flags & ~ECL_FLAG_ISYOUKAI_MODE) | ((v90a & 1) << 0xb);
+                    v90node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
+                    v90node->flags &= ~0x4;
+                    if (v90node->unk53c8 == 0)
                     {
-                        node->flags |= ECL_FLAG_BULLET_SPAWNED;
-                        node->flags = (node->flags & ~ECL_FLAG_ISYOUKAI_MODE) | ((g_Player.IsYoukai() & 1) << 0xb);
-                        node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
-                        node->flags &= ~0x4;
-                        if (node->unk53c8 == 0)
+                        v90node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &v90node->pos, 1, -1);
+                        if (v90node->unk53c8 != 0)
                         {
-                            node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->pos, 1, -1);
-                            if (node->unk53c8 != 0)
-                            {
-                                AnmVm *obj = (AnmVm *)node->unk53c8;
-                                obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
-                                // 弹幕标志 bit2 → 特效 flags bit17 (屏幕方向)
-                                ((EffectManagerParticle *)obj)->flags =
-                                    (((EffectManagerParticle *)obj)->flags & ~0x20000) |
-                                    (((node->flags >> 2) & 1) << 0x11);
-                                if (node->unk2e0c & 1)
-                                    obj->prefix.angleVel.z = -obj->prefix.angleVel.z; // 反转角速度
-                            }
+                            AnmVm *obj = (AnmVm *)v90node->unk53c8;
+                            obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                            // 弹幕标志 bit2 → 特效 flags bit17 (屏幕方向)
+                            ((EffectManagerParticle *)obj)->flags =
+                                (((EffectManagerParticle *)obj)->flags & ~0x20000) |
+                                (((v90node->flags >> 2) & 1) << 0x11);
+                            if (v90node->unk2e0c & 1)
+                                obj->prefix.angleVel.z = -obj->prefix.angleVel.z; // 反转角速度
                         }
-                        node->ownerEnemy = enemy;
-                        head->unk8 = (i32)node;
-                        node->unk4 = (i32)head;
-                        enemy->subEnemyCount++;
                     }
-                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_SOUND_ENEMY_SPAWN, enemy->pos.x);
+                    v90node->ownerEnemy = enemy;
+                    v90head->unk8 = (i32)v90node;
+                    v90node->unk4 = (i32)v90head;
+                    enemy->subEnemyCount++;
                 }
+                g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_SOUND_ENEMY_SPAWN, enemy->pos.x);
                 goto skipInstr;
             case 91: // opcode 92 = 生成弹幕子敌人 (pos 复制 + 移动向量)
+                v91head = GetLastSubEnemy(enemy);
+                v91node = InitBulletPattern(enemy, instr);
+                if (g_BulletSpawnFlag == 0)
                 {
-                    Enemy *head = GetLastSubEnemy(enemy);
-                    Enemy *node = InitBulletPattern(enemy, instr);
-                    if (g_BulletSpawnFlag == 0)
+                    v91node->flags |= ECL_FLAG_BULLET_SPAWNED;
+                    v91a = g_Player.IsYoukai();
+                    v91node->flags = (v91node->flags & ~ECL_FLAG_ISYOUKAI_MODE) | ((v91a & 1) << 0xb);
+                    v91node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
+                    v91node->moveVec = enemy->pos;
+                    v91node->movePos = v91node->moveVec + v91node->pos;
+                    v91node->flags &= ~0x4;
+                    if (v91node->unk53c8 == 0)
                     {
-                        node->flags |= ECL_FLAG_BULLET_SPAWNED;
-                        node->flags = (node->flags & ~ECL_FLAG_ISYOUKAI_MODE) | ((g_Player.IsYoukai() & 1) << 0xb);
-                        node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
-                        node->moveVec = enemy->pos;
-                        node->movePos = node->moveVec + node->pos;
-                        node->flags &= ~0x4;
-                        if (node->unk53c8 == 0)
+                        v91node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &v91node->movePos, 1, -1);
+                        if (v91node->unk53c8 != 0)
                         {
-                            node->unk53c8 = (u32)g_EffectManager.AllocEffectSlot(0x20, &node->movePos, 1, -1);
-                            if (node->unk53c8 != 0)
-                            {
-                                AnmVm *obj = (AnmVm *)node->unk53c8;
-                                obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
-                                // 弹幕标志 bit2 → 特效 flags bit17 (屏幕方向)
-                                ((EffectManagerParticle *)obj)->flags =
-                                    (((EffectManagerParticle *)obj)->flags & ~0x20000) |
-                                    (((node->flags >> 2) & 1) << 0x11);
-                                if (node->unk2e0c & 1)
-                                    obj->prefix.angleVel.z = -obj->prefix.angleVel.z; // 反转角速度
-                            }
+                            AnmVm *obj = (AnmVm *)v91node->unk53c8;
+                            obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                            // 弹幕标志 bit2 → 特效 flags bit17 (屏幕方向)
+                            ((EffectManagerParticle *)obj)->flags =
+                                (((EffectManagerParticle *)obj)->flags & ~0x20000) |
+                                (((v91node->flags >> 2) & 1) << 0x11);
+                            if (v91node->unk2e0c & 1)
+                                obj->prefix.angleVel.z = -obj->prefix.angleVel.z; // 反转角速度
                         }
-                        node->flags |= ECL_FLAG_TRACK_POS;
-                        node->ownerEnemy = enemy;
-                        head->unk8 = (i32)node;
-                        node->unk4 = (i32)head;
-                        enemy->subEnemyCount++;
                     }
-                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_SOUND_ENEMY_SPAWN, enemy->pos.x);
+                    v91node->flags |= ECL_FLAG_TRACK_POS;
+                    v91node->ownerEnemy = enemy;
+                    v91head->unk8 = (i32)v91node;
+                    v91node->unk4 = (i32)v91head;
+                    enemy->subEnemyCount++;
                 }
+                g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_SOUND_ENEMY_SPAWN, enemy->pos.x);
                 goto skipInstr;
             case 95: case 96: case 97: case 98: case 99: case 100:
             case 101: case 102: case 103:
