@@ -16,6 +16,8 @@ DIFFABLE_STATIC(EclManager, g_EclManager);
 i32 __fastcall GetVarValue(Enemy *enemy, i32 varId);                       // 0x41f420
 i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask);      // 0x41fe10
 f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused); // 0x420950
+void __fastcall FUN_00421280(Enemy *enemy, EclRawInstr *instr);           // 0x421280
+void __fastcall FUN_004212e0(Enemy *enemy, EclRawInstr *instr);           // 0x4212e0
 void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr);           // 0x421300
 void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr);           // 0x4213f0
 EclRawInstr *__fastcall FUN_004215f0(Enemy *enemy, EclRawInstr *instr);   // 0x4215f0 子脚本 (op40-51)
@@ -75,6 +77,14 @@ f32 Enemy::GetEclFloatVar(i32 varId)
 f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused)
 {
     return NULL;
+}
+
+void __fastcall FUN_00421280(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+void __fastcall FUN_004212e0(Enemy *enemy, EclRawInstr *instr)
+{
 }
 
 void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr)
@@ -527,6 +537,12 @@ restart:
                 enemy->unk2db8 = ECL_FVAL(0);
                 enemy->unk2dbc = ECL_FVAL(1);
                 enemy->unk2dc0 = 0;
+                goto skipInstr;
+            case 121: // opcode 122 = 子脚本 (FUN_00421280)
+                FUN_00421280(enemy, instr);
+                goto skipInstr;
+            case 122: // opcode 123 = 子脚本 (FUN_004212e0)
+                FUN_004212e0(enemy, instr);
                 goto skipInstr;
             case 137: // opcode 138 = 复制 3 字节到 unk3310/3311/3312
                 enemy->unk3310 = instr->args[0].b[0];
