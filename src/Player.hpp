@@ -134,6 +134,7 @@ struct Player
     void FUN_00451150();
     void FUN_00451500();
     void FUN_0044d420();
+    void FUN_0044e370();
 };
 
 DIFFABLE_EXTERN(Player, g_Player);

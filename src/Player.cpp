@@ -266,6 +266,11 @@ void Player::FUN_0044d420()
 {
 }
 
+// STUB: th08 0x44e370
+void Player::FUN_0044e370()
+{
+}
+
 // FUNCTION: th08 0x44d530
 ChainCallbackResult Player::OnDrawHighPrio(Player *player)
 {
@@ -330,9 +335,145 @@ ChainCallbackResult Player::OnDrawLowPrio(Player *player)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
-// STUB: th08 0x44d650
+// FUNCTION: th08 0x44d650 (32% FIXME: 初步实现，LoadShtFile 约定/anm 变量/字段待迭代)
 ZunResult Player::AddedCallback(Player *player)
 {
+    AnmLoaded *anm;
+    i32 i;
+
+    if (g_Supervisor.GetUnk164())
+    {
+        if (((ZunResult(__fastcall *)(PlayerRawShtFile **, const char *))0x44dd70)(
+                (PlayerRawShtFile **)&player->unkE2a74, *(const char **)(0x4c7ce0 + *(u8 *)0x164d0b1 * 4)) != 0)
+        {
+            return (ZunResult)-1;
+        }
+
+        if (((ZunResult(__fastcall *)(PlayerRawShtFile **, const char *))0x44dd70)(
+                (PlayerRawShtFile **)&player->unkE2a78, *(const char **)(0x4c7d10 + *(u8 *)0x164d0b1 * 4)) != 0)
+        {
+            return (ZunResult)-1;
+        }
+
+        *(AnmLoaded **)((u8 *)player + 0xc) =
+            g_AnmManager->PreloadAnm(5, *(const char **)(0x4c7cb0 + *(u8 *)0x164d0b1 * 4));
+
+        if (*(AnmLoaded **)((u8 *)player + 0xc) == NULL)
+        {
+            return (ZunResult)-1;
+        }
+    }
+    else
+    {
+        *(AnmLoaded **)((u8 *)player + 0xc) = g_AnmManager->GetAnm(5);
+    }
+
+    anm = *(AnmLoaded **)((u8 *)player + 0xc);
+
+    if (*(u8 *)0x164d0b1 >= 4 && (*(u8 *)0x164d0b1 & 1))
+    {
+        anm->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 5);
+    }
+    else
+    {
+        anm->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 0);
+    }
+
+    {
+        Float3 f0 = Float3(*(f32 *)0x164d2e4 / *(f32 *)0x4b42ec, *(f32 *)0x164d2e8 - *(f32 *)0x4b42c8, 0.48f);
+        Float3 f1 = Float3(*(f32 *)0x164d2e4 / *(f32 *)0x4b42ec, *(f32 *)0x164d2e8 - *(f32 *)0x4b42c8, 0.48f);
+
+        *(Float3 *)((u8 *)player + 0x2c0) = f0;
+        *(Float3 *)((u8 *)player + 0x2e0) = f1;
+    }
+
+    for (i = 0; i < 0x180; i++)
+    {
+        player->FUN_0044e370();
+    }
+
+    *(f32 *)((u8 *)player + 0x3d8) = *(f32 *)((u8 *)g_PlayerShtFile + 0x3d8);
+    *(f32 *)((u8 *)player + 0x3d4) = *(f32 *)((u8 *)player + 0x3d8);
+    *(f32 *)((u8 *)player + 0x3dc) = 5.0f;
+    *(f32 *)((u8 *)player + 0x3e4) = *(f32 *)((u8 *)g_PlayerShtFile + 0x3e4);
+    *(f32 *)((u8 *)player + 0x3e0) = *(f32 *)((u8 *)player + 0x3e4);
+    *(f32 *)((u8 *)player + 0x3e8) = 5.0f;
+    *(f32 *)((u8 *)player + 0x3f0) = *(f32 *)((u8 *)g_PlayerShtFile + 0x3f0);
+    *(f32 *)((u8 *)player + 0x3ec) = *(f32 *)((u8 *)player + 0x3f0);
+    *(f32 *)((u8 *)player + 0x3f4) = 5.0f;
+
+    *(i32 *)((u8 *)player + 0xe2a98) = 0;
+
+    if (g_GameManager.GetFlag14())
+    {
+        player->FUN_0044d420();   // ? 需要精确
+    }
+
+    for (i = 0; i < 4; i++)
+    {
+        ((ZunTimer *)((u8 *)player + 0x410 + i * 0x40))->SetCurrent(0);
+    }
+
+    *(u8 *)((u8 *)player + 0x2) = 1;
+
+    for (i = 0; i < 0x80; i++)
+    {
+        *(u16 *)((u8 *)player + 0x462 + i * 0x484) = 0;
+    }
+
+    for (i = 0; i < 0x20; i++)
+    {
+        ((ZunTimer *)((u8 *)player + 0x228 + i * 0x10))->SetCurrent(0);
+    }
+
+    /* 表数据拷贝 */
+    for (i = 0; i < 0x1e; i++)
+    {
+        *(u32 *)((u8 *)player + 0x3d4 + i * 0x20) = *(u32 *)(0x18b896c + *(u8 *)0x164d0b1 * 4 + i * 0x20);
+    }
+
+    *(i32 *)((u8 *)player + 0xfdc) = 0;
+    *(f32 *)((u8 *)player + 0xe2b0c) = -1.57f;
+    *(f32 *)((u8 *)player + 0x408) = 1.0f;
+    *(f32 *)((u8 *)player + 0x404) = 1.0f;
+    *(i32 *)((u8 *)player + 0xe2a68) = *(i32 *)((u8 *)g_PlayerShtFile + 0x8);
+
+    if (g_Supervisor.GetUnk164())
+    {
+        g_AsciiManager.SetGaugeInterrupt(1);
+    }
+
+    g_AsciiManager.SetBossMarkerInterrupt(0, 2);
+    g_AsciiManager.SetBossMarkerInterrupt(1, 2);
+    g_AsciiManager.SetBossMarkerInterrupt(2, 2);
+
+    if (*(u8 *)0x164d0b1 != 3 && g_GameManager.IsSoloHuman() != 0 && g_GameManager.IsSoloYoukai() == 0)
+    {
+        *(u16 *)0x164d300 = 0xf830;
+        *(u16 *)0x164d304 = 0xe0c0;
+        *(u16 *)0x164d308 = 0xf82f;
+    }
+
+    *(i32 *)((u8 *)player + 0xe2b24) = 0;
+
+    for (i = 0; i < 0x10; i++)
+    {
+        *(Float3 *)((u8 *)player + 0x3d4 + i * 0xc) = Float3(0.0f, 0.0f, 0.0f);
+    }
+
+    *(u8 *)((u8 *)player + 0x3) = 2;
+
+    for (i = 0; i < 4; i++)
+    {
+        memset((void *)((u8 *)player + 0x3d4 + i * 0x100), 0, 0x100);
+    }
+
+    if (*(u8 *)0x164d0b1 < 4)
+    {
+        *(i32 *)((u8 *)player + 0x2ec) = *(i32 *)(0x4c7d40 + *(u8 *)0x164d0b1 * 4);
+        *(i32 *)((u8 *)player + 0x2f0) = *(i32 *)(0x4c7e10 + *(u8 *)0x164d0b1 * 4);
+    }
+
     return ZUN_SUCCESS;
 }
 
