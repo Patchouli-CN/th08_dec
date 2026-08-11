@@ -562,6 +562,9 @@ restart:
             case 150: // opcode 151 = 设置 unk3324 bit26
                 enemy->unk3324 = (enemy->unk3324 & ~0x4000000) | ((instr->args[0].b[0] & 1) << 0x1a);
                 goto skipInstr;
+            case 144: // opcode 145 = 设置 unk3324 bit25
+                enemy->unk3324 = (enemy->unk3324 & ~0x2000000) | ((instr->args[0].b[0] & 1) << 0x19);
+                goto skipInstr;
             case 153: // opcode 154 = 清空 unk3280[0x20]
                 for (i = 0; i < 0x20; i++)
                 {
