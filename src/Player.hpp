@@ -123,6 +123,8 @@ struct Player
     f32 AngleToPlayer(Float3 *pos);
     void FUN_004512f0();
     i32 FUN_00449ff0(void *unkD34, void *unkD44);
+    i32 FUN_0040bc20();
+    i32 FUN_0040bc40();
 };
 
 DIFFABLE_EXTERN(Player, g_Player);

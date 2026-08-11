@@ -4,6 +4,7 @@
 #include "AnmManager.hpp"
 #include "EffectManager.hpp"
 #include "Gui.hpp"
+#include "Player.hpp"
 #include "ScreenEffect.hpp"
 
 namespace th08
@@ -1013,9 +1014,82 @@ void __fastcall Background::FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3
     }
 }
 
-// STUB: th08 0x409f40
+// FUNCTION: th08 0x409f40 (65% FIXME: 寄存器/寻址 lea vs add)
 void Background::FUN_00409f40()
 {
+    i32 i;
+
+    if (this->unk0x834 != 0)
+    {
+        if (g_Player.FUN_0040bc20() != 0)
+        {
+            this->unk0x834 = 0;
+            this->timer0x838.SetCurrent(0);
+            this->unk0x844.SetInterrupt(2);
+        }
+    }
+    else
+    {
+        if (g_Player.FUN_0040bc40() != 0)
+        {
+            this->unk0x834 = 1;
+            this->timer0x838.SetCurrent(0);
+            this->unk0x844.SetInterrupt(1);
+        }
+    }
+
+    this->timer0x838.Tick();
+    g_AnmManager->ExecuteScript(&this->unk0x844);
+
+    for (i = 0; i < *(i32 *)((u8 *)this + 0x7fc); i++)
+    {
+        void *elem = (*(void ***)((u8 *)this + 0x800))[i];
+        void *cmd;
+        AnmVm *vm;
+        i32 count;
+
+        if (((*(i8 *)((u8 *)elem + 3)) & 1))
+        {
+            count = 0;
+            cmd = (u8 *)elem + 0x1c;
+
+            while (*(i16 *)cmd >= 0)
+            {
+                vm = (AnmVm *)((u8 *)this + *(i16 *)((u8 *)cmd + 0x6) * 0x2a4);
+
+                switch (*(i16 *)cmd)
+                {
+                case 0:
+                    g_AnmManager->ExecuteScript(vm);
+                    break;
+                case 1:
+                    g_AnmManager->ExecuteScript(vm);
+                    break;
+                }
+
+                if (*(i32 *)((u8 *)vm + 0x220) != 0)
+                {
+                    count++;
+                }
+
+                cmd = (u8 *)cmd + *(i16 *)((u8 *)cmd + 0x2);
+            }
+
+            if (*(i16 *)((u8 *)vm + 0x1fc) == 1)
+            {
+                *(u32 *)((u8 *)vm + 0x1f8) |= 0x20000;
+                *(u8 *)((u8 *)vm + 0x1f6) = (u8)((*(u8 *)((u8 *)vm + 0x1f2) * *(u8 *)((u8 *)this + 0xa36)) >> 8);
+                *(u8 *)((u8 *)vm + 0x1f5) = (u8)((*(u8 *)((u8 *)vm + 0x1f1) * *(u8 *)((u8 *)this + 0xa35)) >> 8);
+                *(u8 *)((u8 *)vm + 0x1f4) = (u8)((*(u8 *)((u8 *)vm + 0x1f0) * *(u8 *)((u8 *)this + 0xa34)) >> 8);
+                *(u8 *)((u8 *)vm + 0x1f7) = (u8)((*(u8 *)((u8 *)vm + 0x1f3) * *(u8 *)((u8 *)this + 0xa37)) >> 8);
+            }
+
+            if (count == 0)
+            {
+                *(u8 *)((u8 *)elem + 3) &= ~0x1;
+            }
+        }
+    }
 }
 
 // FUNCTION: th08 0x426d10

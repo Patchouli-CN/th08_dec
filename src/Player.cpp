@@ -143,6 +143,18 @@ i32 Player::FUN_00449ff0(void *unkD34, void *unkD44)
     return 0;
 }
 
+// STUB: th08 0x40bc20
+i32 Player::FUN_0040bc20()
+{
+    return 0;
+}
+
+// STUB: th08 0x40bc40
+i32 Player::FUN_0040bc40()
+{
+    return 0;
+}
+
 // FUNCTION: th08 0x44d530
 ChainCallbackResult Player::OnDrawHighPrio(Player *player)
 {
