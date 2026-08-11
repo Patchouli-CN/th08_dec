@@ -961,6 +961,33 @@ restart:
             case 140: // opcode 141 = 生成物品
                 g_ItemManager.SpawnItem(&enemy->pos, (ItemType)ECL_IVAL(0), 0);
                 goto skipInstr;
+            case 141: // opcode 142 = 随机撒物品 (依 power 决定类型)
+                {
+                    i32 count = ECL_IVAL(0);
+                    for (i = 0; i < count; i++)
+                    {
+                        Float3 pos = enemy->pos;
+                        pos.x += g_Rng.GetRandomF32() * *(f32 *)0x4b443c - *(f32 *)0x4b42c8; // *128 - 32
+                        pos.y += g_Rng.GetRandomF32() * *(f32 *)0x4b443c - *(f32 *)0x4b42c8;
+                        if (g_GameManager.GetPower() < 0x80)
+                            g_ItemManager.SpawnItem(&pos, (ItemType)(i == 0 ? 2 : 0), 0);
+                        else
+                            g_ItemManager.SpawnItem(&pos, (ItemType)1, 0);
+                    }
+                }
+                goto skipInstr;
+            case 167: // opcode 168 = 随机撒物品 (固定类型 1)
+                {
+                    i32 count = ECL_IVAL(0);
+                    for (i = 0; i < count; i++)
+                    {
+                        Float3 pos = enemy->pos;
+                        pos.x += g_Rng.GetRandomF32() * *(f32 *)0x4b443c - *(f32 *)0x4b42c8; // *128 - 32
+                        pos.y += g_Rng.GetRandomF32() * *(f32 *)0x4b443c - *(f32 *)0x4b42c8;
+                        g_ItemManager.SpawnItem(&pos, (ItemType)1, 0);
+                    }
+                }
+                goto skipInstr;
             case 130: // opcode 131 = 设置激光字段 unk2e00/2dfc/2e04 + 若条件清 Gui
                 enemy->unk2e00 = ECL_IVAL(0);
                 enemy->unk2dfc = ECL_IVAL(0);
