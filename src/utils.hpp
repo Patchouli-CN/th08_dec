@@ -2,6 +2,19 @@
 
 #include "inttypes.hpp"
 
+// A raw ECL instruction argument: integer / float / pointer depending on the
+// opcode and the instruction's parameter mask.
+union AnyArg
+{
+    i32 i;
+    u32 u;
+    f32 f;
+    i16 s[2];
+    u16 us[2];
+    i8 c[4];
+    u8 b[4];
+};
+
 #define ZUN_BIT(a) (1 << (a))
 
 #define MAKE_FOURCC(a, b, c, d) ((a & 0xff) | ((b & 0xff) << 8) | ((c & 0xff) << 16) | ((d & 0xff) << 24))

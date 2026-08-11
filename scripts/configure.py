@@ -99,6 +99,7 @@ def configure(build_type):
         cxx_flags_per_source = {
             "AsciiManager": debug_codegen,
             "Background": debug_codegen,
+            "EclManager": debug_codegen,
             "SpellCard": debug_codegen,
             "Ending": debug_codegen,
             "EnemyManager": debug_codegen,
@@ -134,6 +135,7 @@ def configure(build_type):
         cxx_sources = [
             "AsciiManager",
             "Background",
+            "EclManager",  # ecl.obj
             "SpellCard",  # card.obj
             "Ending",
             "EnemyManager",
