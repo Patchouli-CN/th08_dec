@@ -74,12 +74,21 @@ ZunResult EclManager::Load(const char *path)
 }
 
 // FUNCTION: th08 0x4184b0 (逆向中)
+#pragma var_order(arg, subCtxIdx, instr, i,                                                                           \
+                  p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19,                              \
+                  p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
+                  p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
+                  p50, p51, p52, p53, p54, p55, p56, p57)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
     i32 arg;
     i32 subCtxIdx = -1;
     i32 i;
+    i32 p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19;
+    i32 p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34;
+    i32 p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49;
+    i32 p50, p51, p52, p53, p54, p55, p56, p57;
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -115,10 +124,7 @@ restart:
             case 0: // ECL_UNIMP
                 return ZUN_ERROR;
             case 1: // ECL_SET_WAIT_TIMER: waitTimer = arg0
-                {
-                    i32 v0 = ECL_IVAL(0);
-                    enemy->curContextPtr->waitTimer.SetCurrent(v0);
-                }
+                enemy->curContextPtr->waitTimer.SetCurrent(ECL_IVAL(0));
                 goto skipInstr;
             case 2: // ECL_NOP
                 goto skipInstr;
