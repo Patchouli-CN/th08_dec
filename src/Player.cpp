@@ -338,8 +338,8 @@ void Player::FUN_0044c650()
         {
             FUN_00416130(&g_Spellcard);
             *(i32 *)((u8 *)this + 0xfdc) = 0;
-            *(f32 *)((u8 *)this + 0x408) = 1.0f;
-            *(f32 *)((u8 *)this + 0x404) = 1.0f;
+            this->unk408 = 1.0f;
+            this->unk404 = 1.0f;
 
             if (*(i32 *)((u8 *)this + 0xfe0) == 4)
             {
@@ -498,8 +498,8 @@ void Player::FUN_0044d180()
 
     ((Player *)((u8 *)this + 0x10))->FUN_0044e0f0();
 
-    *(f32 *)((u8 *)this + 0x408) = 1.0f;
-    *(f32 *)((u8 *)this + 0x404) = 1.0f;
+    this->unk408 = 1.0f;
+    this->unk404 = 1.0f;
 
     *(i32 *)((u8 *)this + 0x200) =
         ((((ZunTimer *)((u8 *)this + 0xe2af4))->AsFrames() * 0xff) / 30 << 0x18) | 0xffffff;
@@ -868,15 +868,15 @@ ZunResult Player::AddedCallback(Player *player)
         ((Player *)&player->shots[i])->FUN_0044e370();
     }
 
-    *(f32 *)((u8 *)player + 0x3d8) = *(f32 *)((u8 *)g_PlayerShtFile + 0xc) / *(f32 *)0x4b42ec;
-    *(f32 *)((u8 *)player + 0x3d4) = *(f32 *)((u8 *)player + 0x3d8);
-    *(f32 *)((u8 *)player + 0x3dc) = 5.0f;
-    *(f32 *)((u8 *)player + 0x3e4) = *(f32 *)((u8 *)g_PlayerShtFile + 0x10) / *(f32 *)0x4b42ec;
-    *(f32 *)((u8 *)player + 0x3e0) = *(f32 *)((u8 *)player + 0x3e4);
-    *(f32 *)((u8 *)player + 0x3e8) = 5.0f;
-    *(f32 *)((u8 *)player + 0x3f0) = *(f32 *)((u8 *)g_PlayerShtFile + 0x18) / *(f32 *)0x4b42ec;
-    *(f32 *)((u8 *)player + 0x3ec) = *(f32 *)((u8 *)player + 0x3f0);
-    *(f32 *)((u8 *)player + 0x3f4) = 5.0f;
+    player->shotSpeed3d8 = *(f32 *)((u8 *)g_PlayerShtFile + 0xc) / *(f32 *)0x4b42ec;
+    player->shotSpeed3d4 = player->shotSpeed3d8;
+    player->unk3dc = 5.0f;
+    player->shotSpeed3e4 = *(f32 *)((u8 *)g_PlayerShtFile + 0x10) / *(f32 *)0x4b42ec;
+    player->shotSpeed3e0 = player->shotSpeed3e4;
+    player->unk3e8 = 5.0f;
+    player->shotSpeed3f0 = *(f32 *)((u8 *)g_PlayerShtFile + 0x18) / *(f32 *)0x4b42ec;
+    player->shotSpeed3ec = player->shotSpeed3f0;
+    player->unk3f4 = 5.0f;
 
     player->unkE2a98 = 0;
 
@@ -902,8 +902,8 @@ ZunResult Player::AddedCallback(Player *player)
 
     *(i32 *)((u8 *)player + 0xfdc) = 0;
     player->unkE2b0c = -1.57f;
-    *(f32 *)((u8 *)player + 0x408) = 1.0f;
-    *(f32 *)((u8 *)player + 0x404) = 1.0f;
+    player->unk408 = 1.0f;
+    player->unk404 = 1.0f;
     player->shotIndex = *(i32 *)((u8 *)g_PlayerShtFile + 0x8);
 
     if (g_Supervisor.GetUnk164())
@@ -966,17 +966,17 @@ ZunResult Player::AddedCallback(Player *player)
         for (u32 k = 0; k < 4; k++, opt++)
         {
             memset(opt, 0, 0x2f4);
-            *(i32 *)((u8 *)opt + 0x2ec) = *(i32 *)(0x4c7d40 + g_PlayerCharacter * 0x10 + k * 4);
-            *(i32 *)((u8 *)opt + 0x2f0) = *(i32 *)(0x4c7e10 + g_PlayerCharacter * 0x10 + k * 4);
-            if (*(i32 *)((u8 *)opt + 0x2ec) != 0)
+            opt->unk2ec = *(i32 *)(0x4c7d40 + g_PlayerCharacter * 0x10 + k * 4);
+            (i32 &)opt->func = *(i32 *)(0x4c7e10 + g_PlayerCharacter * 0x10 + k * 4);
+            if (opt->unk2ec != 0)
             {
-                *(i32 *)((u8 *)opt + 0x2c8) = 1;
-                ((ZunTimer *)((u8 *)opt + 0x2e0))->SetCurrent(0);
-                *(i32 *)((u8 *)opt + 0x2d0) = k;
+                opt->unk2c8 = 1;
+                opt->timer2e0.SetCurrent(0);
+                opt->unk2d0 = k;
             }
             else
             {
-                *(i32 *)((u8 *)opt + 0x2c8) = 0;
+                opt->unk2c8 = 0;
             }
         }
     }

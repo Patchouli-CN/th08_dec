@@ -116,12 +116,29 @@ struct Player
     unknown_fields(0x2c0, 0xfc);
     Float3 grabItemTopLeft;
     Float3 grabItemBottomRight;
-    unknown_fields(0x3d4, 0x38);
+    f32 shotSpeed3d4;            // 0x3d4
+    f32 shotSpeed3d8;            // 0x3d8
+    f32 unk3dc;                  // 0x3dc
+    f32 shotSpeed3e0;            // 0x3e0
+    f32 shotSpeed3e4;            // 0x3e4
+    f32 unk3e8;                  // 0x3e8
+    f32 shotSpeed3ec;            // 0x3ec
+    f32 shotSpeed3f0;            // 0x3f0
+    f32 unk3f4;                  // 0x3f4
+    unknown_fields(0x3f8, 0xc);
     struct PlayerOption
     {
-        u8 unk[0x2f0];
+        unknown_fields(0x0, 0x2c8);
+        i32 unk2c8;              // 0x2c8
+        unknown_fields(0x2cc, 0x4);
+        i32 unk2d0;              // 0x2d0
+        unknown_fields(0x2d4, 0xc);
+        ZunTimer timer2e0;       // 0x2e0
+        i32 unk2ec;              // 0x2ec
         void (Player::*func)();  // 0x2f0
     };
+    f32 unk404;                  // 0x404
+    f32 unk408;                  // 0x408
     PlayerOption options[4];     // 0x40c
     i32 unkFdc;                  // 0xfdc  shot-in-progress flag
     i32 unkFe0;                  // 0xfe0  shot type index
