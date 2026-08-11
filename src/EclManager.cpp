@@ -230,11 +230,11 @@ ZunResult EclManager::Load(const char *path)
 }
 
 // FUNCTION: th08 0x4184b0 (逆向中)
-#pragma var_order(arg, subCtxIdx, instr, i,                                                                           \
+#pragma var_order(arg, subCtxIdx, instr, p4,                                                                            \
                   p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19,                              \
                   p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
-                  p50, p51, p52, p53, p54, p55, p56, p57, p58, p59, p60, p61, p62, p63, p64, p65, p66,               \
+                  p50, p51, p52, p53, p54, p55, p56, iInterp, t, flag, interp, savedPos, i, p65, p66,                 \
                   p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81, p82, v1, p84, p85, v5, \
                   v6, v7, v8a, v8b, v8c, v9a, v9b, v14a, v14b, v10a, v10b, v15a, v15b, v11a, v11b, v16a, v16b, \
                   v12a, v12b, v17a, v17b, v13a, v13b, v18b, v18a, v18c, v19a, v19b, v24a, v24b, v24c, v20a, v20b, \
@@ -248,12 +248,19 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 arg;
     i32 subCtxIdx = -1;
     i32 i;
+    i32 p4;               // slot 4 (case 37/38 低槽临时, 尚未转换)
     i32 p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19;
     i32 p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34;
     i32 p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49;
-    i32 p50, p51, p52, p53, p54, p55, p56, p57, p58, p59, p60, p61, p62, p63, p64, p65;
-    i32 p66, p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81;
-    i32 p82;
+    i32 p50, p51, p52, p53, p54, p55, p56;
+    i32 p65, p66, p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80;
+    i32 p81, p82;
+    // exit 块变量 (槽 57-65): iInterp@57, t@58, flag@59, interp@60, savedPos@61-63, i@64
+    i32 iInterp;
+    f32 t;
+    i32 flag;
+    EclInterp *interp;
+    Float3 savedPos;
     i32 v1;   // slot 83 (case 1: SET_WAIT_TIMER)
     i32 p84;  // slot 84 (case 4: DEC_JUMP GetIntPtr ptr, not yet converted)
     i32 p85;  // slot 85 (case 4: DEC_JUMP arg1, not yet converted)
@@ -1693,18 +1700,17 @@ exit:
     // Laser/interp wind-down, then switch to any remaining sub-context.
     if (enemy->laserActive > 0)
     {
-        i32 flag = 0;
-        EclInterp *interp = &enemy->curContextPtr->interps[0];
-        Float3 savedPos = enemy->pos;
+        flag = 0;
+        interp = &enemy->curContextPtr->interps[0];
+        savedPos = enemy->pos;
         if (enemy->curContextPtr->func != NULL)
         {
             enemy->curContextPtr->func(enemy, enemy->curContextPtr->eclExInstr);
         }
-        for (i = 0; i < 8; i++, interp++)
+        for (iInterp = 0; iInterp < 8; iInterp++, interp++)
         {
             if (interp->fn != NULL)
             {
-                f32 t;
                 i32 type;
                 interp->timer.Tick();
                 if (interp->timer >= interp->args[0].i)
