@@ -106,13 +106,28 @@ struct ReplayManager
     static ZunResult RegisterChain(i32 param_1, char *path);
     static void StopRecording();
 
+    ReplayManager();
+    void FUN_004522a0();
+    void FUN_00452830();
+    void FUN_00452d60();
+
     unknown_fields(0x0, 0x8);
     ReplayData *unk8;                    // 0x8
-    unknown_fields(0xc, 0x44);
+    i32 unkC;                            // 0xc
+    i32 unk10;                           // 0x10  recording mode
+    char *unk14;                         // 0x14  replay path
+    Float3 unk18;                        // 0x18
+    Float3 unk24;                        // 0x24
+    Float3 unk30;                        // 0x30
+    unknown_fields(0x3c, 0x14);
     u8 *unk50;
     u8 *unk54[MAX_STAGES];
-    unknown_fields(0x78, 0x62);
-    u16 replayEventFlags;
+    unknown_fields(0x78, 0x50);
+    ChainElem *unkC8;                    // 0xc8
+    ChainElem *unkD0;                    // 0xd0
+    ChainElem *unkD4;                    // 0xd4
+    unknown_fields(0xd8, 0x2);
+    u16 replayEventFlags;                // 0xda
 };
 
 DIFFABLE_EXTERN(ReplayManager *, g_ReplayManager);

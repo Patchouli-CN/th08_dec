@@ -282,5 +282,7 @@ DIFFABLE_EXTERN(i32, g_OptionUpdateCallbacks[8][4]);
 DIFFABLE_EXTERN_ARRAY(i32, 4, g_SpiritOptionInitCallbacks);
 DIFFABLE_EXTERN_ARRAY(i32, 4, g_SpiritOptionUpdateCallbacks);
 DIFFABLE_EXTERN(i32, g_Unknown164d2cc);
+DIFFABLE_EXTERN(u16, g_KeyInput);
+DIFFABLE_EXTERN(u16, g_KeyInput2);
 
 } /* namespace th08 */
