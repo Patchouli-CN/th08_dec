@@ -208,7 +208,7 @@ ChainCallbackResult Player::OnUpdate(Player *player)
 
         if (player->barrierParticle != 0)
         {
-            player->barrierParticle->unk1f8 |= 0x80000;
+            player->barrierParticle->flags |= 0x80000;
         }
 
         return CHAIN_CALLBACK_RESULT_CONTINUE;
@@ -221,7 +221,7 @@ ChainCallbackResult Player::OnUpdate(Player *player)
 
     if (player->barrierParticle != 0)
     {
-        player->barrierParticle->unk1f8 &= 0xfff7ffff;
+        player->barrierParticle->flags &= 0xfff7ffff;
     }
 
     player->FUN_0044c5b0();

@@ -23,7 +23,7 @@ struct EffectManagerParticle
     unknown_fields(0x0, 0x1f0);
     u32 unk1f0;                       // 0x1f0
     unknown_fields(0x1f4, 0x4);
-    u32 unk1f8;                       // 0x1f8
+    u32 flags;                        // 0x1f8  (0x2000 set by spawn, 0x20000 = screen-flip marker)
     unknown_fields(0x1fc, 0x8c);
     u32 unk288;                       // 0x288
     u32 unk28c;                       // 0x28c
@@ -32,7 +32,9 @@ struct EffectManagerParticle
     Float3 unk2a4;                    // 0x2a4
     unknown_fields(0x2b0, 0x24);
     Float3 unk2d4;                    // 0x2d4
-    unknown_fields(0x2e0, 0x48);
+    unknown_fields(0x2e0, 0xc);
+    Float3 unk2ec;                    // 0x2ec  (op128 写入的特效位置)
+    unknown_fields(0x2f8, 0x30);
     u32 unk328;                       // 0x328
     unknown_fields(0x32c, 0x1c);
     u32 unk348;                       // 0x348

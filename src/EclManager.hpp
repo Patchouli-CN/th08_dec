@@ -75,6 +75,18 @@ struct EclContext
 };
 C_ASSERT(sizeof(EclContext) == 0x228);
 
+// A per-sub-context save block (op135 allocates one, 0x24b0 bytes).
+// 0x0 subId + 0x6 stackDepth + 0x8 EclContext + 0x230 saved context stack.
+struct EclDataSlot
+{
+    i32 subId;                    // 0x0
+    unknown_fields(0x4, 0x2);
+    i16 stackDepth;               // 0x6
+    EclContext context;           // 0x8 (0x228)
+    EclContext savedStack[16];    // 0x230 (16 * 0x228 = 0x2280)
+};
+C_ASSERT(sizeof(EclDataSlot) == 0x24b0);
+
 // The scratch sub-ID → EclContext table at 0x4eccb8 (op125/op135 interrupt setup).
 struct EclInterruptTable
 {

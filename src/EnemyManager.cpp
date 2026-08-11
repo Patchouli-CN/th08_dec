@@ -410,7 +410,7 @@ AnmVm *EffectManager::FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c)
         p->unk2a4 = *pos;
         this->unk8b054->SetAndExecuteScriptIdx((AnmVm *)p, g_EffectTemplates[a].field0);
 
-        p->unk1f8 |= 0x2000;
+        p->flags |= 0x2000;
         p->unk1f0 = c;
         p->unk288 = 0;
         p->unk28c = 0;
@@ -477,7 +477,7 @@ AnmVm *EffectManager::FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d)
         this->unk8b054->SetAndExecuteScriptIdx((AnmVm *)p, g_EffectTemplates[a].field0);
     }
 
-    p->unk1f8 |= 0x2000;
+    p->flags |= 0x2000;
     p->unk1f0 = d;
     p->unk288 = 0;
     p->unk28c = 0;

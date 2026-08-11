@@ -186,7 +186,7 @@ struct Enemy
     i32 unk3378;                       // 0x3378  (initialized to -1)
     i32 unk337c;                       // 0x337c
     i32 subEnemyCount;                       // 0x3380  (sub-enemy chain count)
-    void *dataSlots[4];                 // 0x3384
+    EclDataSlot *dataSlots[4];             // 0x3384
     unknown_fields(0x3394, 0x1fb8);    // 0x3394-0x534c
     u8 unk534c;                        // 0x534c  (tutorial/boss-ai flags, bit3 gate)
     i16 unk534e;                       // 0x534e
