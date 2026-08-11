@@ -538,6 +538,9 @@ restart:
                 enemy->unk2dbc = ECL_FVAL(1);
                 enemy->unk2dc0 = 0;
                 goto skipInstr;
+            case 115: // opcode 116 = 设置 unk3300
+                enemy->unk3300 = ECL_IVAL(0);
+                goto skipInstr;
             case 121: // opcode 122 = 子脚本 (FUN_00421280)
                 FUN_00421280(enemy, instr);
                 goto skipInstr;

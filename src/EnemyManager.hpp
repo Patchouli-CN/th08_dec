@@ -65,7 +65,9 @@ struct Enemy
     i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
     unknown_fields(0x2e00, 0x234);     // 0x2e00-0x3034
     u8 unk3034[0x2c];                  // 0x3034 (0x2c bytes)
-    unknown_fields(0x3060, 0x2b0);     // 0x3060-0x3310
+    unknown_fields(0x3060, 0x2a0);     // 0x3060-0x3300
+    i32 unk3300;                       // 0x3300
+    unknown_fields(0x3304, 0xc);       // 0x3304-0x3310
     u8 unk3310;                        // 0x3310
     u8 unk3311;                        // 0x3311
     u8 unk3312;                        // 0x3312
