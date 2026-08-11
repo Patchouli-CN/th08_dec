@@ -10,6 +10,7 @@ namespace th08
 struct Enemy
 {
     void FUN_0042bc90();
+    f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
     unknown_fields(0x0, 0x7f8);
     EclContext eclContext;             // 0x7f8  current ECL execution context
@@ -24,8 +25,12 @@ struct Enemy
     i16 runInterrupt;                  // 0x2d30  >= 0 forces the interrupt path
     unknown_fields(0x2d32, 0x2);
     Float3 pos;                        // 0x2d34
-    unknown_fields(0x2d40, 0x54);      // 0x2d40-0x2d94 (incl. a Float3 copied to +0x2d88)
-    unknown_fields(0x2d94, 0x59c);     // 0x2d94-0x3330
+    Float3 unk2d40;                    // 0x2d40  per-frame movement vector
+    unknown_fields(0x2d4c, 0x3c);      // 0x2d4c-0x2d88
+    Float3 unk2d88;                    // 0x2d88  pos + unk2d40 (computed each ECL frame)
+    unknown_fields(0x2d94, 0x590);     // 0x2d94-0x3324
+    u32 unk3324;                       // 0x3324  bit26 = don't save context on interrupt
+    unknown_fields(0x3328, 0x8);       // 0x3328-0x3330
     u8 eclFlags;                       // 0x3330
     unknown_fields(0x3331, 0x53);      // 0x3331-0x3384
     void *dataPtrs[4];                 // 0x3384
