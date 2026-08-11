@@ -3,10 +3,11 @@
 #include "AnmManager.hpp"
 #include "Global.hpp"
 
-struct EnemySubData; // forward decl (defined in EnemyManager.hpp)
-
 namespace th08
 {
+
+struct EnemySubData; // forward decl (defined in EnemyManager.hpp)
+struct EnemyShotData; // forward decl (defined in EnemyManager.hpp)
 
 struct BulletTypeSprites
 {
@@ -27,7 +28,7 @@ struct BulletManager
     void bulletmanager_fun_00415c60();
     void FUN_00430d30(Float3 *pos, f32 a1); // 0x430d30 (ECL effect)
     void SetupLaserMove(Float3 *pos);          // 0x430e10 (ECL laser/move setup)
-    EnemySubData *AllocShotSlot(EnemySubData *src); // 0x430f20 (claim a data slot)
+    EnemySubData *AllocShotSlot(EnemyShotData *src); // 0x430f20 (claim a data slot)
 
     unknown_fields(0x0, 0x1a880);
     u8 unk_1a880[0x4a5b8];       // 0x1a880

@@ -763,15 +763,14 @@ restart:
             case 107: // opcode 108 = 清除 unk3324 bit17
                 enemy->unk3324 &= ~0x20000;
                 goto skipInstr;
-            case 109: // opcode 110 = 移动插值 (unk2db8/2dbc/2dc0)
-                enemy->unk2db8 = ECL_FVAL(0);
-                enemy->unk2dbc = ECL_FVAL(1);
-                enemy->unk2dc0 = 0;
+            case 109: // opcode 110 = 移动插值 (unk2db8 向量)
+                enemy->unk2db8.x = ECL_FVAL(0);
+                enemy->unk2db8.y = ECL_FVAL(1);
+                enemy->unk2db8.z = 0;
                 goto skipInstr;
             case 108: // opcode 109 = 计算 pos+unk2db8 向量并写 0x2e28; g_BulletManager.SetupLaserMove(&0x2e24)
                 // 注: 原版中 0x2e24 的 Float3 与 0x2e28 的 Float3 字节重叠 (430e10 参数与结果共享)
-                *(Float3 *)((u8 *)enemy + 0x2e28) =
-                    enemy->pos + Float3(enemy->unk2db8, enemy->unk2dbc, enemy->unk2dc0);
+                *(Float3 *)((u8 *)enemy + 0x2e28) = enemy->pos + enemy->unk2db8;
                 g_BulletManager.SetupLaserMove((Float3 *)((u8 *)enemy + 0x2e24));
                 goto skipInstr;
             case 110: // opcode 111 = 写激光数据槽 (0x2e44 + v0*0x18)
@@ -801,6 +800,28 @@ restart:
                         enemy->unk3020 &= ~0x200;
                     }
                     enemy->unk3028 = ECL_IVAL(1);
+                }
+                goto skipInstr;
+            case 113: case 114: // opcode 114-115 = 注册弹幕数据 (填充 shotData → AllocShotSlot)
+                {
+                    EnemyShotData *sd = &enemy->shotData;
+                    sd->pos = enemy->unk2d88 + enemy->unk2db8;
+                    sd->subId = (i16)instr->args[0].i;
+                    sd->anmIdx = (i16)ECL_IVAL(1);
+                    sd->unk10 = ECL_FVAL(2);
+                    sd->unk18 = ECL_FVAL(3);
+                    sd->unk1d0 = ECL_FVAL(4);
+                    sd->unk1d4 = ECL_FVAL(5);
+                    sd->unk1d8 = ECL_FVAL(6);
+                    sd->unk1dc = ECL_FVAL(7);
+                    sd->unk1e0 = ECL_IVAL(8);
+                    sd->unk1e4 = ECL_IVAL(9);
+                    sd->unk1e8 = ECL_IVAL(10);
+                    sd->unk1ec = instr->args[11].i;
+                    sd->unk1f0 = instr->args[12].i;
+                    sd->unk1f8 = (instr->id == 0x73) ? 0 : 1;
+                    sd->unk1fc = instr->args[13].i;
+                    enemy->unk3280[enemy->unk3300] = g_BulletManager.AllocShotSlot(sd);
                 }
                 goto skipInstr;
             case 115: // opcode 116 = 设置 unk3300

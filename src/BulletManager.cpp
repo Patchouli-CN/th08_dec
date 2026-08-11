@@ -145,7 +145,7 @@ void BulletManager::SetupLaserMove(Float3 *pos)
 {
 }
 
-EnemySubData *BulletManager::AllocShotSlot(EnemySubData *src)
+EnemySubData *BulletManager::AllocShotSlot(EnemyShotData *src)
 {
     return NULL;
 }
