@@ -559,6 +559,9 @@ restart:
                 enemy->unk3308 = ECL_IVAL(0);
                 enemy->unk330c = ECL_IVAL(1);
                 goto skipInstr;
+            case 150: // opcode 151 = 设置 unk3324 bit26
+                enemy->unk3324 = (enemy->unk3324 & ~0x4000000) | ((instr->args[0].b[0] & 1) << 0x1a);
+                goto skipInstr;
             case 153: // opcode 154 = 清空 unk3280[0x20]
                 for (i = 0; i < 0x20; i++)
                 {
@@ -567,6 +570,10 @@ restart:
                 goto skipInstr;
             case 158: // opcode 159 = 设置 unk332f (byte)
                 enemy->unk332f = (u8)ECL_IVAL(0);
+                goto skipInstr;
+            case 154: // opcode 155 = 设置 unk3324 bit27 + 全局写
+                enemy->unk3324 = (enemy->unk3324 & ~0x8000000) | ((instr->args[0].b[0] & 1) << 0x1b);
+                *(volatile u32 *)0x4ecca8 = 0x5f5e0f6;
                 goto skipInstr;
             case 155: // opcode 156 = 设置 unk3324 bit7 + unk332f=2
                 enemy->unk3324 = (enemy->unk3324 & ~0x80) | ((instr->args[0].b[0] & 1) << 7);
