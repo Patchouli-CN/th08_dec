@@ -52,7 +52,10 @@ struct Enemy
     f32 unk2dac;                       // 0x2dac
     f32 unk2db0;                       // 0x2db0
     f32 unk2db4;                       // 0x2db4
-    unknown_fields(0x2db8, 0x18);      // 0x2db8-0x2dd0
+    f32 unk2db8;                       // 0x2db8
+    f32 unk2dbc;                       // 0x2dbc
+    f32 unk2dc0;                       // 0x2dc0
+    unknown_fields(0x2dc4, 0xc);       // 0x2dc4-0x2dd0
     f32 unk2dd0;                       // 0x2dd0
     f32 unk2dd4;                       // 0x2dd4
     unknown_fields(0x2dd8, 0x4);       // 0x2dd8-0x2ddc

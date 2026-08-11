@@ -421,6 +421,11 @@ restart:
             case 83: // opcode 84 = NOP
             case 84: // opcode 85 = NOP
                 goto skipInstr;
+            case 109: // opcode 110 = 移动插值 (unk2db8/2dbc/2dc0)
+                enemy->unk2db8 = ECL_FVAL(0);
+                enemy->unk2dbc = ECL_FVAL(1);
+                enemy->unk2dc0 = 0;
+                goto skipInstr;
             case 177: // opcode 178 = 子脚本 (FUN_004224a0)
                 FUN_004224a0(enemy, instr);
                 goto skipInstr;
