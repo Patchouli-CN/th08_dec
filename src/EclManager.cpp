@@ -552,6 +552,12 @@ restart:
                 enemy->unk3311 = instr->args[0].b[1];
                 enemy->unk3312 = instr->args[0].b[2];
                 goto skipInstr;
+            case 153: // opcode 154 = 清空 unk3280[0x20]
+                for (i = 0; i < 0x20; i++)
+                {
+                    enemy->unk3280[i] = 0;
+                }
+                goto skipInstr;
             case 155: // opcode 156 = 设置 unk3324 bit7 + unk332f=2
                 enemy->unk3324 = (enemy->unk3324 & ~0x80) | ((instr->args[0].b[0] & 1) << 7);
                 enemy->unk332f = 2;
