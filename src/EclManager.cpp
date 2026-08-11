@@ -1344,7 +1344,11 @@ restart:
                 enemy->unk3312 = instr->args[0].b[2];
                 goto skipInstr;
             case 104: // opcode 105 = 设置 unk3060 + 按 rank 缩放 + unk3064 重置
-                enemy->unk3060 = ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v104a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v104a = instr->args[0].i;
+                enemy->unk3060 = v104a;
                 if (enemy->unk3060 != 0)
                 {
                     enemy->unk3060 += g_GameManager.ScaleIntBasedOnRank(enemy->unk3060 / 5, -(enemy->unk3060) / 5);
@@ -1352,7 +1356,11 @@ restart:
                 }
                 goto skipInstr;
             case 105: // opcode 106 = 同 op105 但 unk3064 用随机值
-                enemy->unk3060 = ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v105a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v105a = instr->args[0].i;
+                enemy->unk3060 = v105a;
                 if (enemy->unk3060 != 0)
                 {
                     enemy->unk3060 += g_GameManager.ScaleIntBasedOnRank(enemy->unk3060 / 5, -(enemy->unk3060) / 5);
@@ -1376,8 +1384,16 @@ restart:
                 g_BulletManager.SetupLaserMove((Float3 *)&enemy->laserMoveStartX);
                 goto skipInstr;
             case 109: // opcode 110 = 移动插值 (moveVec2 向量)
-                enemy->moveVec2.x = ECL_FVAL(0);
-                enemy->moveVec2.y = ECL_FVAL(1);
+                if (instr->paramMask & 0x1)
+                    v109a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v109a = instr->args[0].f;
+                enemy->moveVec2.x = v109a;
+                if (instr->paramMask & 0x2)
+                    v109b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v109b = instr->args[1].f;
+                enemy->moveVec2.y = v109b;
                 enemy->moveVec2.z = 0;
                 goto skipInstr;
             case 113: case 114: // opcode 114-115 = 注册弹幕数据 (填充 shotData → AllocShotSlot)
