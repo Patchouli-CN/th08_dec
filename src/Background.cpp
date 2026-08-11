@@ -1124,10 +1124,15 @@ Float3 *__fastcall FUN_00409080(Float3 *self)
     return NULL;
 }
 
-// STUB: th08 0x408fc0
-f32 __stdcall FUN_00408fc0(f32 a, f32 b, f32 c, f32 d, f32 e)
+// FUNCTION: th08 0x408fc0 (cubic interpolation between four samples, t in [0,1])
+f32 __stdcall FUN_00408fc0(f32 a, f32 b, f32 c, f32 d, f32 t)
 {
-    return 0.0f;
+    f32 w0 = (t - 1.0f) * (t - 1.0f) * (2.0f * t + 1.0f);
+    f32 w1 = t * t * (3.0f - 2.0f * t);
+    f32 w2 = (1.0f - t) * (1.0f - t) * t;
+    f32 w3 = (t - 1.0f) * t * t;
+
+    return w0 * a + w1 * b + w2 * c + w3 * d;
 }
 
 // FUNCTION: th08 0x410a70
