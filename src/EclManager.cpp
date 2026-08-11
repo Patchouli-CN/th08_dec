@@ -368,6 +368,13 @@ restart:
             case 66: // opcode 67 = 子脚本 (FUN_00422020)
                 FUN_00422020(enemy, instr);
                 goto skipInstr;
+            case 69: // opcode 70 = SET_MOVE_SPEED: moveSpeed + flag bit12
+                enemy->unk2d98 = ECL_FVAL(0);
+                enemy->unk3324 = (enemy->unk3324 & ~0x3000) | 0x1000;
+                goto skipInstr;
+            case 75: // opcode 76 = 清除移动标志 (unk3324 bit19)
+                enemy->unk3324 &= ~0x80000;
+                goto skipInstr;
             case 177: // opcode 178 = 子脚本 (FUN_004224a0)
                 FUN_004224a0(enemy, instr);
                 goto skipInstr;
