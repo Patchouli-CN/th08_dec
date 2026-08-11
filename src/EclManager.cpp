@@ -609,6 +609,17 @@ restart:
                             *(f32 *)((u8 *)enemy->unk3280[idx] + 0x554), ECL_FVAL(1));
                 }
                 goto skipInstr;
+            case 118: // opcode 119 = 设置子弹对象位置 unk548/54c/550 = f + pos
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    if (enemy->unk3280[v0] != 0)
+                    {
+                        *(f32 *)((u8 *)enemy->unk3280[v0] + 0x548) = ECL_FVAL(1) + enemy->unk2d88.x;
+                        *(f32 *)((u8 *)enemy->unk3280[v0] + 0x54c) = ECL_FVAL(2) + enemy->unk2d88.y;
+                        *(f32 *)((u8 *)enemy->unk3280[v0] + 0x550) = ECL_FVAL(3) + enemy->unk2d88.z;
+                    }
+                }
+                goto skipInstr;
             case 119: // opcode 120 = 设置 curContext globalVar intVars[0] (依 unk3280 子弹对象)
                 {
                     i32 v0 = ECL_IVAL(0);
@@ -661,6 +672,16 @@ restart:
                     enemy->unk3358[ECL_IVAL(0)] = ECL_IVAL(1);
                     enemy->unk3368[ECL_IVAL(0)] = ECL_IVAL(2);
                 }
+                goto skipInstr;
+            case 133: // opcode 134 = 设置 unk3378/unk337c (boss 模式只写 3378) + unk2e14 重置
+                if (IS_BOSS_MODE())
+                    enemy->unk3378 = ECL_IVAL(0);
+                else
+                {
+                    enemy->unk3378 = ECL_IVAL(0);
+                    enemy->unk337c = ECL_IVAL(1);
+                }
+                enemy->unk2e14.SetCurrent(0);
                 goto skipInstr;
             case 136: // opcode 137 = 设置 curContextPtr->func/eclExInstr (依函数表 0x4c6cb0)
                 if (ECL_IVAL(0) >= 0)
