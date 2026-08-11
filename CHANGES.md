@@ -109,3 +109,9 @@
 - 逆向发现：死亡掉落物为 1 个大 P + 5 个小 P（第一 SpawnItem itemType=2，后 5 个=0）；
   时间点惩罚 `-(currentTimeOrbs/10)`（>5000 时 -500）；`0x160f510+0x3c`=currentTimeOrbs。
 - 新增：`g_PlayerUnknown0b0`(0x164d0b0)、`Spellcard::FUN_0044d150`、`ItemManager::FUN_00441530`。
+
+- **`Player::FUN_00449ff0`（0x449ff0 弹幕碰撞检测）stub → 96.7%**：遍历 shots[0xc0..]，
+  圆形碰撞（dx²+dy² < r²）、旋转矩形（Rotate 后 AABB）、AABB 矩形碰撞，命中更新
+  `unkE2a90`（碰撞类型）+ `unk30++` 返回 2。剩余差异为 AABB 独立 if 的跳板布局。
+- 逆向发现：`ShotSlot.unk20` 是 f32（旋转标志，原版 fcomp/fchs）；`unk8==0.0` 走矩形碰撞；
+  原版 4 次 Float3 构造（diff/rotated + box/box2 复用 halfW/left 槽）。

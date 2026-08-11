@@ -102,10 +102,12 @@ struct ShotSlot  // 0x40
     f32 targetY;   // 0x14
     f32 unk18;     // 0x18
     f32 unk1C;     // 0x1c
-    i32 unk20;     // 0x20
+    f32 unk20;     // 0x20  non-zero marks a rotated (not AABB) collision box
     i32 lifespan;  // 0x24  decremented each frame by FUN_0044c5b0
-    i32 unk28;     // 0x28
-    unknown_fields(0x2c, 0xc);
+    i32 unk28;     // 0x28  hit type reported by FUN_00449ff0
+    i32 unk2c;     // 0x2c
+    i32 unk30;     // 0x30  hit counter (incremented by FUN_00449ff0)
+    i32 unk34;     // 0x34
     i32 unk38;     // 0x38  set to 1 by FUN_0044e370
     u8 active;     // 0x3c  slot-in-use flag
     unknown_fields(0x3d, 0x3);
@@ -243,7 +245,7 @@ struct Player
     ZunBool CalcItemBoxCollision(Float3 *pos, Float3 *size);
     f32 AngleToPlayer(Float3 *pos);
     void FUN_004512f0();
-    i32 FUN_00449ff0(void *unkD34, void *unkD44);
+    i32 FUN_00449ff0(Float3 *pos, void *unkD34);
     i32 IsHuman();
     i32 IsYoukai();
     void FUN_0044c5b0();

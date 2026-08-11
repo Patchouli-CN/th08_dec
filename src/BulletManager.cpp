@@ -59,9 +59,9 @@ void BulletManager::RemoveAllBullets(i32 param)
             continue;
         }
 
-        r1 = g_Player.FUN_00449ff0(pool + 0xd44, pool + 0xd34);
+        r1 = g_Player.FUN_00449ff0((Float3 *)(pool + 0xd44), pool + 0xd34);
 
-        if (g_Player.FUN_00449ff0(pool + 0xd44, pool + 0xd34) == 2)
+        if (g_Player.FUN_00449ff0((Float3 *)(pool + 0xd44), pool + 0xd34) == 2)
         {
             g_ItemManager.SpawnItem((Float3 *)(pool + 0xd44), (ItemType) * (i32 *)0x18b8988, 1);
             memset(pool, 0, 0x10b8);

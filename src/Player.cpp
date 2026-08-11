@@ -299,10 +299,72 @@ void Player::FUN_004512f0()
     }
 }
 
-// STUB: th08 0x449ff0
-i32 Player::FUN_00449ff0(void *unkD34, void *unkD44)
+// FUNCTION: th08 0x449ff0 (bullet collision: circle / rotated rect / AABB against pos)
+i32 Player::FUN_00449ff0(Float3 *pos, void *unkD34)
 {
+    ShotSlot *slot;
+    i32 i;
+    f32 dx;
+    f32 dy;
+    Float3 diff;
+    Float3 rotated;
+    Float3 box;   // half-extent (rotated rect) or left/top (AABB)
+    Float3 box2;  // right/bottom (AABB)
+
+    slot = &this->shots[0xc0];
+    for (i = 0; i < 0xc0; i++, slot++)
+    {
+        if (slot->active == 0)
+        {
+            goto nextSlot;
+        }
+        if (slot->unk8 != 0.0)
+        {
+            /* Circle test: distance to the slot center vs its radius. */
+            dx = pos->x - slot->posX;
+            dy = pos->y - slot->posY;
+            if (dx * dx + dy * dy < slot->unk8 * slot->unk8)
+            {
+                goto hit;
+            }
+        }
+        else if (slot->unk20 != 0.0f)
+        {
+            /* Rotated rect: rotate the offset into slot space, then AABB test. */
+            diff.x = pos->x - slot->posX;
+            diff.y = pos->y - slot->posY;
+            Rotate(&rotated, &diff, -slot->unk20);
+            box.x = slot->targetX / 2.0f;
+            box.y = slot->targetY / 2.0f;
+            if (-box.x <= rotated.x && rotated.x <= box.x && -box.y <= rotated.y && rotated.y <= box.y)
+                goto hit;
+            goto nextSlot;
+        }
+        else
+        {
+            /* Axis-aligned rect: build the box and test pos against it. */
+            box.x = slot->posX - slot->targetX / 2.0f;
+            box.y = slot->posY - slot->targetY / 2.0f;
+            box2.x = slot->posX + slot->targetX / 2.0f;
+            box2.y = slot->posY + slot->targetY / 2.0f;
+            if (box.x > pos->x)
+                goto nextSlot;
+            if (box2.x < pos->x)
+                goto nextSlot;
+            if (box.y > pos->y)
+                goto nextSlot;
+            if (box2.y < pos->y)
+                goto nextSlot;
+            goto hit;
+        }
+    nextSlot:
+        ;
+    }
     return 0;
+hit:
+    this->unkE2a90 = slot->unk28;
+    slot->unk30++;
+    return 2;
 }
 
 // FUNCTION: th08 0x40bc20
