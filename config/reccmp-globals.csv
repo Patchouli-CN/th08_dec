@@ -205,3 +205,4 @@ th08::g_StageBgmTable,0x4c7240,global
 th08::g_BulletCount,0x160f3c8,global
 th08::g_PlayerUnknown0bd,0x164d0bd,global
 th08::g_CurrentSpellcardNumber,0x164d0b8,global
+th08::g_EnemyAnmLoaded,0xf54e0c,global

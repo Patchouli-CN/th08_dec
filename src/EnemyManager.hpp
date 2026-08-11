@@ -1,4 +1,5 @@
 #pragma once
+#include "AnmManager.hpp"
 #include "EclManager.hpp"
 #include "Global.hpp"
 #include "ZunResult.hpp"
@@ -12,9 +13,12 @@ struct Enemy
     void FUN_0042bc90();
     void FUN_00422c40();
     void FUN_00423150();
+    void FUN_00421de0(u8 *a, u8 *b, u8 *c, u8 *d, u8 *e); // ECL sub-call (0x421de0)
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
-    unknown_fields(0x0, 0x7f8);
+    unknown_fields(0x0, 0xc);
+    AnmVm primaryVm;                   // 0xc   (0x2a4)
+    AnmVm vms[2];                      // 0x2b0  (2 * 0x2a4)
     EclContext eclContext;             // 0x7f8  current ECL execution context
     EclContext savedContextStack[16];  // 0xa20  (16 * 0x228 = 0x2280)
     EclContext *curContextPtr;         // 0x2ca0 pointer to the active EclContext
@@ -37,7 +41,8 @@ struct Enemy
     i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
     unknown_fields(0x2e00, 0x524);     // 0x2e00-0x3324
     u32 unk3324;                       // 0x3324  bit26 = don't save context on interrupt
-    unknown_fields(0x3328, 0x8);       // 0x3328-0x3330
+    u32 unk3328;                       // 0x3328  (anm script flags, bit2 cleared by SET_ANM)
+    unknown_fields(0x332c, 0x4);       // 0x332c-0x3330
     u8 eclFlags;                       // 0x3330
     unknown_fields(0x3331, 0x53);      // 0x3331-0x3384
     void *dataPtrs[4];                 // 0x3384
@@ -62,5 +67,6 @@ struct EnemyManager
 };
 
 DIFFABLE_EXTERN(EnemyManager, g_EnemyManager);
+DIFFABLE_EXTERN(AnmLoaded, g_EnemyAnmLoaded); // 0xf54e0c (enemy sprite animations)
 
 } /* namespace th08 */

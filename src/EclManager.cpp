@@ -36,6 +36,10 @@ f32 __fastcall EclAngleFromDxDy(f32 dx, f32 dy)
     return 0.0f;
 }
 
+void Enemy::FUN_00421de0(u8 *a, u8 *b, u8 *c, u8 *d, u8 *e)
+{
+}
+
 void Enemy::FUN_00422c40()
 {
 }
@@ -217,6 +221,14 @@ restart:
                 goto skipInstr;
             case 32: // ECL_COS: *arg0 = cos(arg1)
                 *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = cosf(ECL_FVAL(1));
+                goto skipInstr;
+            case 53: // ECL_SET_ANM: play animation arg0
+                g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
+                enemy->unk3328 &= ~0x4;
+                goto skipInstr;
+            case 54: // ECL_SUB_CALL
+                enemy->FUN_00421de0((u8 *)instr, (u8 *)instr + 1, (u8 *)instr + 2, (u8 *)instr + 3, (u8 *)instr + 4);
+                enemy->unk3328 &= ~0x4;
                 goto skipInstr;
             default:
                 goto skipInstr;
