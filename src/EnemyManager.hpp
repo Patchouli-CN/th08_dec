@@ -118,7 +118,9 @@ struct Enemy
     i16 unk5350;                       // 0x5350
     i16 unk5352;                       // 0x5352
     ZunTimer unk5354;                  // 0x5354 (0xc bytes)
-    unknown_fields(0x5360, 0x68);      // 0x5360-0x53c8
+    void *unk5360[24];                 // 0x5360 (24 effect-slot pointers)
+    i32 unk53c0;                       // 0x53c0  (effect-slot counter)
+    i32 unk53c4;                       // 0x53c4
     u32 unk53c8;                       // 0x53c8  (pointer to linked enemy/struct)
     unknown_fields(0x53cc, 0x4);       // 0x53cc-0x53d0
 };

@@ -8,6 +8,8 @@
 #include "Player.hpp"
 #include "SoundPlayer.hpp"
 #include "Gui.hpp"
+#include "ItemManager.hpp"
+#include "EffectManager.hpp"
 
 namespace th08
 {
@@ -668,6 +670,27 @@ restart:
                 goto skipInstr;
             case 123: // opcode 124 = 播放音效 (声音索引 v0, 位置 pos.x)
                 g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_IVAL(0), enemy->pos.x);
+                goto skipInstr;
+            case 127: // opcode 128 = 生成特效并存入 unk5360 槽
+                {
+                    i32 idx = enemy->unk53c0;
+                    AnmVm *eff = g_EffectManager.FUN_00425430(0xd, &enemy->pos, 1, 0xff6060d0);
+                    enemy->unk5360[idx] = eff;
+                    memcpy((u8 *)eff + 0x2ec, &instr->args[1], 0xc);
+                    enemy->unk53c4 = instr->args[4].i;
+                    enemy->unk53c0++;
+                }
+                goto skipInstr;
+            case 138: // opcode 139 = 生成特效 (位置 enemy->pos)
+                {
+                    i32 a1 = ECL_IVAL(1);
+                    i32 a0 = ECL_IVAL(0);
+                    g_EffectManager.FUN_00425430(a0, &enemy->pos, a1,
+                                                  *GetIntPtr(enemy, &instr->args[2], instr->paramMask));
+                }
+                goto skipInstr;
+            case 140: // opcode 141 = 生成物品
+                g_ItemManager.SpawnItem(&enemy->pos, (ItemType)ECL_IVAL(0), 0);
                 goto skipInstr;
             case 130: // opcode 131 = 设置激光字段 unk2e00/2dfc/2e04 + 若条件清 Gui
                 enemy->unk2e00 = ECL_IVAL(0);
