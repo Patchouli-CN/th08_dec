@@ -125,6 +125,15 @@ struct Player
     i32 FUN_00449ff0(void *unkD34, void *unkD44);
     i32 FUN_0040bc20();
     i32 FUN_0040bc40();
+    void FUN_0044c5b0();
+    void FUN_0044c650();
+    i32 FUN_0044cbf0();
+    void FUN_0044d180();
+    void FUN_0044d2c0();
+    void FUN_0044aec0();
+    void FUN_00451150();
+    void FUN_00451500();
+    void FUN_0044d420();
 };
 
 DIFFABLE_EXTERN(Player, g_Player);

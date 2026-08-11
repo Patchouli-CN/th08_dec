@@ -153,6 +153,12 @@ i32 Gui::FUN_00437d87()
     return 0;
 }
 
+// STUB: th08 0x4358bb
+i32 Gui::FUN_004358bb()
+{
+    return 0;
+}
+
 // FUNCTION: th08 0x43587e
 i32 Gui::MsgWait()
 {

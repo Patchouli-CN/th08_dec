@@ -3,6 +3,7 @@
 #include "Player.hpp"
 #include "AsciiManager.hpp"
 #include "GameManager.hpp"
+#include "Gui.hpp"
 #include "Supervisor.hpp"
 
 namespace th08
@@ -95,9 +96,73 @@ ZunResult Player::RegisterChain(u32 param)
     return ZUN_SUCCESS;
 }
 
-// STUB: th08 0x44c390
+// FUNCTION: th08 0x44c390 (98.48% FIXME: || 短路跳板布局)
 ChainCallbackResult Player::OnUpdate(Player *player)
 {
+    if (*(i8 *)0x160f534 != 0)
+    {
+        if (*(u32 *)((u8 *)player + 0xbe834) != 0)
+        {
+            *(u32 *)(*(u32 *)((u8 *)player + 0xbe834) + 0x1f8) |= 0x80000;
+        }
+
+        if (*(u32 *)((u8 *)player + 0xe2b24) != 0)
+        {
+            *(u32 *)(*(u32 *)((u8 *)player + 0xe2b24) + 0x1f8) |= 0x80000;
+        }
+
+        return CHAIN_CALLBACK_RESULT_CONTINUE;
+    }
+
+    if (*(u32 *)((u8 *)player + 0xbe834) != 0)
+    {
+        *(u32 *)(*(u32 *)((u8 *)player + 0xbe834) + 0x1f8) &= 0xfff7ffff;
+    }
+
+    if (*(u32 *)((u8 *)player + 0xe2b24) != 0)
+    {
+        *(u32 *)(*(u32 *)((u8 *)player + 0xe2b24) + 0x1f8) &= 0xfff7ffff;
+    }
+
+    player->FUN_0044c5b0();
+    player->FUN_0044c650();
+
+    if ((player->playerState == 2 && player->FUN_0044cbf0() != 0) || player->playerState == 1)
+    {
+        player->FUN_0044d180();
+    }
+
+    player->FUN_0044d2c0();
+
+    if (player->playerState != 2 && player->playerState != 1)
+    {
+        player->FUN_0044aec0();
+    }
+
+    g_AnmManager->ExecuteScript((AnmVm *)((u8 *)player + 0x10));
+    player->FUN_00451150();
+    player->FUN_00451500();
+    player->FUN_0044d420();
+
+    if (g_Gui.FUN_004358bb() == 0)
+    {
+        *(u32 *)0x164d318 += 1;
+        *(u32 *)0x164d31c += 1;
+
+        if (g_GameManager.GaugeIsExtremelyHuman())
+        {
+            *(u32 *)0x164d324 += 1;
+            *(u32 *)0x164d32c += 1;
+            g_GameManager.AddScore(0x64);
+        }
+        else if (g_GameManager.GaugeIsExtremelyYoukai())
+        {
+            *(u32 *)0x164d320 += 1;
+            *(u32 *)0x164d328 += 1;
+            g_GameManager.AddScore(0x64);
+        }
+    }
+
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
@@ -153,6 +218,52 @@ i32 Player::FUN_0040bc20()
 i32 Player::FUN_0040bc40()
 {
     return 0;
+}
+
+// STUB: th08 0x44c5b0
+void Player::FUN_0044c5b0()
+{
+}
+
+// STUB: th08 0x44c650
+void Player::FUN_0044c650()
+{
+}
+
+// STUB: th08 0x44cbf0
+i32 Player::FUN_0044cbf0()
+{
+    return 0;
+}
+
+// STUB: th08 0x44d180
+void Player::FUN_0044d180()
+{
+}
+
+// STUB: th08 0x44d2c0
+void Player::FUN_0044d2c0()
+{
+}
+
+// STUB: th08 0x44aec0
+void Player::FUN_0044aec0()
+{
+}
+
+// STUB: th08 0x451150
+void Player::FUN_00451150()
+{
+}
+
+// STUB: th08 0x451500
+void Player::FUN_00451500()
+{
+}
+
+// STUB: th08 0x44d420
+void Player::FUN_0044d420()
+{
 }
 
 // FUNCTION: th08 0x44d530

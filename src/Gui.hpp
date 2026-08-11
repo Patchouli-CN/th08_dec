@@ -153,6 +153,7 @@ struct Gui
     void FreeMsgFile();
     i32 MsgWait();
     i32 FUN_00437d87();
+    i32 FUN_004358bb();
     void FUN_00435900();
     void DrawGameScene();
     void FUN_0043741d();

@@ -966,6 +966,12 @@ ZunBool GameManager::IsStageClearedWithRetries(i32 stage, i32 character, i32 dif
     return IS_STAGE_CLEARED(this->clrdData[character].difficultiesClearedWithRetries[difficulty], stage);
 }
 
+// STUB: th08 0x406d70
+ZunBool GameManager::GaugeIsExtremelyYoukai()
+{
+    return FALSE;
+}
+
 // FUNCTION: th08 0x40bb80
 ZunBool GameManager::IsTampered()
 {

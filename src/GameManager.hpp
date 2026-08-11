@@ -180,6 +180,8 @@ struct GameManager
         return this->flags.isDemoMode;
     }
 
+    ZunBool GaugeIsExtremelyYoukai();
+
     ZunBool GaugeIsExtremelyHuman()
     {
         return this->globals->youkaiGauge <= this->youkaiGaugeHumanEffectsThreshold;
