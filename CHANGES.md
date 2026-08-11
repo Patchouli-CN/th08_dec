@@ -73,3 +73,10 @@
   `leave`，与原版 `mov esp,ebp; pop ebp` 不符；将 SetCurrent/SetCurrentImpl/Tick/
   TickImpl/AsFrames/AsFramesFloat 移到 Player.cpp（`/Od`）后全部 100%。
 - `FUN_0040bc20`/`FUN_0040bc40` 更名 `Player::IsHuman`/`IsYoukai`（统一 mapping/reccmp/源码）。
+
+## 2026-08-11
+
+- **可读性重构**：定义 `ShotSlot` 结构并拆分 `Player::shots[0x180]`，玩家射击相关
+  函数改用字段访问替代裸偏移。
+- **`FUN_00451500`** 反编译完成：0 → **100%**（决死结界检测，条件分支+音效）。
+- **`FUN_0044c650`** 射击状态机实现至 70%（FIXME：寄存器/跳板布局差异）。

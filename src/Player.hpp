@@ -54,17 +54,23 @@ struct Player;
 // The player's 128 option/bullet sprite VMs, iterated by the draw helper.
 struct PlayerBulletVm
 {
-    AnmVm vm;
-    f32 offsetX;
-    f32 offsetY;
-    unknown_fields(0x2ac, 0x1a4);
-    f32 rotation;
-    unknown_fields(0x454, 0xe);
-    i16 state;
-    unknown_fields(0x464, 0xc);
-    i8 hasCustomColor;
-    unknown_fields(0x471, 0x7);
-    u32 unk478;                       // 0x478
+    AnmVm vm;                    // 0x0
+    f32 offsetX;                 // 0x2a4 (offsetPos.x)
+    f32 offsetY;                 // 0x2a8 (offsetPos.y)
+    unknown_fields(0x2ac, 0x190);
+    f32 unk43c;                  // 0x43c
+    f32 unk440;                  // 0x440
+    unknown_fields(0x444, 0xc);
+    f32 rotation;                // 0x450
+    ZunTimer timer454;           // 0x454
+    unknown_fields(0x460, 0x2);
+    i16 state;                   // 0x462
+    i16 state464;                // 0x464
+    unknown_fields(0x466, 0xa);
+    i8 hasCustomColor;           // 0x470
+    unknown_fields(0x471, 0x3);
+    u32 unk474;                  // 0x474 update callback
+    u32 unk478;                  // 0x478
     unknown_fields(0x47c, 0x8);
 };
 C_ASSERT(sizeof(PlayerBulletVm) == 0x484);
@@ -97,7 +103,10 @@ struct Player
     i8 initParam;
     i8 unk2;
     u8 isYoukaiMode;
-    unknown_fields(0x4, 0xc);
+    u8 unk4;                    // 0x4  player-2 flag (inverts shotType)
+    u8 unk5;                    // 0x5  human/youkai marker (IsHuman/IsYoukai)
+    u8 unk6;                    // 0x6  force shot-switch flag
+    unknown_fields(0x7, 0x9);
     u8 unk_10[0x208];            // 0x10 (DrawNoRotation 取 &unk_10 作 AnmVm*)
     f32 unk_218;                 // 0x218
     f32 unk_21c;                 // 0x21c
@@ -114,25 +123,51 @@ struct Player
         void (Player::*func)();  // 0x2f0
     };
     PlayerOption options[4];     // 0x40c
-    i32 unkFdc;                  // 0xfdc
-    i32 unkFe0;                  // 0xfe0
-    unknown_fields(0xfe4, 0x1c);
+    i32 unkFdc;                  // 0xfdc  shot-in-progress flag
+    i32 unkFe0;                  // 0xfe0  shot type index
+    i32 shotInterval;            // 0xfe4
+    i32 unkFe8;                  // 0xfe8
+    i32 powerLevel;              // 0xfec
+    i32 unkFf0;                  // 0xff0
+    ZunTimer shotTimer;          // 0xff4
     void (Player::*shotFuncs[5])(); // 0x1000
     void (Player::*unk_1014[4])(); // 0x1014
     unknown_fields(0x1024, 0xb7810);
     ShotSlot shots[0x180];       // 0xb8834 (0xbb834 = &shots[0xc0] aliases a sub-range)
     unknown_fields(0xbe834, 0x4);
     PlayerBulletVm bullets[0x80];
-    unknown_fields(0xe2a38, 0x3c);
+    unknown_fields(0xe2a38, 0x30);
+    i32 shotIndex;               // 0xe2a68
+    i32 shotCooldown;            // 0xe2a6c
+    i32 unkE2a70;                // 0xe2a70
     u32 unkE2a74;
     u32 unkE2a78;
-    unknown_fields(0xe2a7c, 0x34);
-    unknown_fields(0xe2ab0, 0x44);
-    ZunTimer invulnerabilityTimer;
-    unknown_fields(0xe2b00, 0x10);
-    ChainElem *calcChain;
+    i32 shotState;               // 0xe2a7c
+    unknown_fields(0xe2a80, 0x10);
+    i32 unkE2a90;                // 0xe2a90
+    unknown_fields(0xe2a94, 0x4);
+    i32 unkE2a98;                // 0xe2a98
+    unknown_fields(0xe2a9c, 0x8);
+    Float3 unkE2aa4;             // 0xe2aa4
+    Float3 unkE2ab0;             // 0xe2ab0
+    unknown_fields(0xe2abc, 0x4);
+    i32 unkE2ac0;                // 0xe2ac0
+    ZunTimer shotTimer2;         // 0xe2ac4
+    ZunTimer unkE2ad0;           // 0xe2ad0
+    unknown_fields(0xe2adc, 0xc);
+    ZunTimer unkE2ae8;           // 0xe2ae8
+    ZunTimer invulnerabilityTimer; // 0xe2af4
+    unknown_fields(0xe2b00, 0xc);
+    f32 unkE2b0c;                // 0xe2b0c
+    ChainElem *calcChain;        // 0xe2b10
     ChainElem *drawChainHighPrio;
     ChainElem *drawChainLowPrio;
+    i32 unkE2b1c;                // 0xe2b1c
+    unknown_fields(0xe2b20, 0x4);
+    i32 unkE2b24;                // 0xe2b24
+    i32 unkE2b28;                // 0xe2b28
+    i32 unkE2b2c;                // 0xe2b2c
+    unknown_fields(0xe2b30, 0x18c);
 
     static ZunResult RegisterChain(u32 param);
     static ChainCallbackResult OnUpdate(Player *player);
