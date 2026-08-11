@@ -335,7 +335,7 @@ ChainCallbackResult Player::OnDrawLowPrio(Player *player)
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
-// FUNCTION: th08 0x44d650 (36% FIXME: 字段/分支待迭代)
+// FUNCTION: th08 0x44d650 (32.7% FIXME: Float3 字段赋值已修，字段/分支待迭代)
 ZunResult Player::AddedCallback(Player *player)
 {
     i32 i;
@@ -379,9 +379,15 @@ ZunResult Player::AddedCallback(Player *player)
     {
         Float3 f0 = Float3(*(f32 *)0x164d2e4 / *(f32 *)0x4b42ec, *(f32 *)0x164d2e8 - *(f32 *)0x4b42c8, 0.48f);
         Float3 f1 = Float3(*(f32 *)0x164d2e4 / *(f32 *)0x4b42ec, *(f32 *)0x164d2e8 - *(f32 *)0x4b42c8, 0.48f);
+        Float3 *dest0 = (Float3 *)((u8 *)player + 0x2c0);
+        Float3 *dest1 = (Float3 *)((u8 *)player + 0x2e0);
 
-        *(Float3 *)((u8 *)player + 0x2c0) = f0;
-        *(Float3 *)((u8 *)player + 0x2e0) = f1;
+        dest0->x = f0.x;
+        dest0->y = f0.y;
+        dest0->z = f0.z;
+        dest1->x = f1.x;
+        dest1->y = f1.y;
+        dest1->z = f1.z;
     }
 
     for (i = 0; i < 0x180; i++)
@@ -455,9 +461,11 @@ ZunResult Player::AddedCallback(Player *player)
 
     for (i = 0; i < 0x10; i++)
     {
-        Float3 zero = Float3(0.0f, 0.0f, 0.0f);
+        Float3 *dest = (Float3 *)((u8 *)player + 0x3d4 + i * 0xc);
 
-        *(Float3 *)((u8 *)player + 0x3d4 + i * 0xc) = zero;
+        dest->x = 0.0f;
+        dest->y = 0.0f;
+        dest->z = 0.0f;
     }
 
     *(u8 *)((u8 *)player + 0x3) = 2;
