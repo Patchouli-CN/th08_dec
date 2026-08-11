@@ -250,7 +250,9 @@ ZunResult EclManager::Load(const char *path)
                   v67a, v67b, v68a, v68b, v68c, v68d, v69a, v70a, v71a, v71b, v71c, v71d, v71e, v71f, v71g, \
                   v72a, v72b, v72c, v72d, v73a, v73b, v73c, v74a, v74b, v74c, v74d, v76a, v76b, v77a, v77b, \
                   v78a, v79a, v80a, v85a, v85b, v86a, v86b, v86c, v87a, v88a, v88b, v88c, v89a, v90a, v91a, \
-                  v110a, v110b, v110c, v110d, v110e, v110f, v110g, v104a, v105a, v109a, v109b)
+                  v110a, v110b, v110c, v110d, v110e, v110f, v110g, v104a, v105a, v109a, v109b, v113a, v113b, \
+                  v113c, v113d, v113e, v113f, v113g, v113h, v113i, v113j, v115a, v116a, v116b, v166a, v166b, \
+                  v117a, v117b, v118a, v118b, v118c, v118d)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -344,6 +346,12 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v110a, v110b, v110c, v110d, v110e, v110f, v110g; // slots 228-234 (case 110: 激光数据)
     i32 v104a, v105a;     // slots 235-236 (case 104/105: unk3060)
     f32 v109a, v109b;     // slots 237-238 (case 109: 激光 moveVec2)
+    i32 v113a, v113b, v113c, v113d, v113e, v113f, v113g, v113h, v113i, v113j; // slots 239-248 (case 113: 弹幕数据)
+    i32 v115a;            // slot 249 (case 115: shotSlotIdx)
+    i32 v116a; f32 v116b; // slots 250-251 (case 116: 子弹角度)
+    i32 v166a; f32 v166b; // slots 252-253 (case 166: 子弹 angle)
+    i32 v117a; f32 v117b; // slots 254-255 (case 117: 子弹角度到玩家)
+    i32 v118a; f32 v118b, v118c, v118d; // slots 256-259 (case 118: 子弹 pos; idx + f1-3)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1419,39 +1427,81 @@ restart:
                 }
                 goto skipInstr;
             case 115: // opcode 116 = 设置 shotSlotIdx
-                enemy->shotSlotIdx = ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v115a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v115a = instr->args[0].i;
+                enemy->shotSlotIdx = v115a;
                 goto skipInstr;
             case 116: // opcode 117 = 给子弹对象加角度 (shotSlots[idx] 的 unk554)
+                if (instr->paramMask & 0x1)
+                    v116a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v116a = instr->args[0].i;
+                arg = v116a;
+                if (enemy->shotSlots[arg] != 0)
                 {
-                    i32 idx = ECL_IVAL(0);
-                    if (enemy->shotSlots[idx] != 0)
-                        enemy->shotSlots[idx]->angle = AddNormalizeAngle(enemy->shotSlots[idx]->angle, ECL_FVAL(1));
+                    if (instr->paramMask & 0x2)
+                        v116b = enemy->GetEclFloatVar(instr->args[1].i);
+                    else
+                        v116b = instr->args[1].f;
+                    enemy->shotSlots[arg]->angle = AddNormalizeAngle(enemy->shotSlots[arg]->angle, v116b);
                 }
                 goto skipInstr;
             case 166: // opcode 167 = 设置子弹对象 unk554
+                if (instr->paramMask & 0x1)
+                    v166a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v166a = instr->args[0].i;
+                arg = v166a;
+                if (enemy->shotSlots[arg] != 0)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    if (enemy->shotSlots[v0] != 0)
-                        enemy->shotSlots[v0]->angle = ECL_FVAL(1);
+                    if (instr->paramMask & 0x2)
+                        v166b = enemy->GetEclFloatVar(instr->args[1].i);
+                    else
+                        v166b = instr->args[1].f;
+                    enemy->shotSlots[arg]->angle = v166b;
                 }
                 goto skipInstr;
             case 117: // opcode 118 = 给子弹对象设角度: angle = AngleToPlayer(pos) + f1
+                if (instr->paramMask & 0x1)
+                    v117a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v117a = instr->args[0].i;
+                arg = v117a;
+                if (enemy->shotSlots[arg] != 0)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    if (enemy->shotSlots[v0] != 0)
-                        enemy->shotSlots[v0]->angle =
-                            g_Player.AngleToPlayer(&enemy->shotSlots[v0]->pos) + ECL_FVAL(1);
+                    if (instr->paramMask & 0x2)
+                        v117b = enemy->GetEclFloatVar(instr->args[1].i);
+                    else
+                        v117b = instr->args[1].f;
+                    enemy->shotSlots[arg]->angle =
+                        g_Player.AngleToPlayer(&enemy->shotSlots[arg]->pos) + v117b;
                 }
                 goto skipInstr;
             case 118: // opcode 119 = 设置子弹对象位置 unk548/54c/550 = f + pos
+                if (instr->paramMask & 0x1)
+                    v118a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v118a = instr->args[0].i;
+                arg = v118a;
+                if (enemy->shotSlots[arg] != 0)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    if (enemy->shotSlots[v0] != 0)
-                    {
-                        enemy->shotSlots[v0]->pos.x = ECL_FVAL(1) + enemy->movePos.x;
-                        enemy->shotSlots[v0]->pos.y = ECL_FVAL(2) + enemy->movePos.y;
-                        enemy->shotSlots[v0]->pos.z = ECL_FVAL(3) + enemy->movePos.z;
-                    }
+                    if (instr->paramMask & 0x2)
+                        v118b = enemy->GetEclFloatVar(instr->args[1].i);
+                    else
+                        v118b = instr->args[1].f;
+                    if (instr->paramMask & 0x4)
+                        v118c = enemy->GetEclFloatVar(instr->args[2].i);
+                    else
+                        v118c = instr->args[2].f;
+                    if (instr->paramMask & 0x8)
+                        v118d = enemy->GetEclFloatVar(instr->args[3].i);
+                    else
+                        v118d = instr->args[3].f;
+                    enemy->shotSlots[arg]->pos.x = v118b + enemy->movePos.x;
+                    enemy->shotSlots[arg]->pos.y = v118c + enemy->movePos.y;
+                    enemy->shotSlots[arg]->pos.z = v118d + enemy->movePos.z;
                 }
                 goto skipInstr;
             case 169: // opcode 170 = 写子弹对象+0x599 (byte)
