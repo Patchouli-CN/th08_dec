@@ -562,6 +562,10 @@ restart:
                 enemy->unk3308 = ECL_IVAL(0);
                 enemy->unk330c = ECL_IVAL(1);
                 goto skipInstr;
+            case 152: // opcode 153 = unk337c = unk2cee; unk2e14.SetCurrent(0)
+                enemy->unk337c = enemy->unk2cee;
+                enemy->unk2e14.SetCurrent(0);
+                goto skipInstr;
             case 150: // opcode 151 = 设置 unk3324 bit26
                 enemy->unk3324 = (enemy->unk3324 & ~0x4000000) | ((instr->args[0].b[0] & 1) << 0x1a);
                 goto skipInstr;

@@ -27,7 +27,8 @@ struct Enemy
     unknown_fields(0x2ca8, 0x40);
     i16 unk2ce8;                       // 0x2ce8
     i16 stackDepth;                    // 0x2cea  saved-context stack depth
-    unknown_fields(0x2cec, 0x4);
+    unknown_fields(0x2cec, 0x2);
+    i16 unk2cee;                       // 0x2cee
     i16 interrupts[32];                // 0x2cf0  (indexed by eclState)
     i16 runInterrupt;                  // 0x2d30  >= 0 forces the interrupt path
     unknown_fields(0x2d32, 0x2);
@@ -91,7 +92,9 @@ struct Enemy
     f32 unk3348;                       // 0x3348
     f32 unk334c;                       // 0x334c
     f32 unk3350;                       // 0x3350
-    unknown_fields(0x3354, 0x30);      // 0x3354-0x3384
+    unknown_fields(0x3354, 0x28);      // 0x3354-0x337c
+    i32 unk337c;                       // 0x337c
+    unknown_fields(0x3380, 0x4);       // 0x3380-0x3384
     void *dataPtrs[4];                 // 0x3384
     unknown_fields(0x3394, 0x2034);    // 0x3394-0x53c8
     u32 unk53c8;                       // 0x53c8  (pointer to linked enemy/struct)
