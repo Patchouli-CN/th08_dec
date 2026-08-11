@@ -115,3 +115,7 @@
   `unkE2a90`（碰撞类型）+ `unk30++` 返回 2。剩余差异为 AABB 独立 if 的跳板布局。
 - 逆向发现：`ShotSlot.unk20` 是 f32（旋转标志，原版 fcomp/fchs）；`unk8==0.0` 走矩形碰撞；
   原版 4 次 Float3 构造（diff/rotated + box/box2 复用 halfW/left 槽）。
+
+- **进度条修正**：implemented.csv 曾含 7 个 fn_diff 非 100% 的函数（历史遗留 FIXME），
+  导致进度虚高（93.84/15.28）。移除后进度准确：**92.61% func / 13.30% size**。
+  进度条现只统计完全匹配（fn_diff 100%）的函数。

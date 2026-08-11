@@ -199,12 +199,10 @@ th08::GameManager::IncreaseSubrank
 th08::GameManager::InitArcadeRegionParams
 th08::GameManager::InitRankParams
 th08::GameManager::InitializeAntiTamper
-th08::GameManager::IsTampered
 th08::GameManager::IsWithinPlayfield
 th08::GameManager::LoadScoreData
 th08::GameManager::OnDraw
 th08::GameManager::RegisterChain
-th08::GameManager::SetBombCount
 th08::GameManager::SetPower
 th08::GameWindow::ActivateWindow
 th08::GameWindow::CalcExecutableChecksum
@@ -224,7 +222,6 @@ th08::GetAnmFormat
 th08::Gui::AddedCallback
 th08::Gui::CutChain
 th08::Gui::DeletedCallback
-th08::Gui::DrawGameScene
 th08::Gui::FUN_00437e5d
 th08::Gui::FreeMsgFile
 th08::Gui::LoadMsg
@@ -324,7 +321,6 @@ th08::Rng::GetRandomF32Signed
 th08::Rng::GetRandomF32SignedInRange
 th08::Rng::GetRandomU16
 th08::Rng::GetRandomU32
-th08::Rng::GetRandomU32InRange
 th08::Rotate
 th08::ScoreDat::FreeAllScores
 th08::ScoreDat::GetHighScore
@@ -397,7 +393,6 @@ th08::Supervisor::InitializeCriticalSections
 th08::Supervisor::Is16bitColorMode
 th08::Supervisor::IsColorCompositingDisabled
 th08::Supervisor::IsDepthTestDisabled
-th08::Supervisor::IsFogDisabled
 th08::Supervisor::IsHUDRedrawEnabled
 th08::Supervisor::IsHardwareBlendingDisabled
 th08::Supervisor::IsMinimumGraphicsMode
@@ -412,8 +407,6 @@ th08::Supervisor::LeaveCriticalSectionWrapper
 th08::Supervisor::LoadConfig
 th08::Supervisor::LoadDat
 th08::Supervisor::LoadMusic
-th08::Supervisor::OnDraw2
-th08::Supervisor::OnUpdate
 th08::Supervisor::PlayAudio
 th08::Supervisor::RegisterChain
 th08::Supervisor::SetRenderState
