@@ -435,6 +435,17 @@ restart:
                 enemy->unk2d7c = ECL_FVAL(0);
                 enemy->unk2d80 = ECL_FVAL(1);
                 goto skipInstr;
+            case 78: // opcode 79 = 设置特效标志 (flags bit → unk3324/3328 各 bit)
+                {
+                    i32 flags = ECL_IVAL(0);
+                    enemy->unk3324 = (enemy->unk3324 & ~0x40) | (((flags >> 0) & 1) << 6);
+                    enemy->unk3324 = (enemy->unk3324 & ~0x4) | (((flags >> 1) & 1) << 2);
+                    enemy->unk3324 = (enemy->unk3324 & ~0x8) | (((flags >> 2) & 1) << 3);
+                    enemy->unk3324 = (enemy->unk3324 & ~0x10) | (((flags >> 3) & 1) << 4);
+                    enemy->unk3324 = (enemy->unk3324 & ~0x10000000) | (((flags >> 4) & 1) << 0x1c);
+                    enemy->unk3328 = (enemy->unk3328 & ~0x40) | (((flags >> 5) & 1) << 6);
+                }
+                goto skipInstr;
             case 81: // opcode 82 = 速度平方: unk3350 = f0*f0
                 enemy->unk3350 = ECL_FVAL(0);
                 enemy->unk3350 *= enemy->unk3350;
