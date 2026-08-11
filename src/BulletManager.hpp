@@ -23,6 +23,7 @@ struct BulletManager
     void Initialize();
     void RemoveAllBullets(i32);
     void bulletmanager_fun_00415c60();
+    void FUN_00430d30(Float3 *pos, f32 a1); // 0x430d30 (ECL effect)
 
     unknown_fields(0x0, 0x1a880);
     u8 unk_1a880[0x4a5b8];       // 0x1a880

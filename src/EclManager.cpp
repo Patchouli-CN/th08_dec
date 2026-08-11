@@ -630,6 +630,16 @@ restart:
             case 123: // opcode 124 = 播放音效 (声音索引 v0, 位置 pos.x)
                 g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_IVAL(0), enemy->pos.x);
                 goto skipInstr;
+            case 130: // opcode 131 = 设置激光字段 unk2e00/2dfc/2e04 + 若条件清 Gui
+                enemy->unk2e00 = ECL_IVAL(0);
+                enemy->unk2dfc = ECL_IVAL(0);
+                enemy->unk2e04 = ECL_IVAL(0);
+                if (enemy->unk3313 == 0 && ((enemy->unk3324 >> 1) & 1))
+                {
+                    for (i = 0; i < 8; i++)
+                        g_Gui.FUN_004230e0(i, 0.0f, 0.0f);
+                }
+                goto skipInstr;
             case 131: // opcode 132 = 设置 unk2e14 计时器
                 enemy->unk2e14.SetCurrent(ECL_IVAL(0));
                 goto skipInstr;
@@ -713,6 +723,21 @@ restart:
                     g_AnmManager->FUN_004649a0(&enemy->primaryVm, (void *)((u8 *)enemy + 0x3e14),
                                                (i32)(((i32)(i16)enemy->unk5352 / (i32)(i16)enemy->unk534e) << 1));
                 }
+                goto skipInstr;
+            case 157: // opcode 158 = 设置 Gui 数据 (v0, a1/unk2e00, a2/unk2e00) + 若 bit3 调 23110
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    g_Gui.FUN_004230e0(v0, (f32)ECL_IVAL(1) / (f32)enemy->unk2e00,
+                                       (f32)ECL_IVAL(2) / (f32)enemy->unk2e00);
+                    if (instr->paramMask & 0x8)
+                        g_Gui.FUN_00423110(v0, ECL_IVAL(3));
+                }
+                goto skipInstr;
+            case 159: // opcode 160 = unk5354 ZunTimer.SetCurrent(v0)
+                enemy->unk5354.SetCurrent(ECL_IVAL(0));
+                goto skipInstr;
+            case 160: // opcode 161 = 生成特效 at unk2d88 (g_BulletManager.FUN_00430d30)
+                g_BulletManager.FUN_00430d30(&enemy->unk2d88, ECL_FVAL(0));
                 goto skipInstr;
             case 144: // opcode 145 = 设置 unk3324 bit25
                 enemy->unk3324 = (enemy->unk3324 & ~0x2000000) | ((instr->args[0].b[0] & 1) << 0x19);

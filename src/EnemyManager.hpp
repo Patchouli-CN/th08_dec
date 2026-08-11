@@ -69,7 +69,9 @@ struct Enemy
     i16 unk2df8;                       // 0x2df8
     i16 unk2dfa;                       // 0x2dfa
     i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
-    unknown_fields(0x2e00, 0x14);      // 0x2e00-0x2e14
+    i32 unk2e00;                       // 0x2e00  (laser-related, divide base)
+    i32 unk2e04;                       // 0x2e04  (laser-related)
+    unknown_fields(0x2e08, 0xc);       // 0x2e08-0x2e14
     ZunTimer unk2e14;                  // 0x2e14 (0xc bytes)
     unknown_fields(0x2e20, 0x200);     // 0x2e20-0x3020
     i32 unk3020;                       // 0x3020  (boss spellcard-related)
@@ -113,7 +115,8 @@ struct Enemy
     i16 unk534e;                       // 0x534e
     i16 unk5350;                       // 0x5350
     i16 unk5352;                       // 0x5352
-    unknown_fields(0x5354, 0x74);      // 0x5354-0x53c8
+    ZunTimer unk5354;                  // 0x5354 (0xc bytes)
+    unknown_fields(0x5360, 0x68);      // 0x5360-0x53c8
     u32 unk53c8;                       // 0x53c8  (pointer to linked enemy/struct)
     unknown_fields(0x53cc, 0x4);       // 0x53cc-0x53d0
 };
