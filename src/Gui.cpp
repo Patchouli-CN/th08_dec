@@ -713,6 +713,22 @@ void Gui::FUN_00423110(i32 a0, i32 a1)
 {
 }
 
+void Gui::FUN_00439007()
+{
+}
+
+void Gui::FUN_00439050()
+{
+}
+
+void Gui::FUN_00439093()
+{
+}
+
+void Gui::FUN_004390d6()
+{
+}
+
 // STUB: th08 0x43542b
 void GuiImpl::DrawDialogue()
 {

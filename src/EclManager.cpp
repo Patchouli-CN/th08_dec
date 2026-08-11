@@ -760,6 +760,16 @@ restart:
             case 160: // opcode 161 = 生成特效 at unk2d88 (g_BulletManager.FUN_00430d30)
                 g_BulletManager.FUN_00430d30(&enemy->unk2d88, ECL_FVAL(0));
                 goto skipInstr;
+            case 161: // opcode 162 = RemoveAllBullets(4)
+                g_BulletManager.RemoveAllBullets(4);
+                goto skipInstr;
+            case 164: // opcode 165 = 写 enemy+0x14 (float)
+                *(f32 *)((u8 *)enemy + 0x14) = ECL_FVAL(0);
+                goto skipInstr;
+            case 165: // opcode 166 = 极坐标→直角: *float[1]=sin(f2)*f3; *float[0]=cos(f2)*f3
+                *GetFloatPtr(enemy, &instr->args[1], instr->paramMask, 0) = sinf(ECL_FVAL(2)) * ECL_FVAL(3);
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = cosf(ECL_FVAL(2)) * ECL_FVAL(3);
+                goto skipInstr;
             case 144: // opcode 145 = 设置 unk3324 bit25
                 enemy->unk3324 = (enemy->unk3324 & ~0x2000000) | ((instr->args[0].b[0] & 1) << 0x19);
                 goto skipInstr;
@@ -782,6 +792,56 @@ restart:
             case 155: // opcode 156 = 设置 unk3324 bit7 + unk332f=2
                 enemy->unk3324 = (enemy->unk3324 & ~0x80) | ((instr->args[0].b[0] & 1) << 7);
                 enemy->unk332f = 2;
+                goto skipInstr;
+            case 166: // opcode 167 = 设置子弹对象 unk554
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    if (enemy->unk3280[v0] != 0)
+                        *(f32 *)((u8 *)enemy->unk3280[v0] + 0x554) = ECL_FVAL(1);
+                }
+                goto skipInstr;
+            case 170: // opcode 171 = 设置子弹对象 unk560
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    if (enemy->unk3280[v0] != 0)
+                        *(f32 *)((u8 *)enemy->unk3280[v0] + 0x560) = ECL_FVAL(1);
+                }
+                goto skipInstr;
+            case 171: // opcode 172 = 设置子弹对象 unk558/55c
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    if (enemy->unk3280[v0] != 0)
+                    {
+                        *(f32 *)((u8 *)enemy->unk3280[v0] + 0x558) = ECL_FVAL(1);
+                        *(f32 *)((u8 *)enemy->unk3280[v0] + 0x55c) = ECL_FVAL(2);
+                    }
+                }
+                goto skipInstr;
+            case 172: // opcode 173 = 设置 unk3324 bit30
+                enemy->unk3324 = (enemy->unk3324 & ~0x40000000) | ((ECL_IVAL(0) & 1) << 0x1e);
+                goto skipInstr;
+            case 174: // opcode 175 = 写全局 0xf54e2c
+                *(volatile u32 *)0xf54e2c = ECL_IVAL(0);
+                goto skipInstr;
+            case 176: // opcode 177 = 设置 unk2e04
+                enemy->unk2e04 = ECL_IVAL(0);
+                goto skipInstr;
+            case 178: // opcode 179 = g_Gui.FUN_00439007()
+                g_Gui.FUN_00439007();
+                goto skipInstr;
+            case 179: // opcode 180 = g_Gui.FUN_004390d6()
+                g_Gui.FUN_004390d6();
+                goto skipInstr;
+            case 180: // opcode 181 = 若时钟<12h 播声+加时钟+依是否=12h 调 Gui
+                if (g_GameManager.GetClockTime() < 0xc)
+                {
+                    g_SoundPlayer.PlaySoundByIdx((SoundIdx)0x2d, 0);
+                    g_GameManager.AddToClockTime(1);
+                    if (g_GameManager.GetClockTime() == 0xc)
+                        g_Gui.FUN_00439093();
+                    else
+                        g_Gui.FUN_00439050();
+                }
                 goto skipInstr;
             case 169: // opcode 170 = 写子弹对象+0x599 (byte)
                 {
