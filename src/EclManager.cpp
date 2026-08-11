@@ -248,7 +248,8 @@ ZunResult EclManager::Load(const char *path)
                   p151, p152, p153, p154, p155, p156, p157, p158, p159, v53a, v54a, v55a, v55b, v55c, v55d, v55e, \
                   v55f, v57a, v58a, v59a, v59b, v59c, v59d, v59e, v59f, v62a, v62b, v64a, v64b, v65a, v65b, v65c, \
                   v67a, v67b, v68a, v68b, v68c, v68d, v69a, v70a, v71a, v71b, v71c, v71d, v71e, v71f, v71g, \
-                  v72a, v72b, v72c, v72d, v73a, v73b, v73c, v74a, v74b, v74c, v74d)
+                  v72a, v72b, v72c, v72d, v73a, v73b, v73c, v74a, v74b, v74c, v74d, v76a, v76b, v77a, v77b, \
+                  v78a, v79a, v80a, v85a, v85b, v86a, v86b, v86c, v87a, v88a, v88b, v88c)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -321,6 +322,15 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v72a; f32 v72b, v72c, v72d; // slots 198-201 (case 72: MOVE_INTERP; IVAL0,FVAL1-3)
     i32 v73a; f32 v73b, v73c; // slots 202-204 (case 73: MOVE_INTERP; IVAL0,FVAL1-2)
     f32 v74a, v74b, v74c, v74d; // slots 205-208 (case 74: SET_MOVE_SPEED4; FVAL0-3)
+    f32 v76a, v76b; // slots 209-210 (case 76: 写两 float; FVAL0, FVAL1)
+    f32 v77a, v77b; // slots 211-212 (case 77: 写两 float; FVAL0, FVAL1)
+    i32 v78a;       // slot 213 (case 78: 设置特效标志 flags)
+    i32 v79a;       // slot 214 (case 79: 清除特效标志 flags)
+    i32 v80a;       // slot 215 (case 80: 混合特效标志 flags)
+    i32 v85a, v85b; // slots 216-217 (case 85: 子弹对象 int 变量)
+    i32 v86a, v86b, v86c; // slots 218-220 (case 86: 子弹对象 float 变量)
+    i32 v87a;       // slot 221 (case 87: 子弹对象子脚本)
+    i32 v88a, v88b, v88c; // slots 222-224 (case 88: 子弹对象 interrupt)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1036,90 +1046,132 @@ restart:
                 enemy->flags &= ~ECL_FLAG_CLEAR_MOVE;
                 goto skipInstr;
             case 76: // opcode 77 = 写两个 float 字段
-                enemy->unk2d70 = ECL_FVAL(0);
-                enemy->unk2d74 = ECL_FVAL(1);
+                if (instr->paramMask & 0x1)
+                    v76a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v76a = instr->args[0].f;
+                enemy->unk2d70 = v76a;
+                if (instr->paramMask & 0x2)
+                    v76b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v76b = instr->args[1].f;
+                enemy->unk2d74 = v76b;
                 goto skipInstr;
             case 77: // opcode 78 = 写两个 float 字段
-                enemy->unk2d7c = ECL_FVAL(0);
-                enemy->unk2d80 = ECL_FVAL(1);
+                if (instr->paramMask & 0x1)
+                    v77a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v77a = instr->args[0].f;
+                enemy->unk2d7c = v77a;
+                if (instr->paramMask & 0x2)
+                    v77b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v77b = instr->args[1].f;
+                enemy->unk2d80 = v77b;
                 goto skipInstr;
             case 78: // opcode 79 = 设置特效标志 (flags bit → flags/3328 各 bit)
-                {
-                    i32 flags = ECL_IVAL(0);
-                    enemy->flags = (enemy->flags & ~0x40) | (((flags >> 0) & 1) << 6);
-                    enemy->flags = (enemy->flags & ~0x4) | (((flags >> 1) & 1) << 2);
-                    enemy->flags = (enemy->flags & ~0x8) | (((flags >> 2) & 1) << 3);
-                    enemy->flags = (enemy->flags & ~0x10) | (((flags >> 3) & 1) << 4);
-                    enemy->flags = (enemy->flags & ~0x10000000) | (((flags >> 4) & 1) << 0x1c);
-                    enemy->anmFlags = (enemy->anmFlags & ~0x40) | (((flags >> 5) & 1) << 6);
-                }
+                if (instr->paramMask & 0x1)
+                    v78a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v78a = instr->args[0].i;
+                enemy->flags = (enemy->flags & ~0x40) | (((v78a >> 0) & 1) << 6);
+                enemy->flags = (enemy->flags & ~0x4) | (((v78a >> 1) & 1) << 2);
+                enemy->flags = (enemy->flags & ~0x8) | (((v78a >> 2) & 1) << 3);
+                enemy->flags = (enemy->flags & ~0x10) | (((v78a >> 3) & 1) << 4);
+                enemy->flags = (enemy->flags & ~0x10000000) | (((v78a >> 4) & 1) << 0x1c);
+                enemy->anmFlags = (enemy->anmFlags & ~0x40) | (((v78a >> 5) & 1) << 6);
                 goto skipInstr;
             case 79: // opcode 80 = 清除特效标志 (flags if 分支)
+                if (instr->paramMask & 0x1)
+                    v79a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v79a = instr->args[0].i;
+                if (v79a & 1) enemy->flags &= ~0x40;
+                if (v79a & 2)
                 {
-                    i32 flags = ECL_IVAL(0);
-                    if (flags & 1) enemy->flags &= ~0x40;
-                    if (flags & 2)
-                    {
-                        enemy->flags &= ~0x4;
-                        if (enemy->unk53c8) ((EffectManagerParticle *)enemy->unk53c8)->flags &= ~0x20000;
-                    }
-                    if (flags & 4) enemy->flags &= ~0x8;
-                    if (flags & 8) enemy->flags |= 0x10;
-                    if (flags & 0x10) enemy->flags |= ECL_FLAG_SPECIAL_EFFECT;
-                    if (flags & 0x20) enemy->anmFlags |= ECL_ANM_FLAG_EFFECT;
+                    enemy->flags &= ~0x4;
+                    if (enemy->unk53c8) ((EffectManagerParticle *)enemy->unk53c8)->flags &= ~0x20000;
                 }
+                if (v79a & 4) enemy->flags &= ~0x8;
+                if (v79a & 8) enemy->flags |= 0x10;
+                if (v79a & 0x10) enemy->flags |= ECL_FLAG_SPECIAL_EFFECT;
+                if (v79a & 0x20) enemy->anmFlags |= ECL_ANM_FLAG_EFFECT;
                 goto skipInstr;
             case 80: // opcode 81 = 混合设置/清除特效标志
+                if (instr->paramMask & 0x1)
+                    v80a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v80a = instr->args[0].i;
+                if (v80a & 1) enemy->flags |= 0x40;
+                if (v80a & 2)
                 {
-                    i32 flags = ECL_IVAL(0);
-                    if (flags & 1) enemy->flags |= 0x40;
-                    if (flags & 2)
-                    {
-                        enemy->flags |= 0x4;
-                        if (enemy->unk53c8) ((EffectManagerParticle *)enemy->unk53c8)->flags |= 0x20000;
-                    }
-                    if (flags & 4) enemy->flags |= 0x8;
-                    if (flags & 8) enemy->flags &= ~0x10;
-                    if (flags & 0x10) enemy->flags &= ~ECL_FLAG_SPECIAL_EFFECT;
-                    if (flags & 0x20) enemy->anmFlags &= ~ECL_ANM_FLAG_EFFECT;
+                    enemy->flags |= 0x4;
+                    if (enemy->unk53c8) ((EffectManagerParticle *)enemy->unk53c8)->flags |= 0x20000;
                 }
+                if (v80a & 4) enemy->flags |= 0x8;
+                if (v80a & 8) enemy->flags &= ~0x10;
+                if (v80a & 0x10) enemy->flags &= ~ECL_FLAG_SPECIAL_EFFECT;
+                if (v80a & 0x20) enemy->anmFlags &= ~ECL_ANM_FLAG_EFFECT;
                 goto skipInstr;
             case 85: // opcode 86 = 读子弹对象 int 变量 (g_BulletObjects[arg2] 上的 var1)
-                {
-                    i32 result;
-                    if (instr->paramMask & 0x2)
-                        result = GetVarValue((Enemy *)g_BulletObjects[ECL_IVAL(2)], instr->args[1].i);
-                    else
-                        result = instr->args[1].i;
-                    *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) = result;
-                }
+                if (instr->paramMask & 0x4)
+                    v85a = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v85a = instr->args[2].i;
+                if (instr->paramMask & 0x2)
+                    v85b = GetVarValue((Enemy *)g_BulletObjects[v85a], instr->args[1].i);
+                else
+                    v85b = instr->args[1].i;
+                *GetIntPtr(enemy, &instr->args[0], instr->paramMask, 0) = v85b;
                 goto skipInstr;
             case 86: // opcode 87 = 读子弹对象 float 变量 (g_BulletObjects[arg2] 上的 var1)
+                if (instr->paramMask & 0x4)
+                    v86a = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v86a = instr->args[2].i;
+                if (g_BulletObjects[v86a] != 0)
                 {
-                    i32 idx = ECL_IVAL(2);
-                    if (g_BulletObjects[idx] != 0)
+                    if (instr->paramMask & 0x2)
                     {
-                        f32 result;
-                        if (instr->paramMask & 0x2)
-                            result = ((Enemy *)g_BulletObjects[ECL_IVAL(2)])->GetEclFloatVar(instr->args[1].i);
+                        if (instr->paramMask & 0x4)
+                            v86b = GetVarValue(enemy, instr->args[2].i);
                         else
-                            result = instr->args[1].f;
-                        *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = result;
+                            v86b = instr->args[2].i;
+                        v86c = ((Enemy *)g_BulletObjects[v86b])->GetEclFloatVar(instr->args[1].i);
                     }
+                    else
+                    {
+                        v86c = instr->args[1].f;
+                    }
+                    *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v86c;
                 }
                 goto skipInstr;
             case 87: // opcode 88 = 子弹对象子脚本 (StartSubContext)
-                {
-                    i32 v0 = ECL_IVAL(0);
-                    Enemy *bullet = (Enemy *)g_BulletObjects[v0];
-                    StartSubContext(bullet, bullet->curContextPtr->curInstr, instr->args[1].i);
-                }
+                if (instr->paramMask & 0x1)
+                    v87a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v87a = instr->args[0].i;
+                arg = v87a;
+                StartSubContext((Enemy *)g_BulletObjects[arg],
+                                ((Enemy *)g_BulletObjects[arg])->curContextPtr->curInstr,
+                                instr->args[1].i);
                 goto skipInstr;
             case 88: // opcode 89 = 写子弹对象+0x2d30 (若 g_BulletObjects[arg0] 有效)
+                if (instr->paramMask & 0x1)
+                    v88a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v88a = instr->args[0].i;
+                if (g_BulletObjects[v88a] != 0)
                 {
-                    i32 idx = ECL_IVAL(0);
-                    if (g_BulletObjects[idx] != 0)
-                        ((Enemy *)g_BulletObjects[ECL_IVAL(0)])->runInterrupt = (i16)ECL_IVAL(1);
+                    if (instr->paramMask & 0x2)
+                        v88b = GetVarValue(enemy, instr->args[1].i);
+                    else
+                        v88b = instr->args[1].i;
+                    if (instr->paramMask & 0x1)
+                        v88c = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v88c = instr->args[0].i;
+                    ((Enemy *)g_BulletObjects[v88c])->runInterrupt = (i16)v88b;
                 }
                 goto skipInstr;
             case 89: // opcode 90 = 生成弹幕子敌人 (GetLastSubEnemy/41f110 + 425b70)
