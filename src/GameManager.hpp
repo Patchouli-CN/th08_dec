@@ -14,6 +14,51 @@
 #define EXTRA_UNLOCKED_FLAG ZUN_BIT(14)
 #define SPELL_PRACTICE_UNLOCKED_FLAG ZUN_BIT(15)
 
+// ---- GameManager::OnUpdate magic constants ----
+#define PAUSE_KEY_MASK 0x1001           // pause + up buttons held together
+#define FOCUS_KEY_BIT 0x8               // focus (slow) button
+#define ANY_INPUT_MASK 0xffff           // any-button mask used by the demo check
+
+// g_PlayerFlags (0x164d0b4) bit positions.
+#define PLAYER_FLAG_SWAP_MODE_BIT 3     // both characters active (swap mode)
+#define PLAYER_FLAG_FORCE_SWITCH_BIT 4  // force a character switch
+#define PLAYER_FLAG_EXTRA_BIT 14        // extra stage unlocked
+
+// g_Unknown164d2cc special event states (behave like an in-progress event).
+#define GAME_STATE_EVENT_6 6
+#define GAME_STATE_EVENT_7 7
+#define GAME_STATE_EVENT_8 8
+
+#define STAGE_PROGRESS_MAX 9            // number of stage-progress slots
+#define CLOCK_TIME_12H_LIMIT 0xc        // clock reaches 12h: game can no longer continue
+#define EXTRA_STAGE_CLEARED_FLAG 0x8000 // high bit marking the extra stage as cleared
+
+// Anti-tamper register validity bounds (6543..106543).
+#define ANTITAMPER_RANGE_MIN 6543
+#define ANTITAMPER_RANGE_MAX 106543
+#define ANTITAMPER_RANGE_MIN_FLOAT 6543.0f
+#define ANTITAMPER_RANGE_MAX_FLOAT 106543.0f
+
+// Displayed-score animation caps.
+#define SCORE_DISPLAY_CAP 1000000000
+#define SCORE_DISPLAY_CAP_ONE_LESS 999999999
+#define SCORE_INCREMENT_CAP 0x8d55e
+
+// Global-slowdown bullet-count thresholds.
+#define SLOW_BULLET_COUNT_MAX 0x140
+#define SLOW_BULLET_COUNT_MID 0xe0
+#define SLOW_BULLET_COUNT_MIN 0x80
+
+// Demo auto-play frame thresholds, indexed by currentDemoReplay (0-3).
+#define DEMO_BOMB_FRAME_0 0x1770
+#define DEMO_BOMB_FRAME_1 0x12c0
+#define DEMO_BOMB_FRAME_2 0x1338
+#define DEMO_BOMB_FRAME_3 0x1af4
+#define DEMO_END_FRAME_0 0x17e8
+#define DEMO_END_FRAME_1 0x1338
+#define DEMO_END_FRAME_2 0x13b0
+#define DEMO_END_FRAME_3 0x1b6c
+
 #define IS_STAGE_CLEARED(difficulty, stage) (difficulty & ZUN_BIT(stage))
 
 #define ANTITAMPER_RNG_RANGE 100000
@@ -394,5 +439,32 @@ struct GameManager
 
 C_ASSERT(sizeof(GameManager) == 0x3de3c);
 
+// Stage BGM table: one {stage BGM, boss BGM, unused} entry per game state
+// (indexed by g_Unknown164d2cc, which is also the current stage).
+struct StageBgmEntry
+{
+    i32 stageBgm;
+    i32 bossBgm;
+    i32 unused;
+};
+
 DIFFABLE_EXTERN(GameManager, g_GameManager);
+DIFFABLE_EXTERN(u32, g_CurFrameCount);
+DIFFABLE_EXTERN(i32, g_GameManagerState);
+DIFFABLE_EXTERN(u16, g_StageClearFlag);
+DIFFABLE_EXTERN(f32, g_CsumFloat);
+DIFFABLE_EXTERN(u16, g_GlobalNoRetryClears[5]);
+DIFFABLE_EXTERN(u16, g_GlobalWithRetryClears[5]);
+
+// One clear-counter entry per difficulty; each entry is 0x44 bytes, only the
+// leading i32 is used (this matches the original's `[difficulty * 0x44]` stride).
+struct ClearCountEntry
+{
+    i32 count;
+    unknown_fields(0x4, 0x40);
+};
+
+DIFFABLE_EXTERN(ClearCountEntry, g_ClearCountByDifficulty[5]);
+DIFFABLE_EXTERN(u32, g_ScreenClearColor);
+DIFFABLE_EXTERN(StageBgmEntry, g_StageBgmTable[9]);
 }; // Namespace th08

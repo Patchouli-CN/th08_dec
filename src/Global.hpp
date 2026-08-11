@@ -357,6 +357,7 @@ DIFFABLE_EXTERN(Chain, g_Chain);
 DIFFABLE_EXTERN(PbgArchive, g_PbgArchive);
 DIFFABLE_EXTERN(ZunMemory, g_ZunMemory);
 DIFFABLE_EXTERN(ControllerMapping, g_ControllerMapping);
+DIFFABLE_EXTERN(i32, g_BulletCount);
 
 ZunBool IsDisableResourceReload();
 }; // namespace th08

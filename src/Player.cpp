@@ -17,6 +17,8 @@ namespace th08
 DIFFABLE_STATIC(Player, g_Player);
 DIFFABLE_STATIC(u8, g_PlayerUnknown0b0); // 0x164d0b0
 DIFFABLE_STATIC(u8, g_PlayerUnknown0bb);
+DIFFABLE_STATIC(u8, g_PlayerUnknown0bd); // 0x164d0bd (player respawn marker)
+DIFFABLE_STATIC(i16, g_CurrentSpellcardNumber); // 0x164d0b8
 DIFFABLE_STATIC(Float2, g_PlayerPos);
 DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile);
 DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile2);

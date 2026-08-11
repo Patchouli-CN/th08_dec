@@ -270,7 +270,13 @@ struct Player
 DIFFABLE_EXTERN(Player, g_Player);
 DIFFABLE_EXTERN(u8, g_PlayerUnknown0b0);
 DIFFABLE_EXTERN(u8, g_PlayerUnknown0bb);
+DIFFABLE_EXTERN(u8, g_PlayerUnknown0bd);
+DIFFABLE_EXTERN(i16, g_CurrentSpellcardNumber);
+DIFFABLE_EXTERN(u8, g_PlayerCharacter);
+DIFFABLE_EXTERN(u32, g_PlayerFlags);
 DIFFABLE_EXTERN(Float2, g_PlayerPos);
+DIFFABLE_EXTERN(f32, g_PlayerTargetX);
+DIFFABLE_EXTERN(f32, g_PlayerTargetY);
 DIFFABLE_EXTERN(PlayerRawShtFile *, g_PlayerShtFile);
 DIFFABLE_EXTERN(PlayerRawShtFile *, g_PlayerShtFile2);
 DIFFABLE_EXTERN(f32, g_PlayerBoundaryLeft);

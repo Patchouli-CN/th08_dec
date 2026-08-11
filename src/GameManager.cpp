@@ -28,6 +28,26 @@ DIFFABLE_STATIC(ChainElem, g_GameManagerDrawChain);
 DIFFABLE_STATIC(u32, g_UnkEnemyDataPtr);
 
 void IncrementCappedAgain(u32 *param, u32 cap);
+void FUN_00438046();
+
+struct SpellcardBgmEntry
+{
+    i32 maxSpellcardNumber;
+    i32 bgmIndex;
+    char *path;
+    i32 isBossTheme;
+    i32 isLastWordTheme;
+};
+
+DIFFABLE_STATIC_ARRAY_ASSIGN(SpellcardBgmEntry, 19, g_SpellcardBgmTable) = {
+    {1, 1, "th08_00.mid", 0, 0},     {12, 2, "th08_03.mid", 1, 0},  {16, 3, "th08_04.mid", 0, 0},
+    {31, 4, "th08_05.mid", 1, 0},    {35, 5, "th08_06.mid", 0, 0},  {53, 6, "th08_07.mid", 1, 0},
+    {76, 8, "th08_09.mid", 1, 0},    {99, 9, "th08_10.mid", 1, 0},  {118, 11, "th08_12.mid", 1, 0},
+    {122, 12, "th08_13.mid", 0, 0},  {142, 13, "th08_14.mid", 1, 0}, {146, 15, "th08_13b.mid", 2, 1},
+    {150, 12, "th08_13.mid", 0, 0},  {170, 14, "th08_15.mid", 1, 0}, {190, 15, "th08_13b.mid", 2, 1},
+    {193, 16, "th08_18.mid", 0, 0},  {204, 17, "th08_19.mid", 1, 0}, {222, 20, "th08_20.mid", 2, 0},
+    {-1, 0, " ", 0, 0},
+};
 
 ZunBool GameManager::IsWithinPlayfield(f32 x, f32 y, f32 width, f32 height)
 {
@@ -98,30 +118,444 @@ void GameManager::CollectExtend()
     }
 }
 
-// STUB: th08 0x439bc7
+DIFFABLE_STATIC(u32, g_CurFrameCount);            // 0x164d09c
+DIFFABLE_STATIC(i32, g_GameManagerState);         // 0x164d0a4
+DIFFABLE_STATIC(u16, g_StageClearFlag);           // 0x164d2d8 (bit mask of the cleared stage)
+DIFFABLE_STATIC(f32, g_CsumFloat);                // 0x164d2fc (anti-tamper integrity float)
+DIFFABLE_STATIC_ARRAY(u16, 5, g_GlobalNoRetryClears);   // 0x164bb54 (no-continue clear flags per difficulty)
+DIFFABLE_STATIC_ARRAY(u16, 5, g_GlobalWithRetryClears); // 0x164bb5e (with-continue clear flags per difficulty)
+DIFFABLE_STATIC_ARRAY(ClearCountEntry, 5, g_ClearCountByDifficulty); // 0x164cd70 (per-difficulty clear counters, 0x44 stride)
+DIFFABLE_STATIC(u32, g_ScreenClearColor);         // 0x4e4b24
+
+DIFFABLE_STATIC_ARRAY_ASSIGN(StageBgmEntry, 9, g_StageBgmTable) = {
+    {1, 2, 0},  {3, 4, 0},  {5, 6, 0},  {7, 8, 0},  {7, 9, 0},
+    {10, 11, 0}, {12, 13, 15}, {12, 14, 15}, {16, 17, 0},
+};
+
+// FUNCTION: th08 0x439bc7 (98.26% FIXME: /Os 跳转 trampoline —— 原版直接 jcc，
+// MSVC 对 `if (cond) goto` 生成 jcc+jmp；cameraMode u8 |= 0xff 生成 movzbl+or+mov
+// 而非原版 or byte；找角色循环原版 setne dl+test edx。均系统性不可修。)
+#pragma var_order(foundIdx, nextIdx, clockTimeTmp, bgmIdx, anmManager, csum, i, notInMenu, scoreIncrement)
 ChainCallbackResult GameManager::OnUpdate(GameManager *gameManager)
 {
+    i32 foundIdx;
+    i32 nextIdx;
+    i8 clockTimeTmp;
+    i32 bgmIdx;
+    AnmManager *anmManager;
+    i32 csum;
+    i32 i;
+    i32 notInMenu;
+    u32 scoreIncrement;
+
+    g_CurFrameCount++;
+
+    if (gameManager->flags.unk5 != 0)
+    {
+        if (gameManager->flags.unk5 == 2)
+        {
+            // Stage clear: write the clear records for this stage/difficulty.
+            gameManager->flags.unk5 = 3;
+            g_GameManager.unk38 = 1;
+            g_GameManagerState |= -1;
+            if (!((g_PlayerFlags >> PLAYER_FLAG_SWAP_MODE_BIT) & 1))
+            {
+                if (g_GameManager.globals->numRetries == 0)
+                {
+                    g_GameManager.clrdData[g_PlayerCharacter].difficultiesClearedWithoutRetries[g_GameManager.difficulty] |=
+                        g_StageClearFlag;
+                    g_GlobalNoRetryClears[g_GameManager.difficulty] |= g_StageClearFlag;
+                }
+                g_GameManager.clrdData[g_PlayerCharacter].difficultiesClearedWithRetries[g_GameManager.difficulty] |=
+                    g_StageClearFlag;
+                g_GlobalWithRetryClears[g_GameManager.difficulty] |= g_StageClearFlag;
+            }
+            gameManager->globals->displayScore = gameManager->globals->score;
+            if (gameManager->flags.isPracticeMode)
+            {
+                g_GameManager.globals->displayScore = g_GameManager.globals->score;
+                g_GameManagerState = 6;
+                return CHAIN_CALLBACK_RESULT_BREAK;
+            }
+            if (g_Unknown164d2cc == GAME_STATE_EVENT_6 || g_Unknown164d2cc == GAME_STATE_EVENT_7 || g_Unknown164d2cc == GAME_STATE_EVENT_8)
+            {
+                goto stageE34;
+            }
+            if ((g_PlayerFlags >> PLAYER_FLAG_SWAP_MODE_BIT) & 1)
+            {
+                foundIdx = 0;
+                for (nextIdx = g_Unknown164d2cc + 1; nextIdx < STAGE_PROGRESS_MAX; nextIdx++)
+                {
+                    if (g_ReplayManager->unk8->header.stageReplayData[nextIdx] != NULL)
+                    {
+                        foundIdx = nextIdx;
+                        break;
+                    }
+                }
+                if (foundIdx == 0)
+                {
+                    g_Supervisor.curState = 7;
+                }
+                else
+                {
+                    g_Unknown164d2cc = foundIdx;
+                    g_Supervisor.curState = 3;
+                }
+                goto stageE2f;
+            }
+            clockTimeTmp = g_GameManager.globals->clockTime;
+            if (clockTimeTmp >= CLOCK_TIME_12H_LIMIT)
+            {
+                g_PlayerFlags &= ~ZUN_BIT(PLAYER_FLAG_FORCE_SWITCH_BIT);
+                g_GameManagerState = 9;
+                return CHAIN_CALLBACK_RESULT_BREAK;
+            }
+            g_GameManager.AdvanceToNextStage();
+            g_Supervisor.curState = 3;
+            goto stageE2f;
+
+        stageE34:
+            if ((g_PlayerFlags >> PLAYER_FLAG_SWAP_MODE_BIT) & 1)
+            {
+                g_GameManagerState = 7;
+            }
+            else
+            {
+                if (g_GameManager.difficulty >= 4)
+                {
+                    if (g_GameManager.difficulty == 4)
+                    {
+                        g_GameManager.clrdData[g_PlayerCharacter].difficultiesClearedWithoutRetries[g_GameManager.difficulty] |= EXTRA_STAGE_CLEARED_FLAG;
+                        g_GlobalWithRetryClears[g_GameManager.difficulty] |= EXTRA_STAGE_CLEARED_FLAG;
+                    }
+                    g_ClearCountByDifficulty[g_GameManager.difficulty].count++;
+                    g_PlayerFlags |= ZUN_BIT(PLAYER_FLAG_FORCE_SWITCH_BIT);
+                    g_GameManager.globals->displayScore = g_GameManager.globals->score;
+                    g_GameManagerState = 6;
+                    return CHAIN_CALLBACK_RESULT_BREAK;
+                }
+                g_PlayerFlags |= ZUN_BIT(PLAYER_FLAG_FORCE_SWITCH_BIT);
+                g_GameManagerState = 9;
+                return CHAIN_CALLBACK_RESULT_BREAK;
+            }
+            goto stageE2f;
+        }
+        else
+        {
+            goto stage1;
+        }
+    }
+    else
+    {
+        goto skipStageComplete;
+    }
+
+stageE2f:
+    if (g_GameManagerState < 0)
+    {
+        g_Gui.FUN_00438f58();
+    }
+
+stage1:
+    // Pause handling. The pause key (0x1001 = pause + up) pauses right away when
+    // pressed, or whenever the game is in a special mode (character switch etc).
+    if ((g_CurFrameInput & PAUSE_KEY_MASK) != 0)
+    {
+        if ((g_CurFrameInput & PAUSE_KEY_MASK) == (g_LastFrameInput & PAUSE_KEY_MASK))
+        {
+            // Same state as last frame: continue to noPauseKey.
+        }
+        else
+        {
+            goto pause;
+        }
+    }
+
+noPauseKey:
+    if (!((g_PlayerFlags >> PLAYER_FLAG_SWAP_MODE_BIT) & 1))
+    {
+        if (g_Unknown164d2cc != GAME_STATE_EVENT_6)
+        {
+            if (g_Unknown164d2cc != GAME_STATE_EVENT_7)
+            {
+                if (g_Unknown164d2cc == GAME_STATE_EVENT_8)
+                {
+                    // Fall through into the pause block when in mode 8.
+                }
+                else
+                {
+                    goto skipStageComplete;
+                }
+            }
+            else
+            {
+                goto pause;
+            }
+        }
+        else
+        {
+            goto pause;
+        }
+    }
+    else
+    {
+        goto pause;
+    }
+
+pause:
+    gameManager->flags.unk5 = 0;
+    if (g_GameManagerState >= 0)
+    {
+        g_Supervisor.curState = g_GameManagerState;
+    }
+
+skipStageComplete:
+    if (gameManager->unk38 != 0)
+    {
+        if (gameManager->unk38 == 2)
+        {
+            return CHAIN_CALLBACK_RESULT_EXIT_GAME_SUCCESS;
+        }
+        gameManager->unk3c++;
+        return CHAIN_CALLBACK_RESULT_BREAK;
+    }
+
+    if (gameManager->unk3de28 != 0)
+    {
+        FUN_00438046();
+        g_AnmManager->ReleaseSurface(8);
+        g_Supervisor.loadingVmsHaveBeenSetup = 0;
+        if (gameManager->unk3de28 == 1)
+        {
+            if (!((g_PlayerFlags >> PLAYER_FLAG_EXTRA_BIT) & 1))
+            {
+                g_Supervisor.PlayMusic(0, g_StageBgmTable[g_Unknown164d2cc].stageBgm);
+            }
+            else
+            {
+                for (bgmIdx = 0; ; bgmIdx++)
+                {
+                    if (g_SpellcardBgmTable[bgmIdx].maxSpellcardNumber < 0)
+                    {
+                        break;
+                    }
+                    if (g_CurrentSpellcardNumber <= g_SpellcardBgmTable[bgmIdx].maxSpellcardNumber)
+                    {
+                        g_Supervisor.PlayMusic(0, g_SpellcardBgmTable[bgmIdx].bgmIndex);
+                        break;
+                    }
+                }
+            }
+        }
+        gameManager->unk3de28 = 0;
+    }
+
+    // Focus (slow) mode toggled on this frame: snap the player box and remember
+    // the RNG state around the pause so the game continues deterministically.
+    if (gameManager->showRetryMenu == 0 && gameManager->isInGameMenu == 0 &&
+        gameManager->flags.isDemoMode == 0 && gameManager->unk2D == 0)
+    {
+        if ((g_CurFrameInput & FOCUS_KEY_BIT) != 0 && (g_CurFrameInput & FOCUS_KEY_BIT) != (g_LastFrameInput & FOCUS_KEY_BIT))
+        {
+            gameManager->isInGameMenu = 1;
+            g_PlayerPos.x = 32.0f;
+            g_PlayerPos.y = 16.0f;
+            g_PlayerTargetX = 384.0f;
+            g_PlayerTargetY = 448.0f;
+            gameManager->unk3D298 = 1;
+            g_SoundPlayer.QueueCommand(6, 0, "Pause");
+            g_SoundPlayer.PlaySoundByIdx(SOUND_PAUSE, 0);
+            g_Supervisor.UpdateGameTime(&g_Supervisor);
+            g_Rng.seedBackup = g_Rng.seed;
+            gameManager->hscr.numPauses++;
+            g_GameManager.UpdateAntiTamper();
+            g_Rng.seed = g_Rng.seedBackup;
+        }
+    }
+
+    g_Supervisor.viewport.X = gameManager->arcadeRegionTopLeftPos.x;
+    g_Supervisor.viewport.Y = gameManager->arcadeRegionTopLeftPos.y;
+    g_Supervisor.viewport.Width = gameManager->arcadeRegionSize.x;
+    g_Supervisor.viewport.Height = gameManager->arcadeRegionSize.y;
+    g_Supervisor.viewport.MinZ = 0.0f;
+    g_Supervisor.viewport.MaxZ = 1.0f;
+    anmManager = g_AnmManager;
+    anmManager->cameraMode |= 0xff;
+
+    // In the swap mode with a single player alive, drop frames so the game stays
+    // at a manageable speed depending on the current FPS.
+    if ((g_PlayerFlags & 0x8) && g_PlayerUnknown0bd == 1)
+    {
+        if (g_Gui.FUN_004358bb() == 0)
+        {
+            gameManager->unk3de08++;
+            if ((g_Supervisor.curFps < 20 && gameManager->unk3de08 % 3 != 0) ||
+                (g_Supervisor.curFps >= 20 && g_Supervisor.curFps < 30 && gameManager->unk3de08 % 2 != 0) ||
+                (g_Supervisor.curFps >= 30 && g_Supervisor.curFps < 40 && gameManager->unk3de08 % 3 == 0) ||
+                (g_Supervisor.curFps >= 40 && g_Supervisor.curFps < 50 && gameManager->unk3de08 % 6 == 0))
+            {
+                return CHAIN_CALLBACK_RESULT_BREAK;
+            }
+        }
+    }
+
+    // Replay / demo auto-play: advance the demo counter and exit the demo when it
+    // has run long enough (or the player pressed any button).
+    if (gameManager->flags.isDemoMode)
+    {
+        if ((g_CurFrameInput & ANY_INPUT_MASK) != 0 && (g_CurFrameInput & ANY_INPUT_MASK) != (g_LastFrameInput & ANY_INPUT_MASK))
+        {
+            g_Supervisor.curState = 1;
+        }
+        gameManager->demoFrameCount++;
+        if ((gameManager->currentDemoReplay == 0 && gameManager->demoFrameCount == DEMO_BOMB_FRAME_0) ||
+            (gameManager->currentDemoReplay == 1 && gameManager->demoFrameCount == DEMO_BOMB_FRAME_1) ||
+            (gameManager->currentDemoReplay == 2 && gameManager->demoFrameCount == DEMO_BOMB_FRAME_2) ||
+            (gameManager->currentDemoReplay == 3 && gameManager->demoFrameCount == DEMO_BOMB_FRAME_3))
+        {
+            ScreenEffect::RegisterChain(SCREEN_EFFECT_ARCADE_FADE_OUT, 0x78, 0, 0, 0, 0x15);
+            g_Supervisor.FadeOutMusic(3.0f);
+        }
+        if ((gameManager->currentDemoReplay == 0 && gameManager->demoFrameCount >= DEMO_END_FRAME_0) ||
+            (gameManager->currentDemoReplay == 1 && gameManager->demoFrameCount >= DEMO_END_FRAME_1) ||
+            (gameManager->currentDemoReplay == 2 && gameManager->demoFrameCount >= DEMO_END_FRAME_2) ||
+            (gameManager->currentDemoReplay == 3 && gameManager->demoFrameCount == DEMO_END_FRAME_3))
+        {
+            g_Supervisor.curState = 1;
+            return CHAIN_CALLBACK_RESULT_BREAK;
+        }
+    }
+
+    // Anti-tamper: recompute the checksum and verify the RNG registers are still
+    // in the expected range; an out-of-range value flags the game as tampered.
+    g_GameManager.globals->antiTamperValue = g_GameManager.globals->rng1[2];
+    csum = gameManager->CalcAntiTamperChecksum();
+    g_CsumFloat = (f32)csum + (f32)g_GameManager.globals->rng7[3];
+
+    for (i = 0; i < 7u; i++)
+    {
+        if (gameManager->globals->rng1[i] < ANTITAMPER_RANGE_MIN || gameManager->globals->rng1[i] > ANTITAMPER_RANGE_MAX)
+        {
+            g_CsumFloat = -9999.0f;
+        }
+    }
+    for (i = 0; i < 2u; i++)
+    {
+        if (gameManager->globals->rng3[i] < ANTITAMPER_RANGE_MIN_FLOAT || gameManager->globals->rng3[i] > ANTITAMPER_RANGE_MAX_FLOAT)
+        {
+            g_CsumFloat = -9999.0f;
+        }
+    }
+
+    gameManager->flags.unk2 = !gameManager->showRetryMenu && !gameManager->isInGameMenu;
+
+    for (i = 0; i < 2u; i++)
+    {
+        if (gameManager->globals->rng2[i] < ANTITAMPER_RANGE_MIN_FLOAT || gameManager->globals->rng2[i] > ANTITAMPER_RANGE_MAX_FLOAT)
+        {
+            g_CsumFloat = -9999.0f;
+        }
+    }
+    for (i = 0; i < 8u; i++)
+    {
+        if (gameManager->globals->rng7[i] < ANTITAMPER_RANGE_MIN || gameManager->globals->rng7[i] > ANTITAMPER_RANGE_MAX)
+        {
+            g_CsumFloat = -9999.0f;
+        }
+    }
+
+    g_Supervisor.d3dDevice->Clear(0, NULL, 2, g_ScreenClearColor, 1.0f, 0);
+
+    if (gameManager->isInGameMenu == 1 || gameManager->isInGameMenu == 2 || gameManager->showRetryMenu)
+    {
+        return CHAIN_CALLBACK_RESULT_BREAK;
+    }
+
+    // Animate the displayed score towards the actual score.
+    if (gameManager->globals->score >= SCORE_DISPLAY_CAP)
+    {
+        gameManager->globals->score = SCORE_DISPLAY_CAP_ONE_LESS;
+    }
+    if (gameManager->globals->displayScore != gameManager->globals->score)
+    {
+        if (gameManager->globals->score < gameManager->globals->displayScore)
+        {
+            gameManager->globals->score = gameManager->globals->displayScore;
+        }
+        scoreIncrement = (gameManager->globals->score - gameManager->globals->displayScore) >> 5;
+        if (scoreIncrement >= SCORE_INCREMENT_CAP)
+        {
+            scoreIncrement = SCORE_INCREMENT_CAP;
+        }
+        else if (scoreIncrement == 0)
+        {
+            scoreIncrement = 1;
+        }
+        if (gameManager->globals->unk0x10 < scoreIncrement)
+        {
+            gameManager->globals->unk0x10 = scoreIncrement;
+        }
+        if (gameManager->globals->displayScore + gameManager->globals->unk0x10 > gameManager->globals->score)
+        {
+            gameManager->globals->unk0x10 = gameManager->globals->score - gameManager->globals->displayScore;
+        }
+        gameManager->globals->displayScore = gameManager->globals->displayScore + gameManager->globals->unk0x10;
+        if (gameManager->globals->displayScore >= gameManager->globals->score)
+        {
+            gameManager->globals->unk0x10 = 0;
+            gameManager->globals->displayScore = gameManager->globals->score;
+        }
+        if (gameManager->globals->displayedHighScore < gameManager->globals->displayScore)
+        {
+            gameManager->globals->displayedHighScore = gameManager->globals->displayScore;
+            gameManager->globals->ontinuesUsedInHighScore = gameManager->globals->numRetries;
+        }
+    }
+
+    for (i = 0; i < 3u; i++)
+    {
+        if (gameManager->globals->rng4[i] < ANTITAMPER_RANGE_MIN_FLOAT || gameManager->globals->rng4[i] > ANTITAMPER_RANGE_MAX_FLOAT)
+        {
+            g_CsumFloat = -9999.0f;
+        }
+    }
+    for (i = 0; i < 2u; i++)
+    {
+        if (gameManager->globals->rng5[i] < ANTITAMPER_RANGE_MIN_FLOAT || gameManager->globals->rng5[i] > ANTITAMPER_RANGE_MAX_FLOAT)
+        {
+            g_CsumFloat = -9999.0f;
+        }
+    }
+    for (i = 0; i < 5u; i++)
+    {
+        if (gameManager->globals->rng8[i] < ANTITAMPER_RANGE_MIN || gameManager->globals->rng8[i] > ANTITAMPER_RANGE_MAX)
+        {
+            g_CsumFloat = -9999.0f;
+        }
+    }
+
+    // Global slow-mode: with lots of bullets on screen, skip frames.
+    if (g_GameManager.cfg->slowMode != 0)
+    {
+        g_GameManager.unk2D = 0;
+        gameManager->unk3de08++;
+        if ((g_BulletCount >= SLOW_BULLET_COUNT_MAX && gameManager->unk3de08 % 3 == 0) ||
+            (g_BulletCount < SLOW_BULLET_COUNT_MAX && g_BulletCount >= SLOW_BULLET_COUNT_MID && gameManager->unk3de08 % 4 == 0) ||
+            (g_BulletCount < SLOW_BULLET_COUNT_MID && g_BulletCount >= SLOW_BULLET_COUNT_MIN && gameManager->unk3de08 % 5 == 0))
+        {
+            g_GameManager.unk2D = 1;
+            return CHAIN_CALLBACK_RESULT_BREAK;
+        }
+        if (g_BulletCount < SLOW_BULLET_COUNT_MIN)
+        {
+            gameManager->unk3de08 = 0;
+        }
+    }
+
+    g_GameManager.IsTampered();
+    gameManager->unk3ddc0++;
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
-
-struct SpellcardBgmEntry
-{
-    i32 maxSpellcardNumber;
-    i32 bgmIndex;
-    char *path;
-    i32 isBossTheme;
-    i32 isLastWordTheme;
-};
-
-DIFFABLE_STATIC_ARRAY_ASSIGN(SpellcardBgmEntry, 19, g_SpellcardBgmTable) = {
-    {1, 1, "th08_00.mid", 0, 0},     {12, 2, "th08_03.mid", 1, 0},  {16, 3, "th08_04.mid", 0, 0},
-    {31, 4, "th08_05.mid", 1, 0},    {35, 5, "th08_06.mid", 0, 0},  {53, 6, "th08_07.mid", 1, 0},
-    {76, 8, "th08_09.mid", 1, 0},    {99, 9, "th08_10.mid", 1, 0},  {118, 11, "th08_12.mid", 1, 0},
-    {122, 12, "th08_13.mid", 0, 0},  {142, 13, "th08_14.mid", 1, 0}, {146, 15, "th08_13b.mid", 2, 1},
-    {150, 12, "th08_13.mid", 0, 0},  {170, 14, "th08_15.mid", 1, 0}, {190, 15, "th08_13b.mid", 2, 1},
-    {193, 16, "th08_18.mid", 0, 0},  {204, 17, "th08_19.mid", 1, 0}, {222, 20, "th08_20.mid", 2, 0},
-    {-1, 0, " ", 0, 0},
-};
 
 DIFFABLE_STATIC(i32, g_SpellcardBgmOverride);
 
@@ -298,7 +732,7 @@ void GameManager::GameplaySetupThread(void *param)
         }
         gameManager->InitArcadeRegionParams();
         gameManager->globals->playerPower = 0.0f;
-        gameManager->UpdateAntiTamper();
+        g_GameManager.UpdateAntiTamper();
         gameManager->unk3de04 = 0;
         g_GameManager.unk3D2A4 = 0;
         g_GameManager.unk3D2A0 = 0;
@@ -340,10 +774,10 @@ void GameManager::GameplaySetupThread(void *param)
         gameManager->InitRankParams();
         gameManager->globals->deaths = 0.0f;
         gameManager->globals->deathInStage = 0.0f;
-        gameManager->UpdateAntiTamper();
+        g_GameManager.UpdateAntiTamper();
         gameManager->globals->bombsUsed = 0.0f;
         gameManager->globals->bombsUsedInStage = 0.0f;
-        gameManager->UpdateAntiTamper();
+        g_GameManager.UpdateAntiTamper();
         gameManager->globals->unk1C = 0;
         gameManager->unk3de10 = 0;
         gameManager->unk3de18 = 0;
@@ -384,9 +818,9 @@ void GameManager::GameplaySetupThread(void *param)
         gameManager->globals->displayScore = gameManager->globals->score;
         gameManager->globals->unk0x10 = 0;
         gameManager->globals->deathInStage = 0.0f;
-        gameManager->UpdateAntiTamper();
+        g_GameManager.UpdateAntiTamper();
         gameManager->globals->bombsUsedInStage = 0.0f;
-        gameManager->UpdateAntiTamper();
+        g_GameManager.UpdateAntiTamper();
         if (Player::RegisterChain(0) != ZUN_SUCCESS)
         {
             if (g_Supervisor.subthreadCloseRequestActive)
@@ -401,7 +835,7 @@ void GameManager::GameplaySetupThread(void *param)
     gameManager->globals->pointItemsCollectedInStage = 0;
     gameManager->globals->grazeInStage = 0;
     gameManager->isInGameMenu = 0;
-    gameManager->flags.unk7 = 0;
+    gameManager->flags.unk5 = 0;
     gameManager->flags.unk13 = 0;
     gameManager->unk3de14 = 0;
     gameManager->unk3de20 = 0;
@@ -426,15 +860,15 @@ void GameManager::GameplaySetupThread(void *param)
             {
             case 0:
                 gameManager->globals->playerPower = 0.0f;
-                gameManager->UpdateAntiTamper();
+                g_GameManager.UpdateAntiTamper();
                 break;
             case 1:
                 gameManager->globals->playerPower = 112.0f;
-                gameManager->UpdateAntiTamper();
+                g_GameManager.UpdateAntiTamper();
                 break;
             default:
                 gameManager->globals->playerPower = 128.0f;
-                gameManager->UpdateAntiTamper();
+                g_GameManager.UpdateAntiTamper();
                 break;
             }
         }
@@ -443,17 +877,17 @@ void GameManager::GameplaySetupThread(void *param)
             if (gameManager->currentSpellCardNumber <= 1)
             {
                 gameManager->globals->playerPower = 30.0f;
-                gameManager->UpdateAntiTamper();
+                g_GameManager.UpdateAntiTamper();
             }
             else if (gameManager->currentSpellCardNumber <= 12)
             {
                 gameManager->globals->playerPower = 80.0f;
-                gameManager->UpdateAntiTamper();
+                g_GameManager.UpdateAntiTamper();
             }
             else
             {
                 gameManager->globals->playerPower = 128.0f;
-                gameManager->UpdateAntiTamper();
+                g_GameManager.UpdateAntiTamper();
             }
         }
     }
@@ -462,7 +896,7 @@ void GameManager::GameplaySetupThread(void *param)
         gameManager->InitRankParams();
         ReplayManager::RegisterChain(1, g_GameManager.replayFilename);
         oldSeed = g_Rng.seed;
-        gameManager->UpdateAntiTamper();
+        g_GameManager.UpdateAntiTamper();
         g_Rng.seed = oldSeed;
     }
     gameManager->stageRngSeed = g_Rng.seed;

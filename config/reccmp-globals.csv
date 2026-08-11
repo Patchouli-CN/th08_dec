@@ -193,3 +193,15 @@ th08::g_Unknown164d2c8,0x164d2c8,global
 th08::g_PlayerTargetX,0x164d2e4,global
 th08::g_PlayerTargetY,0x164d2e8,global
 th08::g_Unknown164d2cc,0x164d2cc,global
+th08::g_CurFrameCount,0x164d09c,global
+th08::g_GameManagerState,0x164d0a4,global
+th08::g_StageClearFlag,0x164d2d8,global
+th08::g_CsumFloat,0x164d2fc,global
+th08::g_GlobalNoRetryClears,0x164bb54,global
+th08::g_GlobalWithRetryClears,0x164bb5e,global
+th08::g_ClearCountByDifficulty,0x164cd70,global
+th08::g_ScreenClearColor,0x4e4b24,global
+th08::g_StageBgmTable,0x4c7240,global
+th08::g_BulletCount,0x160f3c8,global
+th08::g_PlayerUnknown0bd,0x164d0bd,global
+th08::g_CurrentSpellcardNumber,0x164d0b8,global

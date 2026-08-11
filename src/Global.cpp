@@ -21,6 +21,7 @@ DIFFABLE_STATIC(PbgArchive, g_PbgArchive)
 DIFFABLE_STATIC(ZunMemory, g_ZunMemory)
 DIFFABLE_STATIC(JOYCAPSA, g_JoystickCaps)
 DIFFABLE_STATIC(u16, g_FocusButtonConflictState)
+DIFFABLE_STATIC(i32, g_BulletCount); // 0x160f3c8 (active bullet count, used for slowdown)
 
 Chain::~Chain()
 {
