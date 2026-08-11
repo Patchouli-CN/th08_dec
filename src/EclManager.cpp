@@ -16,6 +16,8 @@ DIFFABLE_STATIC(EclManager, g_EclManager);
 i32 __fastcall GetVarValue(Enemy *enemy, i32 varId);                       // 0x41f420
 i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask);      // 0x41fe10
 f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused); // 0x420950
+void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr);           // 0x421300
+void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr);           // 0x4213f0
 
 f32 __cdecl EclAtan2(f32 a, f32 b); // th08 0x41f090 (wraps CRT atan2)
 
@@ -65,6 +67,14 @@ f32 Enemy::GetEclFloatVar(i32 varId)
 f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused)
 {
     return NULL;
+}
+
+void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr)
+{
 }
 
 // FUNCTION: th08 0x418330
@@ -234,6 +244,31 @@ restart:
                 goto skipInstr;
             case 32: // ECL_COS: *arg0 = cos(arg1)
                 *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = cosf(ECL_FVAL(1));
+                goto skipInstr;
+            case 33: // opcode 34 = 两点角度: *float[0]=EclAngleFromDxDy(f4-f2, f3-f1)
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
+                    EclAngleFromDxDy(ECL_FVAL(4) - ECL_FVAL(2), ECL_FVAL(3) - ECL_FVAL(1));
+                goto skipInstr;
+            case 34: // opcode 35 = 子脚本 (FUN_00421300)
+                FUN_00421300(enemy, instr);
+                goto skipInstr;
+            case 35: // opcode 36 = 子脚本 (FUN_004213f0)
+                FUN_004213f0(enemy, instr);
+                goto skipInstr;
+            case 36: // opcode 37 = ECL_NORMALIZE_ANGLE: *float[0] = AddNormalizeAngle(f1, f2)
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
+                    AddNormalizeAngle(ECL_FVAL(1), ECL_FVAL(2));
+                goto skipInstr;
+            case 37: // opcode 38 = 角度转坐标: *f[0]=cos(a)*m; *f[1]=sin(a)*m
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
+                    cosf(AddNormalizeAngle(ECL_FVAL(2), 0)) * ECL_FVAL(3);
+                *GetFloatPtr(enemy, &instr->args[1], instr->paramMask, 0) =
+                    sinf(AddNormalizeAngle(ECL_FVAL(2), 0)) * ECL_FVAL(3);
+                goto skipInstr;
+            case 38: // opcode 39 = 两点距离: *float[0]=sqrt((f1-f3)^2+(f2-f4)^2)
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
+                    sqrtf((ECL_FVAL(1) - ECL_FVAL(3)) * (ECL_FVAL(1) - ECL_FVAL(3)) +
+                          (ECL_FVAL(2) - ECL_FVAL(4)) * (ECL_FVAL(2) - ECL_FVAL(4)));
                 goto skipInstr;
             case 53: // ECL_SET_ANM: play animation arg0
                 g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->primaryVm, ECL_IVAL(0));
