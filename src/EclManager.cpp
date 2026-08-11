@@ -169,9 +169,8 @@ Enemy *__fastcall InitEnemySpawnData(Enemy *enemy)
     return NULL;
 }
 
-f32 EclGlobalObj::SetGlobalFlag(i32 a0)
+void EclGlobalObj::SetGlobalFlag(i32 a0)
 {
-    return 0.0f;
 }
 
 void EclGlobalObj::SetTargetPos(f32 a0, f32 a1, f32 a2)
@@ -950,6 +949,15 @@ restart:
                                                   *GetIntPtr(enemy, &instr->args[2], instr->paramMask));
                 }
                 goto skipInstr;
+            case 139: // opcode 140 = 生成特效 (含局部位置 Float3)
+                {
+                    Float3 localPos = Float3(ECL_FVAL(3), ECL_FVAL(4), ECL_FVAL(5));
+                    i32 a1 = ECL_IVAL(1);
+                    i32 a0 = ECL_IVAL(0);
+                    g_EffectManager.FUN_00425650(a0, &enemy->pos, &localPos, a1,
+                                                  *GetIntPtr(enemy, &instr->args[2], instr->paramMask), 2);
+                }
+                goto skipInstr;
             case 140: // opcode 141 = 生成物品
                 g_ItemManager.SpawnItem(&enemy->pos, (ItemType)ECL_IVAL(0), 0);
                 goto skipInstr;
@@ -1014,6 +1022,12 @@ restart:
                                    0x1e * 4);
                         }
                     }
+                }
+                goto skipInstr;
+            case 135: // opcode 136 = 间接调用 ECL ex-instr 表项 (g_EclExInsn[v0], 无参数)
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    ((void (*)())g_EclExInsn[v0])();
                 }
                 goto skipInstr;
             case 136: // opcode 137 = 设置 curContextPtr->func/eclExInstr (依函数表 0x4c6cb0)
@@ -1120,6 +1134,14 @@ restart:
                 goto skipInstr;
             case 162: // opcode 163 = 写全局 0xf54cec
                 g_f54cec = ECL_IVAL(0);
+                goto skipInstr;
+            case 163: // opcode 164 = 设置全局标志 + 目标位置
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    g_EclGlobalObj.SetGlobalFlag(v0);
+                    if (v0 == 0)
+                        g_EclGlobalObj.SetTargetPos(ECL_FVAL(1), ECL_FVAL(2), ECL_FVAL(3));
+                }
                 goto skipInstr;
             case 158: // opcode 159 = 设置 unk332f (byte)
                 enemy->unk332f = (u8)ECL_IVAL(0);
