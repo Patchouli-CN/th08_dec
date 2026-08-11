@@ -1241,15 +1241,17 @@ restart:
                         g_Gui.FUN_00439050();
                 }
                 goto skipInstr;
-            case 168: // opcode 169 = 依 pos.x 决定随机角度
+            case 168: // opcode 169 = 依 pos.x 位置阈值决定随机角度 (出口角度)
                 {
+                    // 位置阈值: 64.0 (0x4b42c4) / 288.0 (0x4b4888) / 0x17d61ac
+                    // 角度偏移: +3π/4 (0x4b4884≈2.356) 或 -π/4 (0x4b4524≈0.785)
                     f32 *out = GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0);
-                    f32 c1 = *(f32 *)0x17d61ac;
-                    if ((enemy->pos.x > c1 || enemy->pos.x < c1) && enemy->pos.x > 64.0f)
+                    f32 exitLeftBound = *(f32 *)0x17d61ac;
+                    if ((enemy->pos.x > exitLeftBound || enemy->pos.x < exitLeftBound) && enemy->pos.x > *(f32 *)0x4b42c4)
                     {
                         *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(1.5708f) + *(f32 *)0x4b4884, 0.0f);
                     }
-                    else if (enemy->pos.x > 288.0f)
+                    else if (enemy->pos.x > *(f32 *)0x4b4888)
                     {
                         *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(1.5708f) + *(f32 *)0x4b4884, 0.0f);
                     }
