@@ -247,7 +247,8 @@ ZunResult EclManager::Load(const char *path)
                   v28a, v28b, v28c, v29a, v30a, v31a, p141, v32a, p143, v33a, v33b, v33c, v33d, v33e, v36a, v36b, \
                   p151, p152, p153, p154, p155, p156, p157, p158, p159, v53a, v54a, v55a, v55b, v55c, v55d, v55e, \
                   v55f, v57a, v58a, v59a, v59b, v59c, v59d, v59e, v59f, v62a, v62b, v64a, v64b, v65a, v65b, v65c, \
-                  v67a, v67b, v68a, v68b, v68c, v68d, v69a, v70a)
+                  v67a, v67b, v68a, v68b, v68c, v68d, v69a, v70a, v71a, v71b, v71c, v71d, v71e, v71f, v71g, \
+                  v72a, v72b, v72c, v72d, v73a, v73b, v73c, v74a, v74b, v74c, v74d)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -316,6 +317,10 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v68a; f32 v68b, v68c; i32 v68d; // slots 185-188 (case 68: 瞄准条件; IVAL(0), FVAL(1), FVAL(2), IVAL(0))
     f32 v69a;       // slot 189 (case 69: SET_MOVE_SPEED)
     f32 v70a;       // slot 190 (case 70: 移动角度)
+    i32 v71a; f32 v71b, v71c, v71d, v71e, v71f, v71g; // slots 191-197 (case 71: MOVE_INTERP; IVAL0,FVAL1-6)
+    i32 v72a; f32 v72b, v72c, v72d; // slots 198-201 (case 72: MOVE_INTERP; IVAL0,FVAL1-3)
+    i32 v73a; f32 v73b, v73c; // slots 202-204 (case 73: MOVE_INTERP; IVAL0,FVAL1-2)
+    f32 v74a, v74b, v74c, v74d; // slots 205-208 (case 74: SET_MOVE_SPEED4; FVAL0-3)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -921,35 +926,111 @@ restart:
                 enemy->unk2dac = v70a;
                 enemy->flags = (enemy->flags & ~ECL_FLAG_MOVE_MODE_MASK) | ECL_FLAG_MOVE_MODE_ANGLE;
                 goto skipInstr;
-            case 71: // opcode 72 = SET_MOVE_INTERP: 移动插值参数
-                enemy->unk2de8 = ECL_IVAL(0);
-                enemy->unk2ddc.SetCurrent(ECL_IVAL(0));
-                enemy->unk2dd0 = ECL_FVAL(1);
-                enemy->unk2dd4 = ECL_FVAL(2);
-                enemy->unk2d9c = ECL_FVAL(3);
-                enemy->unk2da0 = ECL_FVAL(4);
-                enemy->unk2db0 = ECL_FVAL(5);
-                enemy->unk2db4 = ECL_FVAL(6);
+            case 71: // opcode 72 = SET_MOVE_INTERP: 移动插值参数 (含 flags |= 0x3000)
+                if (instr->paramMask & 0x1)
+                    v71a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v71a = instr->args[0].i;
+                enemy->unk2de8 = v71a;
+                enemy->unk2ddc.SetCurrent(v71a);
+                if (instr->paramMask & 0x2)
+                    v71b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v71b = instr->args[1].f;
+                enemy->unk2dd0 = v71b;
+                if (instr->paramMask & 0x4)
+                    v71c = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v71c = instr->args[2].f;
+                enemy->unk2dd4 = v71c;
+                if (instr->paramMask & 0x8)
+                    v71d = enemy->GetEclFloatVar(instr->args[3].i);
+                else
+                    v71d = instr->args[3].f;
+                enemy->unk2d9c = v71d;
+                if (instr->paramMask & 0x10)
+                    v71e = enemy->GetEclFloatVar(instr->args[4].i);
+                else
+                    v71e = instr->args[4].f;
+                enemy->unk2da0 = v71e;
+                if (instr->paramMask & 0x20)
+                    v71f = enemy->GetEclFloatVar(instr->args[5].i);
+                else
+                    v71f = instr->args[5].f;
+                enemy->unk2db0 = v71f;
+                if (instr->paramMask & 0x40)
+                    v71g = enemy->GetEclFloatVar(instr->args[6].i);
+                else
+                    v71g = instr->args[6].f;
+                enemy->unk2db4 = v71g;
+                enemy->flags |= ECL_FLAG_MOVE_MODE_MASK;
                 goto skipInstr;
-            case 72: // opcode 73 = SET_MOVE_INTERP
-                enemy->unk2de8 = ECL_IVAL(0);
-                enemy->unk2ddc.SetCurrent(ECL_IVAL(0));
-                enemy->unk2d9c = ECL_FVAL(1);
-                enemy->unk2da0 = ECL_FVAL(2);
+            case 72: // opcode 73 = SET_MOVE_INTERP (含 flags |= 0x3000)
+                if (instr->paramMask & 0x1)
+                    v72a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v72a = instr->args[0].i;
+                enemy->unk2de8 = v72a;
+                enemy->unk2ddc.SetCurrent(v72a);
+                if (instr->paramMask & 0x2)
+                    v72b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v72b = instr->args[1].f;
+                enemy->unk2d9c = v72b;
+                if (instr->paramMask & 0x4)
+                    v72c = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v72c = instr->args[2].f;
+                enemy->unk2da0 = v72c;
                 enemy->unk2db0 = 0;
-                enemy->unk2db4 = ECL_FVAL(3);
+                if (instr->paramMask & 0x8)
+                    v72d = enemy->GetEclFloatVar(instr->args[3].i);
+                else
+                    v72d = instr->args[3].f;
+                enemy->unk2db4 = v72d;
+                enemy->flags |= ECL_FLAG_MOVE_MODE_MASK;
                 goto skipInstr;
-            case 73: // opcode 74 = SET_MOVE_INTERP
-                enemy->unk2de8 = ECL_IVAL(0);
-                enemy->unk2ddc.SetCurrent(ECL_IVAL(0));
-                enemy->unk2da0 = ECL_FVAL(1);
-                enemy->unk2db4 = ECL_FVAL(2);
+            case 73: // opcode 74 = SET_MOVE_INTERP (含 flags |= 0x3000)
+                if (instr->paramMask & 0x1)
+                    v73a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v73a = instr->args[0].i;
+                enemy->unk2de8 = v73a;
+                enemy->unk2ddc.SetCurrent(v73a);
+                if (instr->paramMask & 0x2)
+                    v73b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v73b = instr->args[1].f;
+                enemy->unk2da0 = v73b;
+                if (instr->paramMask & 0x4)
+                    v73c = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v73c = instr->args[2].f;
+                enemy->unk2db4 = v73c;
+                enemy->flags |= ECL_FLAG_MOVE_MODE_MASK;
                 goto skipInstr;
-            case 74: // opcode 75 = SET_MOVE_SPEED4: unk3340/44/48/4c = f0..f3
-                enemy->unk3340 = ECL_FVAL(0);
-                enemy->unk3344 = ECL_FVAL(1);
-                enemy->unk3348 = ECL_FVAL(2);
-                enemy->unk334c = ECL_FVAL(3);
+            case 74: // opcode 75 = SET_MOVE_SPEED4: unk3340/44/48/4c = f0..f3 (含 flags |= 0x80000)
+                if (instr->paramMask & 0x1)
+                    v74a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v74a = instr->args[0].f;
+                enemy->unk3340 = v74a;
+                if (instr->paramMask & 0x2)
+                    v74b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v74b = instr->args[1].f;
+                enemy->unk3344 = v74b;
+                if (instr->paramMask & 0x4)
+                    v74c = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v74c = instr->args[2].f;
+                enemy->unk3348 = v74c;
+                if (instr->paramMask & 0x8)
+                    v74d = enemy->GetEclFloatVar(instr->args[3].i);
+                else
+                    v74d = instr->args[3].f;
+                enemy->unk334c = v74d;
+                enemy->flags |= ECL_FLAG_CLEAR_MOVE;
                 goto skipInstr;
             case 75: // opcode 76 = 清除移动标志 (flags bit19)
                 enemy->flags &= ~ECL_FLAG_CLEAR_MOVE;
