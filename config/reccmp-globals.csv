@@ -192,3 +192,4 @@ th08::g_ShotSpeed,0x17ce8e0,global
 th08::g_Unknown164d2c8,0x164d2c8,global
 th08::g_PlayerTargetX,0x164d2e4,global
 th08::g_PlayerTargetY,0x164d2e8,global
+th08::g_Unknown164d2cc,0x164d2cc,global

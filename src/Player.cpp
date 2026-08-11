@@ -30,6 +30,7 @@ DIFFABLE_STATIC(i32, g_GuiDisplayState);          // 0x160f42c
 DIFFABLE_STATIC_ARRAY(u32, 8, g_BulletObjects);   // 0xf54cc0
 DIFFABLE_STATIC(f32, g_ShotSpeed);                // 0x17ce8e0
 DIFFABLE_STATIC(i32, g_Unknown164d2c8);           // 0x164d2c8
+DIFFABLE_STATIC(i32, g_Unknown164d2cc);           // 0x164d2cc
 DIFFABLE_STATIC(f32, g_PlayerTargetX);            // 0x164d2e4
 DIFFABLE_STATIC(f32, g_PlayerTargetY);            // 0x164d2e8
 DIFFABLE_STATIC(ChainElem *, g_PlayerCalcChain);

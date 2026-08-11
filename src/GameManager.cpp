@@ -1244,4 +1244,85 @@ void GameManager::InitArcadeRegionParams()
     this->playerMovementAreaSize.y = 416.0f;
 }
 
+// STUB: th08 0x418130
+i32 GameManager::FUN_00418130(i32 spellcardIdx)
+{
+    return 0;
+}
+
+// STUB: th08 0x418180
+u32 GameManager::FUN_00418180(i32 a, i32 b)
+{
+    return 0;
+}
+
+// STUB: th08 0x437f5c (spellcard collect screen)
+void __fastcall FUN_00437f5c(i32 param)
+{
+}
+
+// FUNCTION: th08 0x438046 (93.46% FIXME: switch 判别式槽 + default case 位置)
+void FUN_00438046()
+{
+    i32 state = g_Unknown164d2cc;
+    switch (state - 1)
+    {
+    case 0:
+        FUN_00437f5c(0x11);
+        break;
+    case 1:
+        FUN_00437f5c(0x12);
+        break;
+    case 2:
+        if (g_GameManager.GetFlag14() != 0 && g_GameManager.FUN_00418130(0xd6) != 0)
+            FUN_00437f5c(0x13);
+        else if (g_GameManager.FUN_00418130(0xd8) != 0)
+            FUN_00437f5c(0x1a);
+        else if (g_GameManager.FUN_00418130(0xd9) != 0)
+            FUN_00437f5c(0x1b);
+        else if (g_GameManager.FUN_00418130(0xda) != 0)
+            FUN_00437f5c(0x1c);
+        else if (g_GameManager.FUN_00418130(0xdb) != 0)
+            FUN_00437f5c(0x1d);
+        else if (g_GameManager.FUN_00418130(0xdc) != 0)
+            FUN_00437f5c(0x1e);
+        else if (g_GameManager.FUN_00418130(0xdd) != 0)
+            FUN_00437f5c(0x1f);
+        break;
+    case 3:
+        FUN_00437f5c(0x14);
+        break;
+    case 4:
+        if (g_GameManager.GetFlag14() != 0 && g_GameManager.FUN_00418130(0xd4) != 0)
+            FUN_00437f5c(0x15);
+        else
+            FUN_00437f5c(0x16);
+        break;
+    case 5:
+        FUN_00437f5c(0x17);
+        break;
+    case 6:
+        if (g_GameManager.GetFlag14() != 0)
+        {
+            if (g_GameManager.FUN_00418180(0x93, 0x96) != 0)
+                FUN_00437f5c(0x17);
+            else
+                FUN_00437f5c(0x18);
+        }
+        else
+            FUN_00437f5c(0x17);
+        break;
+    case 7:
+        if (g_GameManager.GetFlag14() != 0 && g_GameManager.FUN_00418180(0xbf, 0xc1) == 0 &&
+            g_GameManager.FUN_00418130(0xd5) != 0)
+            FUN_00437f5c(0x19);
+        else
+            FUN_00437f5c(0x20);
+        break;
+    default:
+        FUN_00437f5c(0x10);
+        break;
+    }
+}
+
 }; // Namespace th08
