@@ -587,9 +587,60 @@ void Player::FUN_0044aec0()
 {
 }
 
-// STUB: th08 0x451150
+// FUNCTION: th08 0x451150 (68% FIXME: 寄存器分配差异)
 void Player::FUN_00451150()
 {
+    i32 i;
+    PlayerBulletVm *b;
+
+    /* 子弹动画暂停标志（0x164d0b4 bit 10）。 */
+    if (*(u32 *)0x164d0b4 >> 0xa & 1)
+    {
+        return;
+    }
+
+    b = &this->bullets[0];
+    for (i = 0; i < 0x80; i++, b++)
+    {
+        if (b->state == 0)
+        {
+            continue;
+        }
+
+        /* 每个子弹有独立的更新回调，返回非 0 则销毁。 */
+        if (*(u32 *)((u8 *)b + 0x474) != 0)
+        {
+            if (((i32(__fastcall *)(Player *)) * (u32 *)((u8 *)b + 0x474))(this) != 0)
+            {
+                b->state = 0;
+                continue;
+            }
+        }
+
+        /* 按速度推进子弹位置。 */
+        PlayerPosCenter((Float3 *)((u8 *)b + 0x2a4))->x += *(f32 *)0x17ce8e0 * *(f32 *)((u8 *)b + 0x43c);
+        PlayerPosCenter((Float3 *)((u8 *)b + 0x2a4))->y += *(f32 *)0x17ce8e0 * *(f32 *)((u8 *)b + 0x440);
+
+        /* 非"遗留型"子弹离开活动区域则销毁。 */
+        if (*(i16 *)((u8 *)b + 0x464) != 4 && *(i16 *)((u8 *)b + 0x464) != 5)
+        {
+            if (!g_GameManager.IsWithinPlayfield(
+                    PlayerPosCenter((Float3 *)((u8 *)b + 0x2a4))->x,
+                    PlayerPosCenter((Float3 *)((u8 *)b + 0x2a4))->y,
+                    *(f32 *)(*(i32 *)((u8 *)b + 0x224) + 0x30),
+                    *(f32 *)(*(i32 *)((u8 *)b + 0x224) + 0x34)))
+            {
+                b->state = 0;
+            }
+        }
+
+        if (g_AnmManager->ExecuteScript((AnmVm *)b) != 0)
+        {
+            b->state = 0;
+        }
+
+        ((ZunTimer *)((u8 *)b + 0x454))->Tick(0);
+    }
 }
 
 // FUNCTION: th08 0x451500
