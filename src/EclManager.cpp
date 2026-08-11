@@ -1231,6 +1231,24 @@ restart:
                         g_Gui.FUN_00439050();
                 }
                 goto skipInstr;
+            case 168: // opcode 169 = 依 pos.x 决定随机角度
+                {
+                    f32 *out = GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0);
+                    f32 c1 = *(f32 *)0x17d61ac;
+                    if ((enemy->pos.x > c1 || enemy->pos.x < c1) && enemy->pos.x > 64.0f)
+                    {
+                        *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(1.5708f) + *(f32 *)0x4b4884, 0.0f);
+                    }
+                    else if (enemy->pos.x > 288.0f)
+                    {
+                        *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(1.5708f) + *(f32 *)0x4b4884, 0.0f);
+                    }
+                    else
+                    {
+                        *out = g_Rng.GetRandomF32InRange(1.5708f) - *(f32 *)0x4b4524;
+                    }
+                }
+                goto skipInstr;
             case 169: // opcode 170 = 写子弹对象+0x599 (byte)
                 {
                     i32 idx = ECL_IVAL(0);
