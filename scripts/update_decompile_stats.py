@@ -21,7 +21,7 @@ def create_status_profile():
     impl = get_file(script_path / "config" / "implemented.csv")
     maps = get_file(script_path / "config" / "mapping.csv")
 
-    total_func_bytes = 246112  # number of function bytes
+    total_func_bytes = 0
     impl_bytes = 0
     num_funcs = 0
 
@@ -32,6 +32,7 @@ def create_status_profile():
             break
 
         num_funcs += 1
+        total_func_bytes += int(size.removeprefix("0x"), 16)
 
         if f_name + "\n" in impl:
             impl_bytes += int(size.removeprefix("0x"), 16)
