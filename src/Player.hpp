@@ -69,6 +69,28 @@ struct PlayerBulletVm
 };
 C_ASSERT(sizeof(PlayerBulletVm) == 0x484);
 
+// A player shot slot. shots[] and the slot sub-range at 0xbb834 both alias this
+// array (FUN_0044de60 starts from &shots[0xc0]).
+struct ShotSlot  // 0x40
+{
+    f32 posX;      // 0x0  spawn position (from FUN_0044de60 spawnPos)
+    f32 posY;      // 0x4
+    f32 unk8;      // 0x8
+    f32 unkC;      // 0xc
+    f32 targetX;   // 0x10
+    f32 targetY;   // 0x14
+    f32 unk18;     // 0x18
+    f32 unk1C;     // 0x1c
+    i32 unk20;     // 0x20
+    i32 lifespan;  // 0x24  decremented each frame by FUN_0044c5b0
+    i32 unk28;     // 0x28
+    unknown_fields(0x2c, 0xc);
+    i32 unk38;     // 0x38  set to 1 by FUN_0044e370
+    u8 active;     // 0x3c  slot-in-use flag
+    unknown_fields(0x3d, 0x3);
+};
+C_ASSERT(sizeof(ShotSlot) == 0x40);
+
 struct Player
 {
     i8 playerState;
@@ -94,9 +116,12 @@ struct Player
     PlayerOption options[4];     // 0x40c
     i32 unkFdc;                  // 0xfdc
     i32 unkFe0;                  // 0xfe0
-    unknown_fields(0xfe4, 0x30);
+    unknown_fields(0xfe4, 0x1c);
+    void (Player::*shotFuncs[5])(); // 0x1000
     void (Player::*unk_1014[4])(); // 0x1014
-    unknown_fields(0x1024, 0xbe214);
+    unknown_fields(0x1024, 0xb7810);
+    ShotSlot shots[0x180];       // 0xb8834 (0xbb834 = &shots[0xc0] aliases a sub-range)
+    unknown_fields(0xbe834, 0x4);
     PlayerBulletVm bullets[0x80];
     unknown_fields(0xe2a38, 0x3c);
     u32 unkE2a74;
@@ -132,8 +157,9 @@ struct Player
     void FUN_0044d2c0();
     void FUN_0044aec0();
     void FUN_00451150();
-    void FUN_00451500();
+    i32 FUN_00451500();
     void FUN_0044d420();
+    u32 FUN_0044de60(Float3 *spawnPos, f32 targetX, f32 targetY, i32 unk28, i32 unk24);
     void FUN_0044e0f0();
     void FUN_0044e120();
     void FUN_0044e350();
