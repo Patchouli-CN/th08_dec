@@ -8,6 +8,18 @@
 namespace th08
 {
 
+// A 0x18-byte laser-pattern entry in Enemy's 0x2e44 area (op111).
+struct EnemyLaserData
+{
+    f32 x;    // 0x0
+    f32 y;    // 0x4
+    i32 a;    // 0x8
+    i32 b;    // 0xc
+    i32 c;    // 0x10
+    i32 d;    // 0x14
+};
+C_ASSERT(sizeof(EnemyLaserData) == 0x18);
+
 // The per-slot ECL data structure each Enemy::unk3280[] pointer points to.
 // A slot holds one shot-pattern/effect descriptor that RunEcl opcodes read and
 // mutate (op117-121, op166-172). The base is allocated by op114 (0x430f20).
@@ -38,6 +50,7 @@ struct Enemy
     void FUN_00423150();
     void FUN_00421de0(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5); // ECL sub-call (0x421de0)
     void FUN_0042c180(); // move init after SET_POS (0x42c180)
+    void FUN_0042a820(); // 0x42a820 (op127 boss-marker setup)
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
     unknown_fields(0x0, 0xc);
@@ -160,6 +173,9 @@ struct EnemyManager
     static ZunResult AddedCallback(EnemyManager *enemyManager);
     static ZunResult DeletedCallback(EnemyManager *enemyManager);
     static void CutChain();
+    Enemy *SpawnEnemy2(i32 eclSubId, Float3 *pos, i32 life, i32 itemDrop, i32 score,
+                       EclContextArgs *args); // 0x42a680 (th07 SpawnEnemyEx equivalent)
+    void FUN_0042efb0(i32 a0, i32 a1);       // 0x42efb0 (遍历删敌人)
 
     unknown_fields(0x0, 0x53d0);
     Enemy enemies[0x1e0];

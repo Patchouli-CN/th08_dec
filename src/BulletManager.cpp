@@ -141,6 +141,15 @@ void BulletManager::FUN_00430d30(Float3 *pos, f32 a1)
 {
 }
 
+void BulletManager::FUN_00430e10(Float3 *pos)
+{
+}
+
+EnemySubData *BulletManager::FUN_00430f20(EnemySubData *src)
+{
+    return NULL;
+}
+
 ZunResult BulletManager::RegisterChain(char *path)
 {
     BulletManager *bulletManager = &g_BulletManager;

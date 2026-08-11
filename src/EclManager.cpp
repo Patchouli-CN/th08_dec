@@ -16,6 +16,7 @@ namespace th08
 
 DIFFABLE_STATIC(EclManager, g_EclManager);
 DIFFABLE_STATIC_ARRAY(EclExInstr, 32, g_EclExInsn); // 0x4c6cb0
+DIFFABLE_STATIC(EclGlobalObj, g_EclGlobalObj);      // 0x4ea670
 
 // ECL variable access helpers (th08 standalone functions; th07 had these as
 // EclManager static methods). Stubs for now; RunEcl's call targets normalize to
@@ -35,6 +36,12 @@ void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr);           // 0x4
 void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr);           // 0x422020
 void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr);           // 0x4224a0
 void __fastcall FUN_00422720(Enemy *enemy, EclRawInstr *instr);           // 0x422720 (laser op96-104)
+
+// op90-93 底层 helper（内部逻辑无需逆向，call 目标归一化为 T，只需签名/返回类型正确）
+Enemy *__fastcall FUN_0041efc0(Enemy *enemy);                            // 0x41efc0 获取关联 Enemy (ecx)
+Enemy *__fastcall FUN_0041f110(Enemy *enemy, EclRawInstr *instr);        // 0x41f110 初始化弹幕 Enemy (ecx,edx)
+Enemy *__fastcall FUN_0041f280(Enemy *enemy, EclRawInstr *instr);        // 0x41f280 初始化弹幕 Enemy (变体)
+Enemy *__fastcall FUN_0041f400(Enemy *enemy);                            // 0x41f400 初始化 Enemy Float3 (ecx)
 
 f32 __cdecl EclAtan2(f32 a, f32 b); // th08 0x41f090 (wraps CRT atan2)
 
@@ -60,6 +67,10 @@ void Enemy::FUN_00421de0(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5)
 }
 
 void Enemy::FUN_0042c180()
+{
+}
+
+void Enemy::FUN_0042a820()
 {
 }
 
@@ -133,6 +144,35 @@ void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr)
 }
 
 void __fastcall FUN_00422720(Enemy *enemy, EclRawInstr *instr)
+{
+}
+
+Enemy *__fastcall FUN_0041efc0(Enemy *enemy)
+{
+    return NULL;
+}
+
+Enemy *__fastcall FUN_0041f110(Enemy *enemy, EclRawInstr *instr)
+{
+    return NULL;
+}
+
+Enemy *__fastcall FUN_0041f280(Enemy *enemy, EclRawInstr *instr)
+{
+    return NULL;
+}
+
+Enemy *__fastcall FUN_0041f400(Enemy *enemy)
+{
+    return NULL;
+}
+
+f32 EclGlobalObj::FUN_0041f0b0(i32 a0)
+{
+    return 0.0f;
+}
+
+void EclGlobalObj::FUN_0041f040(f32 a0, f32 a1, f32 a2)
 {
 }
 
@@ -550,6 +590,13 @@ restart:
                     }
                 }
                 goto skipInstr;
+            case 87: // opcode 88 = 子弹对象子脚本 (FUN_00421bd0)
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    Enemy *bullet = (Enemy *)g_BulletObjects[v0];
+                    FUN_00421bd0(bullet, bullet->curContextPtr->curInstr, instr->args[1].i);
+                }
+                goto skipInstr;
             case 88: // opcode 89 = 写子弹对象+0x2d30 (若 g_BulletObjects[arg0] 有效)
                 {
                     i32 idx = ECL_IVAL(0);
@@ -599,6 +646,23 @@ restart:
                 enemy->unk2dbc = ECL_FVAL(1);
                 enemy->unk2dc0 = 0;
                 goto skipInstr;
+            case 108: // opcode 109 = 计算 pos+unk2db8 向量并写 0x2e28; g_BulletManager.FUN_00430e10(&0x2e24)
+                // 注: 原版中 0x2e24 的 Float3 与 0x2e28 的 Float3 字节重叠 (430e10 参数与结果共享)
+                *(Float3 *)((u8 *)enemy + 0x2e28) =
+                    enemy->pos + Float3(enemy->unk2db8, enemy->unk2dbc, enemy->unk2dc0);
+                g_BulletManager.FUN_00430e10((Float3 *)((u8 *)enemy + 0x2e24));
+                goto skipInstr;
+            case 110: // opcode 111 = 写激光数据槽 (0x2e44 + v0*0x18)
+                {
+                    EnemyLaserData *ld = (EnemyLaserData *)((u8 *)enemy + 0x2e44 + ECL_IVAL(0) * 0x18);
+                    ld->c = ECL_IVAL(1);
+                    ld->d = ECL_IVAL(2);
+                    ld->a = ECL_IVAL(3);
+                    ld->b = ECL_IVAL(4);
+                    ld->x = ECL_FVAL(5);
+                    ld->y = ECL_FVAL(6);
+                }
+                goto skipInstr;
             case 111: // opcode 112 = RemoveAllBullets(1)
                 g_BulletManager.bulletmanager_fun_00415c60();
                 goto skipInstr;
@@ -625,6 +689,14 @@ restart:
                     i32 idx = ECL_IVAL(0);
                     if (enemy->unk3280[idx] != 0)
                         enemy->unk3280[idx]->angle = AddNormalizeAngle(enemy->unk3280[idx]->angle, ECL_FVAL(1));
+                }
+                goto skipInstr;
+            case 117: // opcode 118 = 给子弹对象设角度: angle = AngleToPlayer(pos) + f1
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    if (enemy->unk3280[v0] != 0)
+                        enemy->unk3280[v0]->angle =
+                            g_Player.AngleToPlayer(&enemy->unk3280[v0]->pos) + ECL_FVAL(1);
                 }
                 goto skipInstr;
             case 118: // opcode 119 = 设置子弹对象位置 unk548/54c/550 = f + pos
@@ -763,6 +835,12 @@ restart:
                 goto skipInstr;
             case 148: // opcode 149 = 写 primaryVm 脚本索引字段 (+0x1fe)
                 *(i16 *)((u8 *)&enemy->primaryVm + 0x1fe) = (i16)ECL_IVAL(0);
+                goto skipInstr;
+            case 149: // opcode 150 = 写 vms[idx] 脚本索引字段 (+0x1fe)
+                {
+                    i32 idx = instr->args[0].i;
+                    *(i16 *)((u8 *)&enemy->vms[idx] + 0x1fe) = (i16)instr->args[1].i;
+                }
                 goto skipInstr;
             case 142: // opcode 143 = 设置 unk3304
                 enemy->unk3304 = ECL_IVAL(0);

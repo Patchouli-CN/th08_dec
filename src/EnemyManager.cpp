@@ -304,6 +304,16 @@ void EnemyManager::CutChain()
     g_Chain.Cut(&g_EnemyManagerDrawChainLowPrio);
 }
 
+Enemy *EnemyManager::SpawnEnemy2(i32 eclSubId, Float3 *pos, i32 life, i32 itemDrop, i32 score,
+                                 EclContextArgs *args)
+{
+    return NULL;
+}
+
+void EnemyManager::FUN_0042efb0(i32 a0, i32 a1)
+{
+}
+
 void Enemy::FUN_0042bc90()
 {
     i32 i;
@@ -485,6 +495,11 @@ AnmVm *EffectManager::FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d)
     g_ReplayManager->replayEventFlags |= 0x400;
 
     return (AnmVm *)p;
+}
+
+void *EffectManager::FUN_00425b70(i32 type, Float3 *pos, i32 b, i32 c)
+{
+    return NULL;
 }
 
 void EffectManager::CutChain()

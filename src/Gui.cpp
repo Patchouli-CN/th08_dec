@@ -713,6 +713,14 @@ void Gui::FUN_00423110(i32 a0, i32 a1)
 {
 }
 
+void Gui::FUN_00422c20(i32 a0)
+{
+}
+
+void Gui::FUN_004230c0(f32 a0)
+{
+}
+
 void Gui::FUN_00439007()
 {
 }
