@@ -541,6 +541,9 @@ restart:
             case 115: // opcode 116 = 设置 unk3300
                 enemy->unk3300 = ECL_IVAL(0);
                 goto skipInstr;
+            case 125: // opcode 126 = 设置 interrupts 数组元素
+                enemy->interrupts[ECL_IVAL(1)] = (i16)ECL_IVAL(0);
+                goto skipInstr;
             case 121: // opcode 122 = 子脚本 (FUN_00421280)
                 FUN_00421280(enemy, instr);
                 goto skipInstr;
