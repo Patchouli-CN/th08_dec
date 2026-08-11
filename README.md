@@ -5,6 +5,8 @@
   <img alt="Decomp Progress" src="resources/progress.svg">
 </picture>
 
+> **当前 RunEcl (0x4184b0) 字节匹配进度：42.57%** — 184/184 opcode 全部实现，EBP 槽对齐持续进行中。
+
 [![Discord][discord-badge]][discord] <- click here to join discord server.
 
 [discord]: https://discord.gg/VyGwAjrh9a
