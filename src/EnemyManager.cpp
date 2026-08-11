@@ -158,10 +158,111 @@ ChainCallbackResult EnemyManager::OnDrawLowPrio(EnemyManager *enemyManager)
     return result;
 }
 
-// STUB: th08 0x42ebf0
+// FUNCTION: th08 0x42ebf0 (79.65% FIXME: Anm 分支共用布局/寄存器)
 ZunResult EnemyManager::AddedCallback(EnemyManager *enemyManager)
 {
-    return ZUN_ERROR;
+    u8 *p = (u8 *)enemyManager + 0x53d0;
+
+    if (g_Supervisor.GetUnk164())
+    {
+        *(void **)((u8 *)enemyManager + 0x9dceec) = g_AnmManager->PreloadAnm(7, (const char *)0x4b4ac8);
+        if (*(void **)((u8 *)enemyManager + 0x9dceec) == NULL)
+        {
+            return (ZunResult)-1;
+        }
+    }
+    else
+    {
+        *(void **)((u8 *)enemyManager + 0x9dceec) = g_AnmManager->GetAnm(7);
+    }
+
+    if (!IsDisableResourceReload())
+    {
+        if ((*(u32 *)0x164d0b4 >> 0xe) & 1)
+        {
+            if (*(i16 *)0x164d0b8 < 0xcd)
+            {
+                *(void **)((u8 *)enemyManager + 0x9dcef0) =
+                    g_AnmManager->PreloadAnm(8, *(const char **)(0x4c7364 + *(u32 *)0x164d2cc * 4));
+
+                if (*(void **)((u8 *)enemyManager + 0x9dcef0) == NULL)
+                {
+                    return (ZunResult)-1;
+                }
+            }
+            else
+            {
+                *(void **)((u8 *)enemyManager + 0x9dcef0) =
+                    g_AnmManager->PreloadAnm(8, *(const char **)(0x4c7054 + *(i16 *)0x164d0b8 * 4));
+
+                if (*(void **)((u8 *)enemyManager + 0x9dcef0) == NULL)
+                {
+                    return (ZunResult)-1;
+                }
+            }
+        }
+        else
+        {
+            *(void **)((u8 *)enemyManager + 0x9dcef0) =
+                g_AnmManager->PreloadAnm(8, *(const char **)(0x4c7364 + *(u32 *)0x164d2cc * 4));
+
+            if (*(void **)((u8 *)enemyManager + 0x9dcef0) == NULL)
+            {
+                return (ZunResult)-1;
+            }
+        }
+    }
+    else
+    {
+        *(void **)((u8 *)enemyManager + 0x9dcef0) = g_AnmManager->GetAnm(8);
+    }
+
+    if (!IsDisableResourceReload())
+    {
+        if ((*(u32 *)0x164d0b4 >> 0xe) & 1)
+        {
+            if (*(i16 *)0x164d0b8 >= 0xcd)
+            {
+                if (((u32(__cdecl *)(const char *))0x418330)(*(const char **)(0x4c70e4 + *(i16 *)0x164d0b8 * 4)) != 0)
+                {
+                    /* return Load 的返回值（eax 残留） */
+                }
+            }
+            else
+            {
+                if (((u32(__cdecl *)(const char *))0x418330)(*(const char **)(0x4c73f0 + *(u32 *)0x164d2cc * 4)) != 0)
+                {
+                }
+            }
+        }
+        else
+        {
+            if (((u32(__cdecl *)(const char *))0x418330)(*(const char **)(0x4c73cc + *(u32 *)0x164d2cc * 4)) != 0)
+            {
+            }
+        }
+    }
+    else
+    {
+        /* 0x42edb7: 全局 0x4eccb8/0x4eccbc 保存+清零+恢复（死代码） */
+        i32 old0 = *(i32 *)0x4eccb8;
+        i32 old1 = *(i32 *)0x4eccbc;
+
+        memset((void *)0x4eccb8, 0, 0x188);
+        *(i32 *)0x4eccb8 = old0;
+        *(i32 *)0x4eccbc = old1;
+    }
+
+    *(u16 *)((u8 *)enemyManager + 0x9dcdc0) = g_Rng.GetRandomU16InRange(3);
+    *(u16 *)((u8 *)enemyManager + 0x9dcdc2) = g_Rng.GetRandomU16InRange(8);
+
+    Float3 markerPos(-1000.0f, -1000.0f, -1000.0f);
+    g_AsciiManager.SetBossMarkerPosition(0, &markerPos);
+    g_AsciiManager.SetBossMarkerPosition(1, &markerPos);
+    g_AsciiManager.SetBossMarkerPosition(2, &markerPos);
+    g_AsciiManager.SetBossMarkerPosition(3, &markerPos);
+
+    return ZUN_SUCCESS;
 }
 
 ZunResult EnemyManager::DeletedCallback(EnemyManager *enemyManager)
