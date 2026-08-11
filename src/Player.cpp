@@ -17,6 +17,13 @@ DIFFABLE_STATIC(PlayerRawShtFile *, g_PlayerShtFile2);
 DIFFABLE_STATIC(ChainElem *, g_PlayerCalcChain);
 DIFFABLE_STATIC(ChainElem *, g_PlayerDrawChainHighPrio);
 DIFFABLE_STATIC(ChainElem *, g_PlayerDrawChainLowPrio);
+DIFFABLE_STATIC(i32, g_Unknown57ad30);
+
+// Simulates D3DXVECTOR3::D3DXVECTOR3() (0x40b460) at the per-field positionCenter construction.
+Float3 *__fastcall PlayerPosCenter(Float3 *vec)
+{
+    return vec;
+}
 
 // FUN_0044e0e0
 static ZunBool IsUnk164Clear()
@@ -339,6 +346,7 @@ ChainCallbackResult Player::OnDrawLowPrio(Player *player)
 ZunResult Player::AddedCallback(Player *player)
 {
     i32 i;
+    PlayerBulletVm *bullet;
 
     if (g_Supervisor.GetUnk164())
     {
@@ -367,73 +375,56 @@ ZunResult Player::AddedCallback(Player *player)
         *(AnmLoaded **)((u8 *)player + 0xc) = g_AnmManager->GetAnm(5);
     }
 
-    if (*(u8 *)0x164d0b1 >= 4 && (*(u8 *)0x164d0b1 & 1))
-    {
-        (*(AnmLoaded **)((u8 *)player + 0xc))->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 5);
-    }
-    else
+    if (!(*(u8 *)0x164d0b1 >= 4 && (*(u8 *)0x164d0b1 & 1)))
     {
         (*(AnmLoaded **)((u8 *)player + 0xc))->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 0);
     }
-
+    else
     {
-        Float3 f0 = Float3(*(f32 *)0x164d2e4 / *(f32 *)0x4b42ec, *(f32 *)0x164d2e8 - *(f32 *)0x4b42c8, 0.48f);
-        Float3 f1 = Float3(*(f32 *)0x164d2e4 / *(f32 *)0x4b42ec, *(f32 *)0x164d2e8 - *(f32 *)0x4b42c8, 0.48f);
-        Float3 *dest0 = (Float3 *)((u8 *)player + 0x2c0);
-        Float3 *dest1 = (Float3 *)((u8 *)player + 0x2e0);
-
-        dest0->x = f0.x;
-        dest0->y = f0.y;
-        dest0->z = f0.z;
-        dest1->x = f1.x;
-        dest1->y = f1.y;
-        dest1->z = f1.z;
+        (*(AnmLoaded **)((u8 *)player + 0xc))->SetAndExecuteScriptIdx((AnmVm *)((u8 *)player + 0x10), 5);
     }
 
-    for (i = 0; i < 0x180; i++)
+    /* 原版对 `positionCenter = Float3(...)` 编译成三次构造器调用，见 PlayerPosCenter。 */
+    PlayerPosCenter(&player->positionCenter)->x = *(f32 *)0x164d2e4 / *(f32 *)0x4b42ec;
+    PlayerPosCenter(&player->positionCenter)->y = *(f32 *)0x164d2e8 - *(f32 *)0x4b42c8;
+    PlayerPosCenter(&player->positionCenter)->z = 0.48f;
+
+    for (i = 0; i < 0x180u; i++)
     {
-        player->FUN_0044e370();
+        ((Player *)((u8 *)player + 0xb8834 + i * 0x40))->FUN_0044e370();
     }
 
-    *(f32 *)((u8 *)player + 0x3d8) = *(f32 *)((u8 *)g_PlayerShtFile + 0x3d8);
+    *(f32 *)((u8 *)player + 0x3d8) = *(f32 *)((u8 *)g_PlayerShtFile + 0xc) / *(f32 *)0x4b42ec;
     *(f32 *)((u8 *)player + 0x3d4) = *(f32 *)((u8 *)player + 0x3d8);
     *(f32 *)((u8 *)player + 0x3dc) = 5.0f;
-    *(f32 *)((u8 *)player + 0x3e4) = *(f32 *)((u8 *)g_PlayerShtFile + 0x3e4);
+    *(f32 *)((u8 *)player + 0x3e4) = *(f32 *)((u8 *)g_PlayerShtFile + 0x10) / *(f32 *)0x4b42ec;
     *(f32 *)((u8 *)player + 0x3e0) = *(f32 *)((u8 *)player + 0x3e4);
     *(f32 *)((u8 *)player + 0x3e8) = 5.0f;
-    *(f32 *)((u8 *)player + 0x3f0) = *(f32 *)((u8 *)g_PlayerShtFile + 0x3f0);
+    *(f32 *)((u8 *)player + 0x3f0) = *(f32 *)((u8 *)g_PlayerShtFile + 0x18) / *(f32 *)0x4b42ec;
     *(f32 *)((u8 *)player + 0x3ec) = *(f32 *)((u8 *)player + 0x3f0);
     *(f32 *)((u8 *)player + 0x3f4) = 5.0f;
 
     *(i32 *)((u8 *)player + 0xe2a98) = 0;
 
-    if (g_GameManager.GetFlag14())
+    player->playerState = 1;
+
+    ((ZunTimer *)((u8 *)player + 0xe2af4))->SetCurrent(g_GameManager.GetFlag14() ? 0xa : 0x78);
+
+    player->unk2 = 1;
+
+    bullet = &player->bullets[0];
+    for (i = 0; i < 0x80; i++, bullet++)
     {
-        player->FUN_0044d420();   // ? 需要精确
+        bullet->state = 0;
     }
 
-    for (i = 0; i < 4; i++)
-    {
-        ((ZunTimer *)((u8 *)player + 0x410 + i * 0x40))->SetCurrent(0);
-    }
+    ((ZunTimer *)((u8 *)player + 0xe2ac4))->SetCurrent(-1);
+    ((ZunTimer *)((u8 *)player + 0xe2ad0))->SetCurrent(0);
+    ((ZunTimer *)((u8 *)player + 0xe2ae8))->SetCurrent(0);
 
-    *(u8 *)((u8 *)player + 0x2) = 1;
-
-    for (i = 0; i < 0x80; i++)
-    {
-        *(u16 *)((u8 *)player + 0x462 + i * 0x484) = 0;
-    }
-
-    for (i = 0; i < 0x20; i++)
-    {
-        ((ZunTimer *)((u8 *)player + 0x228 + i * 0x10))->SetCurrent(0);
-    }
-
-    /* 表数据拷贝 */
-    for (i = 0; i < 0x1e; i++)
-    {
-        *(u32 *)((u8 *)player + 0x3d4 + i * 0x20) = *(u32 *)(0x18b896c + *(u8 *)0x164d0b1 * 4 + i * 0x20);
-    }
+    /* 角色射击回调表拷贝（两次，均为 5 dword）。 */
+    memcpy((u8 *)player + 0x1000, (void *)(0x4c7ad0 + (*(u8 *)0x164d0b1 * 2) * 0x14), 0x14);
+    memcpy((u8 *)player + 0x1014, (void *)(0x4c7ad0 + (*(u8 *)0x164d0b1 * 2 + 1) * 0x14), 0x14);
 
     *(i32 *)((u8 *)player + 0xfdc) = 0;
     *(f32 *)((u8 *)player + 0xe2b0c) = -1.57f;
@@ -450,7 +441,36 @@ ZunResult Player::AddedCallback(Player *player)
     g_AsciiManager.SetBossMarkerInterrupt(1, 2);
     g_AsciiManager.SetBossMarkerInterrupt(2, 2);
 
-    if (*(u8 *)0x164d0b1 != 3 && g_GameManager.IsSoloHuman() != 0 && g_GameManager.IsSoloYoukai() == 0)
+    /* 主/次颜色默认值，再按角色覆盖。 */
+    *(u16 *)0x164d300 = 0xd8f0;
+    *(u16 *)0x164d304 = 0xe0c0;
+    *(u16 *)0x164d308 = 0xf830;
+    *(u16 *)0x164d302 = 0x2710;
+    *(u16 *)0x164d306 = 0x1f40;
+    *(u16 *)0x164d30a = 0x7d0;
+
+    if (*(u8 *)0x164d0b1 == 3)
+    {
+        *(u16 *)0x164d300 = 0xec78;
+        *(u16 *)0x164d304 = 0xf448;
+        *(u16 *)0x164d308 = 0xf830;
+    }
+    else if (*(u8 *)0x164d0b1 == 0xa)
+    {
+        *(u16 *)0x164d300 = 0xec78;
+        *(u16 *)0x164d304 = 0xf448;
+        *(u16 *)0x164d308 = 0xf830;
+        *(u16 *)0x164d302 = 0x1388;
+        *(u16 *)0x164d306 = 0xbb8;
+        *(u16 *)0x164d30a = 0x7d0;
+    }
+    else if (g_GameManager.IsSoloHuman())
+    {
+        *(u16 *)0x164d302 = 0x7d0;
+        *(u16 *)0x164d306 = 0x1f40;
+        *(u16 *)0x164d30a = 0x7d1;
+    }
+    else if (g_GameManager.IsSoloYoukai())
     {
         *(u16 *)0x164d300 = 0xf830;
         *(u16 *)0x164d304 = 0xe0c0;
@@ -459,27 +479,43 @@ ZunResult Player::AddedCallback(Player *player)
 
     *(i32 *)((u8 *)player + 0xe2b24) = 0;
 
-    for (i = 0; i < 0x10; i++)
+    for (i = 0; i < 0x10u; i++)
     {
-        Float3 *dest = (Float3 *)((u8 *)player + 0x3d4 + i * 0xc);
-
-        dest->x = 0.0f;
-        dest->y = 0.0f;
-        dest->z = 0.0f;
+        *(Float3 *)((u8 *)player + 0x2cc + i * 0xc) = player->positionCenter;
     }
 
     *(u8 *)((u8 *)player + 0x3) = 2;
 
-    for (i = 0; i < 4; i++)
+    if (*(u8 *)0x164d0b1 > 3)
     {
-        memset((void *)((u8 *)player + 0x3d4 + i * 0x100), 0, 0x100);
+        PlayerOption *opt = &player->options[0];
+        for (u32 k = 0; k < 4; k++, opt++)
+        {
+            memset(opt, 0, 0x2f4);
+            *(i32 *)((u8 *)opt + 0x2ec) = *(i32 *)(0x4c7d40 + *(u8 *)0x164d0b1 * 0x10 + k * 4);
+            *(i32 *)((u8 *)opt + 0x2f0) = *(i32 *)(0x4c7e10 + *(u8 *)0x164d0b1 * 0x10 + k * 4);
+            if (*(i32 *)((u8 *)opt + 0x2ec) != 0)
+            {
+                *(i32 *)((u8 *)opt + 0x2c8) = 1;
+                ((ZunTimer *)((u8 *)opt + 0x2e0))->SetCurrent(0);
+                *(i32 *)((u8 *)opt + 0x2d0) = k;
+            }
+            else
+            {
+                *(i32 *)((u8 *)opt + 0x2c8) = 0;
+            }
+        }
     }
 
-    if (*(u8 *)0x164d0b1 < 4)
+    if (g_GameManager.IsSoloHuman())
     {
-        *(i32 *)((u8 *)player + 0x2ec) = *(i32 *)(0x4c7d40 + *(u8 *)0x164d0b1 * 4);
-        *(i32 *)((u8 *)player + 0x2f0) = *(i32 *)(0x4c7e10 + *(u8 *)0x164d0b1 * 4);
+        *(i32 *)((u8 *)player + 0xe2b2c) = 0x1b;
     }
+    else
+    {
+        *(i32 *)((u8 *)player + 0xe2b2c) = 0x28;
+    }
+    *(i32 *)&g_Unknown57ad30 = *(i32 *)((u8 *)player + 0xe2b2c);
 
     return ZUN_SUCCESS;
 }

@@ -303,6 +303,7 @@ th08::PbgArchive::Release
 th08::PbgArchive::SeekPastInt
 th08::PbgArchive::SeekPastString
 th08::PbgArchive::~PbgArchive
+th08::Player::AddedCallback
 th08::Player::AngleToPlayer
 th08::Player::CalcItemBoxCollision
 th08::Player::CutChain

@@ -55,3 +55,11 @@
   同难度/角色选择状态机模式（switch this->unk10 + MoveCursor + WAS_PRESSED 确认）。
 - **`EnemyManager::Initialize`**（0x429e00）反编译完成（100%）。初始化 EnemyManager
   （0x9cef10 清零 + 各数组/标志位/定时器/Float3 初始化，p 变量复用 this）。
+
+## 2026-08-11
+
+- **`Player::AddedCallback`** 反编译完成：32.7% → **100%**。重写为逐段对照反汇编：
+  三次构造器调用（helper `PlayerPosCenter` 模拟 D3DXVECTOR3 空构造器）、0x180 shot 槽
+  循环、sht 表数据除法拷贝、GetFlag14 条件 SetCurrent、bullets state 清零、两张射击
+  回调表 memcpy、角色颜色覆盖、0x10 位置拷贝、4 个 option 初始化、结尾 e2b2c/全局
+  0x57ad30。新增全局 `g_Unknown57ad30`（0x57ad30）。
