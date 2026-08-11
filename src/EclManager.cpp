@@ -569,6 +569,22 @@ restart:
                     }
                 }
                 goto skipInstr;
+            case 104: // opcode 105 = 设置 unk3060 + 按 rank 缩放 + unk3064 重置
+                enemy->unk3060 = ECL_IVAL(0);
+                if (enemy->unk3060 != 0)
+                {
+                    enemy->unk3060 += g_GameManager.ScaleIntBasedOnRank(enemy->unk3060 / 5, -(enemy->unk3060) / 5);
+                    enemy->unk3064.SetCurrent(0);
+                }
+                goto skipInstr;
+            case 105: // opcode 106 = 同 op105 但 unk3064 用随机值
+                enemy->unk3060 = ECL_IVAL(0);
+                if (enemy->unk3060 != 0)
+                {
+                    enemy->unk3060 += g_GameManager.ScaleIntBasedOnRank(enemy->unk3060 / 5, -(enemy->unk3060) / 5);
+                    enemy->unk3064.SetCurrent(g_Rng.GetRandomU32InRange(enemy->unk3060));
+                }
+                goto skipInstr;
             case 106: // opcode 107 = 设置 unk3324 bit17
                 enemy->unk3324 |= 0x20000;
                 goto skipInstr;
@@ -631,6 +647,18 @@ restart:
                 goto skipInstr;
             case 125: // opcode 126 = 设置 interrupts 数组元素
                 enemy->interrupts[ECL_IVAL(1)] = (i16)ECL_IVAL(0);
+                goto skipInstr;
+            case 120: // opcode 121 = RUN_EX_INS (子弹对象: unk598<2 时设状态)
+                {
+                    i32 v0 = ECL_IVAL(0);
+                    u8 *b = (u8 *)enemy->unk3280[v0];
+                    if (b != 0 && *(u32 *)(b + 0x584) != 0 && *(u8 *)(b + 0x598) < 2)
+                    {
+                        *(u8 *)(b + 0x598) = 2;
+                        ((ZunTimer *)(b + 0x588))->SetCurrent(0);
+                        *(u32 *)(b + 0x564) = *(u32 *)(b + 0x568);
+                    }
+                }
                 goto skipInstr;
             case 121: // opcode 122 = 子脚本 (FUN_00421280)
                 FUN_00421280(enemy, instr);
@@ -864,6 +892,12 @@ restart:
                     g_PlayerFlags |= 0x2000;
                 }
                 enemy->unk3324 |= 0x40000000;
+                goto skipInstr;
+            case 181: // opcode 182 = 设置 unk3328 bit8
+                enemy->unk3328 = (enemy->unk3328 & ~0x100) | ((ECL_IVAL(0) & 1) << 8);
+                goto skipInstr;
+            case 182: // opcode 183 = 设置 unk3324 bit31
+                enemy->unk3324 = (enemy->unk3324 & ~0x80000000) | ((ECL_IVAL(0) & 1) << 0x1f);
                 goto skipInstr;
             case 177: // opcode 178 = 子脚本 (FUN_004224a0)
                 FUN_004224a0(enemy, instr);
