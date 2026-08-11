@@ -421,6 +421,12 @@ restart:
             case 83: // opcode 84 = NOP
             case 84: // opcode 85 = NOP
                 goto skipInstr;
+            case 106: // opcode 107 = 设置 unk3324 bit17
+                enemy->unk3324 |= 0x20000;
+                goto skipInstr;
+            case 107: // opcode 108 = 清除 unk3324 bit17
+                enemy->unk3324 &= ~0x20000;
+                goto skipInstr;
             case 109: // opcode 110 = 移动插值 (unk2db8/2dbc/2dc0)
                 enemy->unk2db8 = ECL_FVAL(0);
                 enemy->unk2dbc = ECL_FVAL(1);
