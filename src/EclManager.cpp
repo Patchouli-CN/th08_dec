@@ -604,6 +604,128 @@ restart:
                         ((Enemy *)g_BulletObjects[ECL_IVAL(0)])->runInterrupt = (i16)ECL_IVAL(1);
                 }
                 goto skipInstr;
+            case 89: // opcode 90 = 生成弹幕子敌人 (FUN_0041efc0/41f110 + 425b70)
+                {
+                    Enemy *head = FUN_0041efc0(enemy);
+                    Enemy *node = FUN_0041f110(enemy, instr);
+                    if (g_BulletSpawnFlag == 0)
+                    {
+                        node->unk3324 |= 0x100;
+                        node->unk3324 = (node->unk3324 & ~0x800) | ((g_Player.IsYoukai() & 1) << 0xb);
+                        node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
+                        node->unk3324 &= ~0x4;
+                        if (node->unk53c8 == 0)
+                        {
+                            node->unk53c8 = (u32)g_EffectManager.FUN_00425b70(0x20, &node->pos, 1, -1);
+                            if (node->unk53c8 != 0)
+                            {
+                                AnmVm *obj = (AnmVm *)node->unk53c8;
+                                obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                                *(u32 *)((u8 *)obj + 0x1f8) = (*(u32 *)((u8 *)obj + 0x1f8) & ~0x20000) |
+                                                              (((node->unk3324 >> 2) & 1) << 0x11);
+                                if (node->unk2e0c & 1)
+                                    *(f32 *)((u8 *)obj + 0x14) = -*(f32 *)((u8 *)obj + 0x14);
+                            }
+                        }
+                        node->unk2da4 = enemy;
+                        head->unk8 = (i32)node;
+                        node->unk4 = (i32)head;
+                        enemy->unk3380++;
+                    }
+                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0x24, enemy->pos.x);
+                }
+                goto skipInstr;
+            case 90: // opcode 91 = 生成弹幕子敌人 (41f280 变体)
+                {
+                    Enemy *head = FUN_0041efc0(enemy);
+                    Enemy *node = FUN_0041f280(enemy, instr);
+                    if (g_BulletSpawnFlag == 0)
+                    {
+                        node->unk3324 |= 0x100;
+                        node->unk3324 = (node->unk3324 & ~0x800) | ((g_Player.IsYoukai() & 1) << 0xb);
+                        node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
+                        node->unk3324 &= ~0x4;
+                        if (node->unk53c8 == 0)
+                        {
+                            node->unk53c8 = (u32)g_EffectManager.FUN_00425b70(0x20, &node->pos, 1, -1);
+                            if (node->unk53c8 != 0)
+                            {
+                                AnmVm *obj = (AnmVm *)node->unk53c8;
+                                obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                                *(u32 *)((u8 *)obj + 0x1f8) = (*(u32 *)((u8 *)obj + 0x1f8) & ~0x20000) |
+                                                              (((node->unk3324 >> 2) & 1) << 0x11);
+                                if (node->unk2e0c & 1)
+                                    *(f32 *)((u8 *)obj + 0x14) = -*(f32 *)((u8 *)obj + 0x14);
+                            }
+                        }
+                        node->unk2da4 = enemy;
+                        head->unk8 = (i32)node;
+                        node->unk4 = (i32)head;
+                        enemy->unk3380++;
+                    }
+                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0x24, enemy->pos.x);
+                }
+                goto skipInstr;
+            case 91: // opcode 92 = 生成弹幕子敌人 (pos 复制 + 移动向量)
+                {
+                    Enemy *head = FUN_0041efc0(enemy);
+                    Enemy *node = FUN_0041f110(enemy, instr);
+                    if (g_BulletSpawnFlag == 0)
+                    {
+                        node->unk3324 |= 0x100;
+                        node->unk3324 = (node->unk3324 & ~0x800) | ((g_Player.IsYoukai() & 1) << 0xb);
+                        node->unk332f = (u8)(g_Player.IsYoukai() ? 0 : 2);
+                        node->unk2d40 = enemy->pos;
+                        node->unk2d88 = node->unk2d40 + node->pos;
+                        node->unk3324 &= ~0x4;
+                        if (node->unk53c8 == 0)
+                        {
+                            node->unk53c8 = (u32)g_EffectManager.FUN_00425b70(0x20, &node->unk2d88, 1, -1);
+                            if (node->unk53c8 != 0)
+                            {
+                                AnmVm *obj = (AnmVm *)node->unk53c8;
+                                obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                                *(u32 *)((u8 *)obj + 0x1f8) = (*(u32 *)((u8 *)obj + 0x1f8) & ~0x20000) |
+                                                              (((node->unk3324 >> 2) & 1) << 0x11);
+                                if (node->unk2e0c & 1)
+                                    *(f32 *)((u8 *)obj + 0x14) = -*(f32 *)((u8 *)obj + 0x14);
+                            }
+                        }
+                        node->unk3324 |= 0x200;
+                        node->unk2da4 = enemy;
+                        head->unk8 = (i32)node;
+                        node->unk4 = (i32)head;
+                        enemy->unk3380++;
+                    }
+                    g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0x24, enemy->pos.x);
+                }
+                goto skipInstr;
+            case 92: // opcode 93 = SPAWN_ENEMY_ABS
+                if (enemy->unk2dfc > 0)
+                {
+                    Float3 pos = Float3(ECL_FVAL(1), ECL_FVAL(2), ECL_FVAL(3));
+                    i32 life = ECL_IVAL(6);
+                    i32 itemDrop = ECL_IVAL(5);
+                    i32 score = ECL_IVAL(4);
+                    g_EnemyManager.SpawnEnemy2(instr->args[0].i, &pos, life, itemDrop, score,
+                                               &enemy->curContextPtr->eclContextArgs);
+                }
+                goto skipInstr;
+            case 93: // opcode 94 = SPAWN_ENEMY_REL (pos 相对敌人)
+                if (enemy->unk2dfc > 0)
+                {
+                    Float3 pos = Float3(ECL_FVAL(1), ECL_FVAL(2), ECL_FVAL(3));
+                    pos = pos + enemy->pos;
+                    i32 life = ECL_IVAL(6);
+                    i32 itemDrop = ECL_IVAL(5);
+                    i32 score = ECL_IVAL(4);
+                    g_EnemyManager.SpawnEnemy2(instr->args[0].i, &pos, life, itemDrop, score,
+                                               &enemy->curContextPtr->eclContextArgs);
+                }
+                goto skipInstr;
+            case 94: // opcode 95 = 遍历删敌人 (g_EnemyManager.FUN_0042efb0)
+                g_EnemyManager.FUN_0042efb0(0x1f40, 0);
+                goto skipInstr;
             case 95: case 96: case 97: case 98: case 99: case 100:
             case 101: case 102: case 103:
                 // opcode 96-104: 激光处理

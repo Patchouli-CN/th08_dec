@@ -53,7 +53,9 @@ struct Enemy
     void FUN_0042a820(); // 0x42a820 (op127 boss-marker setup)
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
-    unknown_fields(0x0, 0xc);
+    unknown_fields(0x0, 0x4);
+    i32 unk4;                          // 0x4   (prev in the sub-enemy chain)
+    i32 unk8;                          // 0x8   (next in the sub-enemy chain)
     AnmVm primaryVm;                   // 0xc   (0x2a4)
     AnmVm vms[2];                      // 0x2b0  (2 * 0x2a4)
     EclContext eclContext;             // 0x7f8  current ECL execution context
@@ -84,7 +86,7 @@ struct Enemy
     f32 unk2d98;                       // 0x2d98  (move speed)
     f32 unk2d9c;                       // 0x2d9c
     f32 unk2da0;                       // 0x2da0
-    unknown_fields(0x2da4, 0x4);       // 0x2da4-0x2da8
+    Enemy *unk2da4;                    // 0x2da4  (owner enemy, set by bullet spawn)
     f32 unk2da8;                       // 0x2da8  (move angle)
     f32 unk2dac;                       // 0x2dac
     f32 unk2db0;                       // 0x2db0
@@ -107,7 +109,9 @@ struct Enemy
     i32 unk2dfc;                       // 0x2dfc  laser-in-use flag
     i32 unk2e00;                       // 0x2e00  (laser-related, divide base)
     i32 unk2e04;                       // 0x2e04  (laser-related)
-    unknown_fields(0x2e08, 0xc);       // 0x2e08-0x2e14
+    unknown_fields(0x2e08, 0x4);       // 0x2e08-0x2e0c
+    i32 unk2e0c;                       // 0x2e0c
+    unknown_fields(0x2e10, 0x4);       // 0x2e10-0x2e14
     ZunTimer unk2e14;                  // 0x2e14 (0xc bytes)
     unknown_fields(0x2e20, 0x200);     // 0x2e20-0x3020
     i32 unk3020;                       // 0x3020  (boss spellcard-related)
@@ -146,7 +150,7 @@ struct Enemy
     i32 unk3368[4];                    // 0x3368  (same indexing; set with unk3358)
     i32 unk3378;                       // 0x3378  (initialized to -1)
     i32 unk337c;                       // 0x337c
-    unknown_fields(0x3380, 0x4);       // 0x3380-0x3384
+    i32 unk3380;                       // 0x3380  (sub-enemy chain count)
     void *dataPtrs[4];                 // 0x3384
     unknown_fields(0x3394, 0x1fb8);    // 0x3394-0x534c
     u8 unk534c;                        // 0x534c  (tutorial/boss-ai flags, bit3 gate)
