@@ -1091,8 +1091,8 @@ ZunResult EclManager::Load(const char *path)
                   v130i, v157v, p22, p23, p24, v141cnt, v141i, v141z, v141y, v141x, v167cnt, v167i, v167z, v167y, v167x, \
                   v92res, v92d6, v92d5, v92d4, v92d3, v92d2, v92d1, v92d0, v92pz, v92py, v92px,                      \
                   v93res, v93d6, v93d5, v93d4, v93d3, v93d2, v93d1, v93d0, v93pz, v93py, v93px,                      \
-                  iInterp, t, flag, interp, savedPos, i, p65, p66,                                                    \
-                  p67, p68, p69, p70, p71, p72, p73, v108z, v108y, v108x, p77, p78, p79, p80, p81, p82, v1, v4a, v4b, v5, \
+                  iInterp, t, flag, interp, savedPosX, savedPosY, savedPosZ, i, p65, p66,                                                    \
+                  p67, p68, p69, p70, p71, p72, p73, v108z, v108y, v108x, p77, p78, p79, p80, p81, opcode, v1, v4a, v4b, v5, \
                   v6, v7, v8a, v8b, v8c, v9a, v9b, v14a, v14b, v10a, v10b, v15a, v15b, v11a, v11b, v16a, v16b, \
                   v12a, v12b, v17a, v17b, v13a, v13b, v18b, v18a, v18c, v19a, v19b, v24a, v24b, v24c, v20a, v20b, \
                   v25a, v25b, v25c, v21a, v21b, v26a, v26b, v26c, v22a, v22b, v27a, v27b, v27c, v23a, v23b, \
@@ -1153,13 +1153,14 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 p65, p66, p67, p68, p69, p70, p71, p72, p73;
     f32 v108z, v108y, v108x;  // slots 74-76 (case 108: pos+moveVec2 Float3 结果, &v108x 基址)
     i32 p77, p78, p79, p80;
-    i32 p81, p82;
+    i32 p81;
+    i32 opcode;
     // exit 块变量 (槽 57-65): iInterp@57, t@58, flag@59, interp@60, savedPos@61-63, i@64
     i32 iInterp;
     f32 t;
     i32 flag;
     EclInterp *interp;
-    Float3 savedPos;
+    f32 savedPosX, savedPosY, savedPosZ;
     i32 v1;   // slot 83 (case 1: SET_WAIT_TIMER)
     i32 *v4a; // slot 84 (case 4: DEC_JUMP GetIntPtr ptr)
     i32 v4b;  // slot 85 (case 4: DEC_JUMP arg2)
@@ -1315,7 +1316,8 @@ restart:
             if ((instr->skipInstrOnDifficulty & (g_GameManager.difficultyMask | enemy->eclFlags)) ==
                 (g_GameManager.difficultyMask | enemy->eclFlags))
             {
-            switch (instr->id - 1)
+            opcode = instr->id - 1;
+            switch (opcode)
             {
             case 0: // ECL_UNIMP
                 return ZUN_ERROR;
@@ -3406,7 +3408,9 @@ exit:
     {
         flag = 0;
         interp = &enemy->curContextPtr->interps[0];
-        savedPos = enemy->pos;
+        savedPosX = enemy->pos.x;
+        savedPosY = enemy->pos.y;
+        savedPosZ = enemy->pos.z;
         if (enemy->curContextPtr->func != NULL)
         {
             enemy->curContextPtr->func(enemy, enemy->curContextPtr->eclExInstr);
@@ -3457,10 +3461,12 @@ exit:
         }
         if (flag != 0)
         {
-            enemy->moveDeltaX = enemy->pos.x - savedPos.x;
-            enemy->moveDeltaY = enemy->pos.y - savedPos.y;
+            enemy->moveDeltaX = enemy->pos.x - savedPosX;
+            enemy->moveDeltaY = enemy->pos.y - savedPosY;
             enemy->moveAngle = EclAngleFromDxDy(enemy->moveDeltaX, enemy->moveDeltaY);
-            enemy->pos = savedPos;
+            enemy->pos.x = savedPosX;
+            enemy->pos.y = savedPosY;
+            enemy->pos.z = savedPosZ;
         }
     }
 
