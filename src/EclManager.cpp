@@ -255,7 +255,7 @@ ZunResult EclManager::Load(const char *path)
                   v117a, v117b, v118a, v118b, v118c, v118d, v169a, v169b, v119a, v120a, v170a, v170b, \
                   v171a, v171b, v171c, v162a, v126a, v126b, v126c, v126d, v158a, v123a, v125a, v125b, \
                   v124a, v130a, v157a, v157b, v157c, v157d, v131a, v132a, v132b, v132c, v132d, v132e, \
-                  v132f)
+                  v132f, v133a, v133b, v133c, v134a, v134b, v134c)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -373,6 +373,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v157a, v157b, v157c, v157d; // slots 280-283 (case 157: Gui 数据; v0 + a1 + a2 + a3)
     i32 v131a;        // slot 284 (case 131: unk2e14 计时器)
     i32 v132a, v132b, v132c, v132d, v132e, v132f; // slots 285-290 (case 132: unk3358/unk3368; 非boss: value1+idx1+value2+idx2, boss: value1+idx1)
+    i32 v133a, v133b, v133c; // slots 291-293 (case 133: unk3378/337c; 非boss: val0+val1, boss: val0)
+    i32 v134a, v134b, v134c; // slots 294-296 (case 134: dataSlots 分配/释放; idx + subId, subId re-read)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1839,33 +1841,57 @@ restart:
                 }
                 goto skipInstr;
             case 133: // opcode 134 = 设置 unk3378/unk337c (boss 模式只写 3378) + unk2e14 重置
-                if (IS_BOSS_MODE())
-                    enemy->unk3378 = ECL_IVAL(0);
+                if (!IS_BOSS_MODE())
+                {
+                    if (instr->paramMask & 0x1)
+                        v133a = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v133a = instr->args[0].i;
+                    enemy->unk3378 = v133a;
+                    if (instr->paramMask & 0x2)
+                        v133b = GetVarValue(enemy, instr->args[1].i);
+                    else
+                        v133b = instr->args[1].i;
+                    enemy->unk337c = v133b;
+                }
                 else
                 {
-                    enemy->unk3378 = ECL_IVAL(0);
-                    enemy->unk337c = ECL_IVAL(1);
+                    if (instr->paramMask & 0x1)
+                        v133c = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v133c = instr->args[0].i;
+                    enemy->unk3378 = v133c;
                 }
                 enemy->unk2e14.SetCurrent(0);
                 goto skipInstr;
             case 134: // opcode 135 = 分配/释放数据缓冲 (dataSlots[v0])
+                if (instr->paramMask & 0x1)
+                    v134a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v134a = instr->args[0].i;
+                arg = v134a;
+                if (enemy->dataSlots[arg] != 0)
+                    g_ZunMemory.Free(enemy->dataSlots[arg]);
+                enemy->dataSlots[arg] = NULL;
+                if (instr->paramMask & 0x2)
+                    v134b = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v134b = instr->args[1].i;
+                if (v134b >= 0)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    if (enemy->dataSlots[v0] != 0)
-                        g_ZunMemory.Free(enemy->dataSlots[v0]);
-                    enemy->dataSlots[v0] = NULL;
-                    if (ECL_IVAL(1) >= 0)
+                    enemy->dataSlots[arg] = (EclDataSlot *)g_ZunMemory.Alloc(sizeof(EclDataSlot), "ECLInt");
+                    if (enemy->dataSlots[arg] != 0)
                     {
-                        enemy->dataSlots[v0] = (EclDataSlot *)g_ZunMemory.Alloc(sizeof(EclDataSlot), "ECLInt");
-                        if (enemy->dataSlots[v0] != 0)
-                        {
-                            memset(enemy->dataSlots[v0], 0, 0x24b0);
-                            enemy->dataSlots[v0]->subId = ECL_IVAL(1);
-                            g_EclInterruptTable.SetupEclContext(&enemy->dataSlots[v0]->context,
-                                                                       (i16)enemy->dataSlots[v0]->subId);
-                            memcpy(&enemy->dataSlots[v0]->context.eclContextArgs,
-                                   &enemy->curContextPtr->eclContextArgs, 0x1e * 4);
-                        }
+                        memset(enemy->dataSlots[arg], 0, 0x24b0);
+                        if (instr->paramMask & 0x2)
+                            v134c = GetVarValue(enemy, instr->args[1].i);
+                        else
+                            v134c = instr->args[1].i;
+                        enemy->dataSlots[arg]->subId = v134c;
+                        g_EclInterruptTable.SetupEclContext(&enemy->dataSlots[arg]->context,
+                                                                   (i16)enemy->dataSlots[arg]->subId);
+                        memcpy(&enemy->dataSlots[arg]->context.eclContextArgs,
+                               &enemy->curContextPtr->eclContextArgs, 0x1e * 4);
                     }
                 }
                 goto skipInstr;
