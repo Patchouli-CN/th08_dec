@@ -1173,7 +1173,7 @@ i32 Player::FUN_0044aec0()
     }
     if (this->barrierParticle != 0)
     {
-        this->barrierParticle->unk2a4 = this->positionCenter;
+        this->barrierParticle->spawnPos = this->positionCenter;
         if (g_GameManager.GaugeIsExtremelyHuman() == 0 && g_GameManager.GaugeIsExtremelyYoukai() == 0)
         {
             this->barrierParticle->alive = 0;

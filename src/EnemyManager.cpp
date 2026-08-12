@@ -373,21 +373,21 @@ ZunResult EffectManager::RegisterChain()
 // FUNCTION: th08 0x425430
 AnmVm *EffectManager::SpawnEffect(i32 a, Float3 *pos, i32 b, i32 c)
 {
-    EffectManagerParticle *p = &this->particles[this->unk0];
+    EffectManagerParticle *p = &this->particles[this->nextSlotIdx];
     AnmVm *result;
     i32 i;
 
     for (i = 0; i < 0x200; i++)
     {
-        this->unk0 = this->unk0 + 1;
-        if (this->unk0 >= 0x200)
+        this->nextSlotIdx = this->nextSlotIdx + 1;
+        if (this->nextSlotIdx >= 0x200)
         {
-            this->unk0 = 0;
+            this->nextSlotIdx = 0;
         }
 
         if (p->alive != 0)
         {
-            if (this->unk0 == 0)
+            if (this->nextSlotIdx == 0)
             {
                 p = &this->particles[0];
             }
@@ -407,8 +407,8 @@ AnmVm *EffectManager::SpawnEffect(i32 a, Float3 *pos, i32 b, i32 c)
 
         p->alive = 1;
         p->type = (i8)a;
-        p->unk2a4 = *pos;
-        this->unk8b054->SetAndExecuteScriptIdx((AnmVm *)p, g_EffectTemplates[a].field0);
+        p->spawnPos = *pos;
+        this->effectAnm->SetAndExecuteScriptIdx((AnmVm *)p, g_EffectTemplates[a].field0);
 
         p->flags |= 0x2000;
         p->spawnParam = c;
@@ -431,7 +431,7 @@ AnmVm *EffectManager::SpawnEffect(i32 a, Float3 *pos, i32 b, i32 c)
             break;
         }
 
-        if (this->unk0 == 0)
+        if (this->nextSlotIdx == 0)
         {
             p = &this->particles[0];
         }
@@ -470,11 +470,11 @@ AnmVm *EffectManager::SpawnEffectAtSlot(i32 a, Float3 *pos, i32 b, i32 c, i32 d)
     p->slotIdx = b;
     p->alive = 1;
     p->type = (i8)a;
-    p->unk2a4 = *pos;
+    p->spawnPos = *pos;
 
     if (g_EffectTemplates[a].field0 >= 0)
     {
-        this->unk8b054->SetAndExecuteScriptIdx((AnmVm *)p, g_EffectTemplates[a].field0);
+        this->effectAnm->SetAndExecuteScriptIdx((AnmVm *)p, g_EffectTemplates[a].field0);
     }
 
     p->flags |= 0x2000;

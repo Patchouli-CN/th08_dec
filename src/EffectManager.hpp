@@ -29,7 +29,7 @@ struct EffectManagerParticle
     u32 drawOffsetY;                  // 0x28c
     u32 drawOffsetZ;                  // 0x290
     unknown_fields(0x294, 0x10);
-    Float3 unk2a4;                    // 0x2a4  (spawn position, from spawn *pos)
+    Float3 spawnPos;                  // 0x2a4  (spawn position, from spawn *pos)
     unknown_fields(0x2b0, 0x24);
     Float3 pos;                       // 0x2d4  (effect animated position, updated by template callbacks)
     unknown_fields(0x2e0, 0xc);
@@ -60,11 +60,11 @@ struct EffectManager
     void *AllocEffectSlot(i32 type, Float3 *pos, i32 b, i32 c); // 0x425b70 (claim an effect slot)
     void SpawnEffectLocal(i32 a0, Float3 *pos, Float3 *localPos, i32 a1, i32 a2); // 0x425650 (op140; 带局部位置生成特效)
 
-    i32 unk0;                            // 0x0
+    i32 nextSlotIdx;                     // 0x0  (SpawnEffect 轮转分配游标: particles[nextSlotIdx++], 绕 0x200)
     unknown_fields(0x4, 0x18);
     EffectManagerParticle particles[512]; // 0x1c
     unknown_fields(0x6c01c, 0x1f038);    // 0x6c01c..0x8b054
-    AnmLoaded *unk8b054;                 // 0x8b054
+    AnmLoaded *effectAnm;                // 0x8b054  (SetAndExecuteScriptIdx 用的特效 AnmLoaded)
     unknown_fields(0x8b058, 0x4);        // 到 0x8b05c
 };
 
