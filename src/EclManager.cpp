@@ -246,8 +246,9 @@ ZunResult EclManager::Load(const char *path)
 #pragma var_order(arg, subCtxIdx, instr, v37n, v37m, v38dx, v38dy, p8,                                              \
                   v89node, v89head, v90node, v90head, v91node, v91head, v110ld, v113sd, v113args, p18, p19, \
                   v130i, v157v, p22, p23, p24, v141cnt, v141i, v141z, v141y, v141x, v167cnt, v167i, v167z, v167y, v167x, \
-                  p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
-                  p50, p51, p52, p53, p54, p55, p56, iInterp, t, flag, interp, savedPos, i, p65, p66,                 \
+                  v92res, v92d6, v92d5, v92d4, v92d3, v92d2, v92d1, v92d0, v92pz, v92py, v92px,                      \
+                  v93res, v93d6, v93d5, v93d4, v93d3, v93d2, v93d1, v93d0, v93pz, v93py, v93px,                      \
+                  iInterp, t, flag, interp, savedPos, i, p65, p66,                                                    \
                   p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81, p82, v1, v4a, v4b, v5, \
                   v6, v7, v8a, v8b, v8c, v9a, v9b, v14a, v14b, v10a, v10b, v15a, v15b, v11a, v11b, v16a, v16b, \
                   v12a, v12b, v17a, v17b, v13a, v13b, v18b, v18a, v18c, v19a, v19b, v24a, v24b, v24c, v20a, v20b, \
@@ -299,8 +300,13 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v167cnt;                  // slot 30 (case 167 循环计数)
     i32 v167i;                    // slot 31 (case 167 循环变量)
     f32 v167z, v167y, v167x;      // slots 32/33/34 (case 167 Float3: &v167x 为基址)
-    i32 p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49;
-    i32 p50, p51, p52, p53, p54, p55, p56;
+    // case 92/93 低槽: 结果 + EnemySpawnData 拷贝(7 dword, 基址=&v92d0) + Float3(基址=&v92px)
+    i32 v92res;                                        // slot 35
+    i32 v92d6, v92d5, v92d4, v92d3, v92d2, v92d1, v92d0; // slots 36-42 (v92d0=-0xa8 基址)
+    f32 v92pz, v92py, v92px;                           // slots 43-45 (v92px=-0xb4 基址)
+    i32 v93res;                                        // slot 46
+    i32 v93d6, v93d5, v93d4, v93d3, v93d2, v93d1, v93d0; // slots 47-53 (v93d0=-0xd4 基址)
+    f32 v93pz, v93py, v93px;                           // slots 54-56 (v93px=-0xe0 基址)
     i32 p65, p66, p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80;
     i32 p81, p82;
     // exit 块变量 (槽 57-65): iInterp@57, t@58, flag@59, interp@60, savedPos@61-63, i@64
@@ -2143,24 +2149,22 @@ restart:
             case 92: // opcode 93 = SPAWN_ENEMY_ABS
                 if (enemy->laserActive > 0)
                 {
-                    EnemySpawnData data;
-                    data = *(EnemySpawnData *)&instr->args[0];
-                    Float3 pos;
+                    *(EnemySpawnData *)&v92d0 = *(EnemySpawnData *)&instr->args[0];
                     if (instr->paramMask & 0x2)
-                        v92a = enemy->GetEclFloatVar(data.pos.x);
+                        v92a = enemy->GetEclFloatVar(((EnemySpawnData *)&v92d0)->pos.x);
                     else
-                        v92a = data.pos.x;
-                    pos.x = v92a;
+                        v92a = ((EnemySpawnData *)&v92d0)->pos.x;
+                    ((Float3 *)&v92px)->x = v92a;
                     if (instr->paramMask & 0x4)
-                        v92b = enemy->GetEclFloatVar(data.pos.y);
+                        v92b = enemy->GetEclFloatVar(((EnemySpawnData *)&v92d0)->pos.y);
                     else
-                        v92b = data.pos.y;
-                    pos.y = v92b;
+                        v92b = ((EnemySpawnData *)&v92d0)->pos.y;
+                    ((Float3 *)&v92px)->y = v92b;
                     if (instr->paramMask & 0x8)
-                        v92c = enemy->GetEclFloatVar(data.pos.z);
+                        v92c = enemy->GetEclFloatVar(((EnemySpawnData *)&v92d0)->pos.z);
                     else
-                        v92c = data.pos.z;
-                    pos.z = v92c;
+                        v92c = ((EnemySpawnData *)&v92d0)->pos.z;
+                    ((Float3 *)&v92px)->z = v92c;
                     if (instr->paramMask & 0x40)
                         v92d = GetVarValue(enemy, instr->args[6].i);
                     else
@@ -2173,32 +2177,31 @@ restart:
                         v92f = GetVarValue(enemy, instr->args[4].i);
                     else
                         v92f = instr->args[4].i;
-                    g_EnemyManager.SpawnEnemy2(data.subId, &pos, v92f, v92e, v92d,
+                    v92res = (i32)g_EnemyManager.SpawnEnemy2(((EnemySpawnData *)&v92d0)->subId,
+                                               (Float3 *)&v92px, v92f, v92e, v92d,
                                                &enemy->curContextPtr->eclContextArgs);
                 }
                 goto skipInstr;
             case 93: // opcode 94 = SPAWN_ENEMY_REL (pos 相对敌人)
                 if (enemy->laserActive > 0)
                 {
-                    EnemySpawnData data;
-                    data = *(EnemySpawnData *)&instr->args[0];
-                    Float3 pos;
+                    *(EnemySpawnData *)&v93d0 = *(EnemySpawnData *)&instr->args[0];
                     if (instr->paramMask & 0x2)
-                        v93a = enemy->GetEclFloatVar(data.pos.x);
+                        v93a = enemy->GetEclFloatVar(((EnemySpawnData *)&v93d0)->pos.x);
                     else
-                        v93a = data.pos.x;
-                    pos.x = v93a;
+                        v93a = ((EnemySpawnData *)&v93d0)->pos.x;
+                    ((Float3 *)&v93px)->x = v93a;
                     if (instr->paramMask & 0x4)
-                        v93b = enemy->GetEclFloatVar(data.pos.y);
+                        v93b = enemy->GetEclFloatVar(((EnemySpawnData *)&v93d0)->pos.y);
                     else
-                        v93b = data.pos.y;
-                    pos.y = v93b;
+                        v93b = ((EnemySpawnData *)&v93d0)->pos.y;
+                    ((Float3 *)&v93px)->y = v93b;
                     if (instr->paramMask & 0x8)
-                        v93c = enemy->GetEclFloatVar(data.pos.z);
+                        v93c = enemy->GetEclFloatVar(((EnemySpawnData *)&v93d0)->pos.z);
                     else
-                        v93c = data.pos.z;
-                    pos.z = v93c;
-                    pos += enemy->pos;
+                        v93c = ((EnemySpawnData *)&v93d0)->pos.z;
+                    ((Float3 *)&v93px)->z = v93c;
+                    *(Float3 *)&v93px += enemy->pos;
                     if (instr->paramMask & 0x40)
                         v93d = GetVarValue(enemy, instr->args[6].i);
                     else
@@ -2211,7 +2214,8 @@ restart:
                         v93f = GetVarValue(enemy, instr->args[4].i);
                     else
                         v93f = instr->args[4].i;
-                    g_EnemyManager.SpawnEnemy2(data.subId, &pos, v93f, v93e, v93d,
+                    v93res = (i32)g_EnemyManager.SpawnEnemy2(((EnemySpawnData *)&v93d0)->subId,
+                                               (Float3 *)&v93px, v93f, v93e, v93d,
                                                &enemy->curContextPtr->eclContextArgs);
                 }
                 goto skipInstr;
