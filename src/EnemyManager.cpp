@@ -502,7 +502,7 @@ void *EffectManager::AllocEffectSlot(i32 type, Float3 *pos, i32 b, i32 c)
     return NULL;
 }
 
-void EffectManager::FUN_00425650(i32 a0, Float3 *pos, Float3 *localPos, i32 a1, i32 a2, i32 a3)
+void EffectManager::FUN_00425650(i32 a0, Float3 *pos, Float3 *localPos, i32 a1, i32 a2)
 {
 }
 

@@ -255,7 +255,8 @@ ZunResult EclManager::Load(const char *path)
                   v117a, v117b, v118a, v118b, v118c, v118d, v169a, v169b, v119a, v120a, v170a, v170b, \
                   v171a, v171b, v171c, v162a, v126a, v126b, v126c, v126d, v158a, v123a, v125a, v125b, \
                   v124a, v130a, v157a, v157b, v157c, v157d, v131a, v132a, v132b, v132c, v132d, v132e, \
-                  v132f, v133a, v133b, v133c, v134a, v134b, v134c)
+                  v132f, v133a, v133b, v133c, v134a, v134b, v134c, v138a, v138b, v139a, v139b, v139c, \
+                  v139d, v139e)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -375,6 +376,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v132a, v132b, v132c, v132d, v132e, v132f; // slots 285-290 (case 132: unk3358/unk3368; 非boss: value1+idx1+value2+idx2, boss: value1+idx1)
     i32 v133a, v133b, v133c; // slots 291-293 (case 133: unk3378/337c; 非boss: val0+val1, boss: val0)
     i32 v134a, v134b, v134c; // slots 294-296 (case 134: dataSlots 分配/释放; idx + subId, subId re-read)
+    i32 v138a, v138b; // slots 297-298 (case 138: 生成特效; a1(bit2) + a0(bit1))
+    f32 v139a, v139b, v139c; i32 v139d, v139e; // slots 299-303 (case 139: 生成特效含局部pos; f3-5 + a1 + a0)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1896,20 +1899,45 @@ restart:
                 }
                 goto skipInstr;
             case 138: // opcode 139 = 生成特效 (位置 enemy->pos)
-                {
-                    i32 a1 = ECL_IVAL(1);
-                    i32 a0 = ECL_IVAL(0);
-                    g_EffectManager.FUN_00425430(a0, &enemy->pos, a1,
-                                                  *GetIntPtr(enemy, &instr->args[2], instr->paramMask));
-                }
+                if (instr->paramMask & 0x2)
+                    v138a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v138a = instr->args[1].i;
+                if (instr->paramMask & 0x1)
+                    v138b = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v138b = instr->args[0].i;
+                g_EffectManager.FUN_00425430(v138b, &enemy->pos, v138a,
+                                              *GetIntPtr(enemy, &instr->args[2], instr->paramMask, 2));
                 goto skipInstr;
             case 139: // opcode 140 = 生成特效 (含局部位置 Float3)
                 {
-                    Float3 localPos = Float3(ECL_FVAL(3), ECL_FVAL(4), ECL_FVAL(5));
-                    i32 a1 = ECL_IVAL(1);
-                    i32 a0 = ECL_IVAL(0);
-                    g_EffectManager.FUN_00425650(a0, &enemy->pos, &localPos, a1,
-                                                  *GetIntPtr(enemy, &instr->args[2], instr->paramMask), 2);
+                    Float3 localPos;
+                    if (instr->paramMask & 0x8)
+                        v139a = enemy->GetEclFloatVar(instr->args[3].i);
+                    else
+                        v139a = instr->args[3].f;
+                    localPos.x = v139a;
+                    if (instr->paramMask & 0x10)
+                        v139b = enemy->GetEclFloatVar(instr->args[4].i);
+                    else
+                        v139b = instr->args[4].f;
+                    localPos.y = v139b;
+                    if (instr->paramMask & 0x20)
+                        v139c = enemy->GetEclFloatVar(instr->args[5].i);
+                    else
+                        v139c = instr->args[5].f;
+                    localPos.z = v139c;
+                    if (instr->paramMask & 0x2)
+                        v139d = GetVarValue(enemy, instr->args[1].i);
+                    else
+                        v139d = instr->args[1].i;
+                    if (instr->paramMask & 0x1)
+                        v139e = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v139e = instr->args[0].i;
+                    g_EffectManager.FUN_00425650(v139e, &enemy->pos, &localPos, v139d,
+                                                  *GetIntPtr(enemy, &instr->args[2], instr->paramMask, 2));
                 }
                 goto skipInstr;
             case 142: // opcode 143 = 设置 unk3304

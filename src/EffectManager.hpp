@@ -58,7 +58,7 @@ struct EffectManager
     AnmVm *FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c);
     AnmVm *FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d);
     void *AllocEffectSlot(i32 type, Float3 *pos, i32 b, i32 c); // 0x425b70 (claim an effect slot)
-    void FUN_00425650(i32 a0, Float3 *pos, Float3 *localPos, i32 a1, i32 a2, i32 a3); // 0x425650 (op140)
+    void FUN_00425650(i32 a0, Float3 *pos, Float3 *localPos, i32 a1, i32 a2); // 0x425650 (op140; ORIG call 压 5 参)
 
     i32 unk0;                            // 0x0
     unknown_fields(0x4, 0x18);
