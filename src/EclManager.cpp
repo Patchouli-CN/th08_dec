@@ -11,6 +11,7 @@
 #include "ItemManager.hpp"
 #include "EffectManager.hpp"
 #include "AsciiManager.hpp"
+#include "Spellcard.hpp"
 
 #include <math.h>
 
@@ -120,11 +121,281 @@ Enemy *__fastcall InitEnemySpawnData(Enemy *enemy);                            /
 
 f32 __stdcall EclAtan2(f32 a, f32 b); // wraps CRT atan2 (original 0x41f090)
 
-// FUNCTION: th08 0x41f420
-i32 __fastcall GetVarValue(Enemy *enemy, i32 varId)
+// 辅助类: GetVarValue/GetEclFloatVar 中调用的未逆向 helper (thiscall 视图; call 目标归一化为 T)。
+class D3DVectorOps // 与 Player.cpp 同名类共享符号 (Float3::operator- @ 0x4090d0)
+{
+  public:
+    Float3 *Sub(Float3 *subtrahend, Float3 *result);
+};
+
+class Float3LenOps // Float3::Length @ 0x40b4c0 (thiscall, 返回 ST0)
+{
+  public:
+    f32 Length();
+};
+
+class EclSpellcardVars // g_Spellcard/g_EclGlobalObj @ 0x4ea670 的 flag getter (原版 flag 位)
+{
+  public:
+    i32 GetTimeOrbsExtra(); // 0x453cc0
+    i32 IsLastWord();       // 0x41fd90 (bit0 && bit2)
+    i32 IsExtraActive();    // 0x405260 (bit9)
+    i32 GetSpellcardFlag(); // 0x41fdd0 (子对象方法)
+};
+
+class RngF32InRangeOps // Rng::GetRandomF32InRange @ 0x40d390 (thiscall, 原版未内联)
+{
+  public:
+    f32 InRange(f32 range);
+};
+
+// D3DVectorOps::Sub 定义在 Player.cpp (0x4090d0 stub), 此处仅声明共用符号。
+
+f32 Float3LenOps::Length()
+{
+    return 0.0f;
+}
+
+i32 EclSpellcardVars::GetTimeOrbsExtra()
 {
     return 0;
 }
+
+i32 EclSpellcardVars::IsLastWord()
+{
+    return 0;
+}
+
+i32 EclSpellcardVars::IsExtraActive()
+{
+    return 0;
+}
+
+i32 EclSpellcardVars::GetSpellcardFlag()
+{
+    return 0;
+}
+
+f32 RngF32InRangeOps::InRange(f32 range)
+{
+    return 0.0f;
+}
+
+// GetVarValue: case 顺序照原版发射顺序 (跳表索引与源码顺序解耦)。default 兜底返回 varId。
+// FUNCTION: th08 0x41f420
+i32 __fastcall GetVarValue(Enemy *enemy, i32 varId)
+{
+    f32 vecZ, vecY, vecX; // Float3 局部 (基址 &vecX), 供 0x2742 差值
+    switch (varId)
+    {
+    case 0x2710:
+        return enemy->curContextPtr->eclContextArgs.intVars1[0];
+    case 0x2711:
+        return enemy->curContextPtr->eclContextArgs.intVars1[1];
+    case 0x2712:
+        return enemy->curContextPtr->eclContextArgs.intVars1[2];
+    case 0x2713:
+        return enemy->curContextPtr->eclContextArgs.intVars1[3];
+    case 0x2714:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.floatVars1[0];
+    case 0x2715:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.floatVars1[1];
+    case 0x2716:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.floatVars1[2];
+    case 0x2717:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.floatVars1[3];
+    case 0x2718:
+        return *(i32 *)((u8 *)enemy + 0x2ca8);
+    case 0x2719:
+        return *(i32 *)((u8 *)enemy + 0x2cac);
+    case 0x271a:
+        return *(i32 *)((u8 *)enemy + 0x2cb0);
+    case 0x271b:
+        return *(i32 *)((u8 *)enemy + 0x2cb4);
+    case 0x271c:
+        return *(i32 *)((u8 *)enemy + 0x2cb8);
+    case 0x271d:
+        return *(i32 *)((u8 *)enemy + 0x2cbc);
+    case 0x271e:
+        return *(i32 *)((u8 *)enemy + 0x2cc0);
+    case 0x271f:
+        return *(i32 *)((u8 *)enemy + 0x2cc4);
+    case 0x2745:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.globalVars.floatVars[0];
+    case 0x2746:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.globalVars.floatVars[1];
+    case 0x2747:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.globalVars.floatVars[2];
+    case 0x2748:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.globalVars.floatVars[3];
+    case 0x2734:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.floatVars2[0];
+    case 0x2735:
+        return *(i32 *)&enemy->curContextPtr->eclContextArgs.floatVars2[1];
+    case 0x2736:
+        return enemy->curContextPtr->eclContextArgs.globalVars.intVars[0];
+    case 0x2737:
+        return enemy->curContextPtr->eclContextArgs.globalVars.intVars[1];
+    case 0x2730:
+        return (i32)(g_Rng.GetRandomU32() & 0x7fffffff);
+    case 0x2731:
+        return (i32)g_Rng.GetRandomF32();
+    case 0x2732:
+        return (i32)g_Rng.GetRandomU32();
+    case 0x2733:
+        return (i32)g_Rng.GetRandomF32Signed();
+    case 0x2738:
+        return *(i32 *)((u8 *)&g_GameManager + 0x30);
+    case 0x2739:
+        return g_164d334;
+    case 0x2741:
+        return enemy->eclTimer.current;
+    case 0x2743:
+        return enemy->laserActive;
+    case 0x2744:
+        return g_PlayerCharacter;
+    case 0x276e:
+        return (i32)*(f32 *)&enemy->curContextPtr->eclContextArgs.globalVars.intVars[2];
+    case 0x276f:
+        return (i32)*(f32 *)&enemy->curContextPtr->eclContextArgs.globalVars.intVars[3];
+    case 0x2720:
+        return (i32)enemy->curContextPtr->eclContextArgs.floatVars1[4];
+    case 0x2721:
+        return (i32)enemy->curContextPtr->eclContextArgs.floatVars1[5];
+    case 0x2722:
+        return (i32)enemy->curContextPtr->eclContextArgs.floatVars1[6];
+    case 0x2723:
+        return (i32)enemy->curContextPtr->eclContextArgs.floatVars1[7];
+    case 0x2724:
+        return (i32)*(f32 *)&enemy->curContextPtr->eclContextArgs.intVars2[0];
+    case 0x2725:
+        return (i32)*(f32 *)&enemy->curContextPtr->eclContextArgs.intVars2[1];
+    case 0x2726:
+        return (i32)*(f32 *)&enemy->curContextPtr->eclContextArgs.intVars2[2];
+    case 0x2727:
+        return (i32)*(f32 *)&enemy->curContextPtr->eclContextArgs.intVars2[3];
+    case 0x2728:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2cc8);
+    case 0x2729:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2ccc);
+    case 0x272a:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2cd0);
+    case 0x272b:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2cd4);
+    case 0x272c:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2cd8);
+    case 0x272d:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2cdc);
+    case 0x272e:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2ce0);
+    case 0x272f:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2ce4);
+    case 0x2749:
+        return (i32)*(f32 *)((u8 *)enemy->curContextPtr + 0x80);
+    case 0x274a:
+        return (i32)*(f32 *)((u8 *)enemy->curContextPtr + 0x84);
+    case 0x274b:
+        return (i32)*(f32 *)((u8 *)enemy->curContextPtr + 0x88);
+    case 0x274c:
+        return (i32)*(f32 *)((u8 *)enemy->curContextPtr + 0x8c);
+    case 0x274d:
+        return g_EclGlobalRegion[0];
+    case 0x274e:
+        return g_EclGlobalRegion[1];
+    case 0x274f:
+        return g_EclGlobalRegion[2];
+    case 0x2750:
+        return g_EclGlobalRegion[3];
+    case 0x2751:
+        return (i32)*(f32 *)&g_EclGlobalRegion[4];
+    case 0x2752:
+        return (i32)*(f32 *)&g_EclGlobalRegion[5];
+    case 0x2753:
+        return (i32)*(f32 *)&g_EclGlobalRegion[6];
+    case 0x2754:
+        return (i32)*(f32 *)&g_EclGlobalRegion[7];
+    case 0x273a:
+        return (i32)enemy->movePos.x;
+    case 0x273b:
+        return (i32)enemy->movePos.y;
+    case 0x273c:
+        return (i32)enemy->movePos.z;
+    case 0x273d:
+        return (i32)g_EclExitLeftBound;
+    case 0x273e:
+        return (i32)g_17d61b0;
+    case 0x273f:
+        return (i32)g_17d61b4;
+    case 0x275a:
+        return (i32)enemy->moveInterp1;
+    case 0x275b:
+        return (i32)enemy->moveInterp2;
+    case 0x275c:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2dd8);
+    case 0x2765:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2d64);
+    case 0x2766:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2d68);
+    case 0x2767:
+        return (i32)*(f32 *)((u8 *)enemy + 0x2d6c);
+    case 0x2768:
+        return enemy->eclDataArray0[0];
+    case 0x2769:
+        return enemy->eclDataArray0[1];
+    case 0x276a:
+        return enemy->eclDataArray0[2];
+    case 0x276b:
+        return enemy->eclDataArray0[3];
+    case 0x2755:
+        return (i32)enemy->moveAngle;
+    case 0x2756:
+        return (i32)enemy->moveSpeed;
+    case 0x2757:
+        return (i32)enemy->moveRadius;
+    case 0x2758:
+        return (i32)enemy->moveRadiusStep;
+    case 0x2759:
+        return (i32)enemy->moveInterp5;
+    case 0x275d:
+        return (i32)enemy->moveInterp3;
+    case 0x275e:
+        return (i32)enemy->moveInterp4;
+    case 0x2763:
+        return *(i32 *)((u8 *)enemy + 0x3354);
+    case 0x2764:
+        return enemy->bossMarkerIdx;
+    case 0x276c:
+        return enemy->eclData0;
+    case 0x276d:
+        return *(i32 *)((u8 *)enemy + 0x2e08);
+    case 0x2770:
+        return enemy->FUN_0041f000()
+                   ? enemy->FUN_0041fd40()
+                   : (enemy->FUN_0041fd20() ? enemy->ownerEnemy->FUN_0041fd40() : 0);
+    case 0x2740:
+        return (i32)g_Player.AngleToPlayer(&enemy->movePos);
+    case 0x2742:
+        ((D3DVectorOps *)&g_EclExitLeftBound)->Sub((Float3 *)&vecX, &enemy->movePos);
+        return (i32)((Float3LenOps *)(Float3 *)&vecX)->Length();
+    case 0x2771:
+        return g_Player.IsYoukai();
+    case 0x2772:
+        return (g_GameManager.GetTimeOrbs() + ((EclSpellcardVars *)&g_EclGlobalObj)->GetTimeOrbsExtra() +
+                g_ItemManager.GetTimeOrbCount() < g_GameManager.GetLastSpellTimeOrbThreshold())
+                   ? 0
+                   : 2;
+    case 0x2773:
+        return ((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0()
+                   ? ((EclSpellcardVars *)&g_EclGlobalObj)->IsLastWord()
+                   : ((EclSpellcardVars *)&g_EclGlobalObj)->IsExtraActive();
+    case 0x2774:
+        return ((EclSpellcardVars *)&g_EclGlobalObj)->GetSpellcardFlag();
+    default:
+        return varId;
+    }
+}
+
+
 
 // FUNCTION: th08 0x41f090
 f32 __stdcall EclAtan2(f32 a, f32 b)
@@ -256,11 +527,223 @@ i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 argIdx)
         return &args[0].i;
     }
 }
+// GetEclFloatVar: varId 参数按 f32 位模式传入 (调用方传 int 位); switch 前 fld+ftol 取整。
+// case 顺序照原版发射顺序。default 返回原 float 位。
 // FUNCTION: th08 0x420120
+#pragma var_order(vecZ, vecY, vecX, result, temp, result2)
 f32 Enemy::GetEclFloatVar(i32 varId)
 {
-    return 0.0f;
+    f32 vecZ, vecY, vecX; // Float3 局部 (基址 &vecX), 供 0x2742 差值
+    switch ((i32)(*(f32 *)&varId))
+    {
+    case 0x2710:
+        return (f32)this->curContextPtr->eclContextArgs.intVars1[0];
+    case 0x2711:
+        return (f32)this->curContextPtr->eclContextArgs.intVars1[1];
+    case 0x2712:
+        return (f32)this->curContextPtr->eclContextArgs.intVars1[2];
+    case 0x2713:
+        return (f32)this->curContextPtr->eclContextArgs.intVars1[3];
+    case 0x2714:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.floatVars1[0];
+    case 0x2715:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.floatVars1[1];
+    case 0x2716:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.floatVars1[2];
+    case 0x2717:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.floatVars1[3];
+    case 0x2718:
+        return (f32)*(i32 *)((u8 *)this + 0x2ca8);
+    case 0x2719:
+        return (f32)*(i32 *)((u8 *)this + 0x2cac);
+    case 0x271a:
+        return (f32)*(i32 *)((u8 *)this + 0x2cb0);
+    case 0x271b:
+        return (f32)*(i32 *)((u8 *)this + 0x2cb4);
+    case 0x271c:
+        return (f32)*(i32 *)((u8 *)this + 0x2cb8);
+    case 0x271d:
+        return (f32)*(i32 *)((u8 *)this + 0x2cbc);
+    case 0x271e:
+        return (f32)*(i32 *)((u8 *)this + 0x2cc0);
+    case 0x271f:
+        return (f32)*(i32 *)((u8 *)this + 0x2cc4);
+    case 0x2745:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.globalVars.floatVars[0];
+    case 0x2746:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.globalVars.floatVars[1];
+    case 0x2747:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.globalVars.floatVars[2];
+    case 0x2748:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.globalVars.floatVars[3];
+    case 0x2734:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.floatVars2[0];
+    case 0x2735:
+        return (f32)*(i32 *)&this->curContextPtr->eclContextArgs.floatVars2[1];
+    case 0x2736:
+        return (f32)this->curContextPtr->eclContextArgs.globalVars.intVars[0];
+    case 0x2737:
+        return (f32)this->curContextPtr->eclContextArgs.globalVars.intVars[1];
+    case 0x2730:
+        return (f32)(g_Rng.GetRandomU32() & 0x7fffffff);
+    case 0x2731:
+        return g_Rng.GetRandomF32();
+    case 0x2732:
+        return (f32)(i32)g_Rng.GetRandomU32();
+    case 0x2733:
+        return g_Rng.GetRandomF32Signed();
+    case 0x2762:
+        return ((RngF32InRangeOps *)&g_Rng)->InRange(6.2831855f) - 3.1415927f;
+    case 0x2738:
+        return (f32)*(i32 *)((u8 *)&g_GameManager + 0x30);
+    case 0x2739:
+        return (f32)g_164d334;
+    case 0x2741:
+        return (f32)this->eclTimer.current;
+    case 0x2743:
+        return (f32)this->laserActive;
+    case 0x2744:
+        return (f32)g_PlayerCharacter;
+    case 0x276c:
+        return (f32)this->eclData0;
+    case 0x276d:
+        return (f32)*(i32 *)((u8 *)this + 0x2e08);
+    case 0x274d:
+        return (f32)g_EclGlobalRegion[0];
+    case 0x274e:
+        return (f32)g_EclGlobalRegion[1];
+    case 0x274f:
+        return (f32)g_EclGlobalRegion[2];
+    case 0x2750:
+        return (f32)g_EclGlobalRegion[3];
+    case 0x2751:
+        return *(f32 *)&g_EclGlobalRegion[4];
+    case 0x2752:
+        return *(f32 *)&g_EclGlobalRegion[5];
+    case 0x2753:
+        return *(f32 *)&g_EclGlobalRegion[6];
+    case 0x2754:
+        return *(f32 *)&g_EclGlobalRegion[7];
+    case 0x2720:
+        return this->curContextPtr->eclContextArgs.floatVars1[4];
+    case 0x2721:
+        return this->curContextPtr->eclContextArgs.floatVars1[5];
+    case 0x2722:
+        return this->curContextPtr->eclContextArgs.floatVars1[6];
+    case 0x2723:
+        return this->curContextPtr->eclContextArgs.floatVars1[7];
+    case 0x2724:
+        return *(f32 *)&this->curContextPtr->eclContextArgs.intVars2[0];
+    case 0x2725:
+        return *(f32 *)&this->curContextPtr->eclContextArgs.intVars2[1];
+    case 0x2726:
+        return *(f32 *)&this->curContextPtr->eclContextArgs.intVars2[2];
+    case 0x2727:
+        return *(f32 *)&this->curContextPtr->eclContextArgs.intVars2[3];
+    case 0x2728:
+        return *(f32 *)((u8 *)this + 0x2cc8);
+    case 0x2729:
+        return *(f32 *)((u8 *)this + 0x2ccc);
+    case 0x272a:
+        return *(f32 *)((u8 *)this + 0x2cd0);
+    case 0x272b:
+        return *(f32 *)((u8 *)this + 0x2cd4);
+    case 0x272c:
+        return *(f32 *)((u8 *)this + 0x2cd8);
+    case 0x272d:
+        return *(f32 *)((u8 *)this + 0x2cdc);
+    case 0x272e:
+        return *(f32 *)((u8 *)this + 0x2ce0);
+    case 0x272f:
+        return *(f32 *)((u8 *)this + 0x2ce4);
+    case 0x2749:
+        return *(f32 *)((u8 *)this->curContextPtr + 0x80);
+    case 0x274a:
+        return *(f32 *)((u8 *)this->curContextPtr + 0x84);
+    case 0x274b:
+        return *(f32 *)((u8 *)this->curContextPtr + 0x88);
+    case 0x274c:
+        return *(f32 *)((u8 *)this->curContextPtr + 0x8c);
+    case 0x273a:
+        return this->movePos.x;
+    case 0x273b:
+        return this->movePos.y;
+    case 0x273c:
+        return this->movePos.z;
+    case 0x273d:
+        return g_EclExitLeftBound;
+    case 0x273e:
+        return g_17d61b0;
+    case 0x273f:
+        return g_17d61b4;
+    case 0x276e:
+        return *(f32 *)&this->curContextPtr->eclContextArgs.globalVars.intVars[2];
+    case 0x276f:
+        return *(f32 *)&this->curContextPtr->eclContextArgs.globalVars.intVars[3];
+    case 0x275a:
+        return this->moveInterp1;
+    case 0x275b:
+        return this->moveInterp2;
+    case 0x275c:
+        return *(f32 *)((u8 *)this + 0x2dd8);
+    case 0x275f:
+        return this->moveVelVec.x;
+    case 0x2760:
+        return this->moveVelVec.y;
+    case 0x2761:
+        return this->moveVelVec.z;
+    case 0x2765:
+        return *(f32 *)((u8 *)this + 0x2d64);
+    case 0x2766:
+        return *(f32 *)((u8 *)this + 0x2d68);
+    case 0x2767:
+        return *(f32 *)((u8 *)this + 0x2d6c);
+    case 0x2768:
+        return (f32)this->eclDataArray0[0];
+    case 0x2769:
+        return (f32)this->eclDataArray0[1];
+    case 0x276a:
+        return (f32)this->eclDataArray0[2];
+    case 0x276b:
+        return (f32)this->eclDataArray0[3];
+    case 0x2740:
+        return g_Player.AngleToPlayer(&this->movePos);
+    case 0x2755:
+        return this->moveAngle;
+    case 0x2756:
+        return this->moveSpeed;
+    case 0x2757:
+        return this->moveRadius;
+    case 0x2758:
+        return this->moveRadiusStep;
+    case 0x2759:
+        return this->moveInterp5;
+    case 0x275d:
+        return this->moveInterp3;
+    case 0x275e:
+        return this->moveInterp4;
+    case 0x2764:
+        return (f32)this->bossMarkerIdx;
+    case 0x2763:
+        return (f32)*(i32 *)((u8 *)this + 0x3354);
+    case 0x2770:
+        return (f32)(this->FUN_0041f000()
+                         ? this->FUN_0041fd40()
+                         : (this->FUN_0041fd20() ? this->ownerEnemy->FUN_0041fd40() : 0));
+    case 0x2742:
+        ((D3DVectorOps *)&g_EclExitLeftBound)->Sub((Float3 *)&vecX, &this->movePos);
+        return ((Float3LenOps *)(Float3 *)&vecX)->Length();
+    case 0x2771:
+        return (f32)g_Player.IsYoukai();
+    case 0x2773:
+        return (f32)(((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0()
+                         ? ((EclSpellcardVars *)&g_EclGlobalObj)->IsLastWord()
+                         : ((EclSpellcardVars *)&g_EclGlobalObj)->IsExtraActive());
+    default:
+        return *(f32 *)&varId;
+    }
 }
+
 
 // FUNCTION: th08 0x420950
 f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 argIdx)

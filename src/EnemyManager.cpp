@@ -512,4 +512,23 @@ void EffectManager::CutChain()
     g_Chain.Cut(&g_EffectManagerDrawChain);
 }
 
+// 子敌人链 helper (GetVarValue/GetEclFloatVar varId 0x2770 调用; call 目标归一化为 T)
+// FUNCTION: th08 0x41f000
+i32 Enemy::FUN_0041f000()
+{
+    return 0;
+}
+
+// FUNCTION: th08 0x41fd20
+i32 Enemy::FUN_0041fd20()
+{
+    return 0;
+}
+
+// FUNCTION: th08 0x41fd40
+i32 Enemy::FUN_0041fd40()
+{
+    return 0;
+}
+
 } /* namespace th08 */
