@@ -1086,17 +1086,17 @@ ZunResult EclManager::Load(const char *path)
 }
 
 // FUNCTION: th08 0x4184b0 (逆向中)
-#pragma var_order(arg, subCtxIdx, instr, v37n, v37m, v38dx, v38dy, p8,                                              \
+#pragma var_order(arg, subCtxIdx, instr, v37n, v37m, v38dx, v38dy, v39sub,                                              \
                   v89node, v89head, v90node, v90head, v91node, v91head, v110ld, v113sd, v113args, p18, p19, \
-                  v130i, v157v, p22, p23, p24, v141cnt, v141i, v141z, v141y, v141x, v167cnt, v167i, v167z, v167y, v167x, \
+                  v130i, v157v, v139z, v139y, v139x, v141cnt, v141i, v141z, v141y, v141x, v167cnt, v167i, v167z, v167y, v167x, \
                   v92res, v92d6, v92d5, v92d4, v92d3, v92d2, v92d1, v92d0, v92pz, v92py, v92px,                      \
                   v93res, v93d6, v93d5, v93d4, v93d3, v93d2, v93d1, v93d0, v93pz, v93py, v93px,                      \
                   iInterp, t, flag, interp, savedPosX, savedPosY, savedPosZ, i, p65, p66,                                                    \
-                  p67, p68, p69, p70, p71, p72, p73, v108z, v108y, v108x, p77, p78, p79, p80, p81, opcode, v1, v4a, v4b, v5, \
+                  p67, p68, p69, p70, p71, p72, p73, v108z, v108y, v108x, p77, v126z, v126y, v126x, p81, opcode, v1, v4a, v4b, v5, \
                   v6, v7, v8a, v8b, v8c, v9a, v9b, v14a, v14b, v10a, v10b, v15a, v15b, v11a, v11b, v16a, v16b, \
                   v12a, v12b, v17a, v17b, v13a, v13b, v18b, v18a, v18c, v19a, v19b, v24a, v24b, v24c, v20a, v20b, \
                   v25a, v25b, v25c, v21a, v21b, v26a, v26b, v26c, v22a, v22b, v27a, v27b, v27c, v23a, v23b, \
-                  v28a, v28b, v28c, v29a, v30a, v31a, p141, v32a, p143, v33a, v33b, v33c, v33d, v33e, v36a, v36b, \
+                  v28a, v28b, v28c, v29a, v30a, v31a, v31b, v32a, v32b, v33a, v33b, v33c, v33d, v33e, v36a, v36b, \
                   v37a, v37b, v37c, v37d, v38a, v38b, v38c, v38d, v38e, v53a, v54a, v55a, v55b, v55c, v55d, v55e, \
                   v55f, v57a, v58a, v59a, v59b, v59c, v59d, v59e, v59f, v62a, v62b, v64a, v64b, v65a, v65b, v65c, \
                   v67a, v67b, v68a, v68b, v68c, v68d, v69a, v70a, v71a, v71b, v71c, v71d, v71e, v71f, v71g, \
@@ -1112,8 +1112,8 @@ ZunResult EclManager::Load(const char *path)
                   v135a, v136a, v136b, v145a, v140a, v146a, v147a, v92a, v92b, v92c, v92d, v92e, \
                   v92f, v93a, v93b, v93c, v93d, v93e, v93f, v148a, v112a, v112b, v112c, v151a, \
                   v151b, v151c, v151d, v151e, v151f, v156a, v156b, v156c, v159a, v160a, v163a, \
-                  v163b, v163c, v163d, v164a, v165a, v165b, v165c, v165d, v165e, v165f, v172a, \
-                  v182a, v81a, v82a, v173a, v174a, v176a, v181a, v183a)
+                  v163b, v163c, v163d, v164a, v165a, v165b, v165c, v165d, v165e, v165f, v168a, v168b, \
+                  v172a, v182a, v81a, v82a, v173a, v174a, v176a, v181a, v183a, vExitType)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -1124,7 +1124,7 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     f32 v37m;             // slot 5 (case 37 低槽: f3 副本)
     f32 v38dx;            // slot 6 (case 38 低槽: dx)
     f32 v38dy;            // slot 7 (case 38 低槽: dy)
-    i32 p8;
+    i32 v39sub;   // slot 8 (case 39: RunSubScript 结果)
     Enemy *v89node;       // slot 9 (case 89: 弹幕生成 node)
     Enemy *v89head;       // slot 10 (case 89: 弹幕生成 head)
     Enemy *v90node;       // slot 11 (case 90: 弹幕生成 node)
@@ -1136,7 +1136,7 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     AnyArg *v113args;    // slot 17 (case 113: args 指针)
     i32 p18, p19;
     i32 v130i, v157v;  // slots 20-21 (case 130 loop counter / case 157 v0 copy)
-    i32 p22, p23, p24;
+    f32 v139z, v139y, v139x;      // slots 22-24 (case 139 局部位置 Float3, &v139x 基址)
     i32 v141cnt;                  // slot 25 (case 141 循环计数)
     i32 v141i;                    // slot 26 (case 141 循环变量)
     f32 v141z, v141y, v141x;      // slots 27/28/29 (case 141 Float3: &v141x 为基址)
@@ -1151,8 +1151,9 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v93d6, v93d5, v93d4, v93d3, v93d2, v93d1, v93d0; // slots 47-53 (v93d0=-0xd4 基址)
     f32 v93pz, v93py, v93px;                           // slots 54-56 (v93px=-0xe0 基址)
     i32 p65, p66, p67, p68, p69, p70, p71, p72, p73;
-    f32 v108z, v108y, v108x;  // slots 74-76 (case 108: pos+moveVec2 Float3 结果, &v108x 基址)
-    i32 p77, p78, p79, p80;
+    f32 v108z, v108y, v108x;  // slots 74-76 (占位: 原版 case 108 op+ 缓冲在槽 74, &v108x 基址)
+    i32 p77;
+    f32 v126z, v126y, v126x;  // slots 78-80 (case 126: offscreenPos Float3, &v126x 基址)
     i32 p81;
     i32 opcode;
     // exit 块变量 (槽 57-65): iInterp@57, t@58, flag@59, interp@60, savedPos@61-63, i@64
@@ -1191,9 +1192,9 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 *v29a;          // slot 138 (case 29: INC)
     i32 *v30a;          // slot 139 (case 30: DEC)
     f32 v31a;           // slot 140 (case 31: SIN)
-    i32 p141;           // slot 141 (unused)
+    f32 v31b;           // slot 141 (case 31: sinf 结果)
     f32 v32a;           // slot 142 (case 32: COS)
-    i32 p143;           // slot 143 (unused)
+    f32 v32b;           // slot 143 (case 32: cosf 结果)
     f32 v33a, v33b, v33c, v33d, v33e; // slots 144-148 (case 33: 两点角度; read order f3,f1,f4,f2,result)
     f32 v36a, v36b; // slots 149-150 (case 36: NORMALIZE_ANGLE; ECL_FVAL(0), result)
     f32 v37a, v37b, v37c, v37d; // slots 151-154 (case 37: 角度转坐标; f2 + f3 + cos + sin)
@@ -1221,7 +1222,7 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v79a;       // slot 214 (case 79: 清除特效标志 flags)
     i32 v80a;       // slot 215 (case 80: 混合特效标志 flags)
     i32 v85a, v85b; // slots 216-217 (case 85: 子弹对象 int 变量)
-    i32 v86a, v86b, v86c; // slots 218-220 (case 86: 子弹对象 float 变量)
+    i32 v86a, v86b; f32 v86c; // slots 218-220 (case 86: 子弹对象 float 变量; v86c 存 float)
     i32 v87a;       // slot 221 (case 87: 子弹对象子脚本)
     i32 v88a, v88b, v88c; // slots 222-224 (case 88: 子弹对象 interrupt)
     i32 v89a, v90a, v91a; // slots 225-227 (case 89-91: IsYoukai 临时)
@@ -1274,6 +1275,7 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v163a, v163b, v163c, v163d; // slots 347-350 (case 163)
     i32 v164a;        // slot 351 (case 164)
     f32 v165a, v165b, v165c, v165d, v165e, v165f; // slots 352-357 (case 165)
+    f32 v168a, v168b; // slots 358-359 (case 168: 出口角度)
     i32 v172a;        // slot 360 (case 172: flags bit30)
     i32 v182a;        // slot 361 (case 182: flags bit31)
     f32 v81a;         // slot 362 (case 81: speedSquared 平方)
@@ -1282,7 +1284,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v174a;        // slot 365 (case 174)
     i32 v176a;        // slot 366 (case 176)
     i32 v181a;        // slot 367 (case 181)
-    i32 v183a;        // slot 368 (case 183)
+    i32 v183a;        // slot 368 (case 183: SetGlobalFlag2)
+    i32 vExitType;    // slot 369 (exit 块 interp type switch 判别式)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1316,7 +1319,9 @@ restart:
             if ((instr->skipInstrOnDifficulty & (g_GameManager.difficultyMask | enemy->eclFlags)) ==
                 (g_GameManager.difficultyMask | enemy->eclFlags))
             {
-            opcode = instr->id - 1;
+            // ZUN: 分两步写 opcode (id 先存槽再减 1), switch 直接读槽
+            opcode = instr->id;
+            opcode = opcode - 1;
             switch (opcode)
             {
             case 0: // ECL_UNIMP
@@ -1369,7 +1374,10 @@ restart:
                     (g_Rng.GetRandomU16() & 1 ? 1 : -1) * v7;
                 goto skipInstr;
             case 8: // ECL_RAND_SIGN_FLOAT: *arg0 = ±arg1
-                v8a = (g_Rng.GetRandomU16() & 1) ? 1.0f : -1.0f;
+                if (g_Rng.GetRandomU16() & 1)
+                    v8a = 1.0f;
+                else
+                    v8a = -1.0f;
                 if (instr->paramMask & 0x2)
                     v8b = enemy->GetEclFloatVar(instr->args[1].i);
                 else
@@ -1589,14 +1597,16 @@ restart:
                     v31a = enemy->GetEclFloatVar(instr->args[1].i);
                 else
                     v31a = instr->args[1].f;
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = sinf(v31a);
+                v31b = sinf(v31a);
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v31b;
                 goto skipInstr;
             case 32: // ECL_COS: *arg0 = cos(arg1)
                 if (instr->paramMask & 0x2)
                     v32a = enemy->GetEclFloatVar(instr->args[1].i);
                 else
                     v32a = instr->args[1].f;
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = cosf(v32a);
+                v32b = cosf(v32a);
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v32b;
                 goto skipInstr;
             case 33: // opcode 34 = 两点角度: *float[0]=EclAngleFromDxDy(f4-f2, f3-f1)
                 // 读取序: f3(144) f1(145) f4(146) f2(147) → 结果(148)
@@ -1675,10 +1685,10 @@ restart:
             case 45: case 46: case 47: case 48: case 49: case 50:
                 // opcode 40-51: 子脚本处理 (RunSubScript 内部再分派)
                 {
-                    EclRawInstr *subInstr = RunSubScript(enemy, instr);
-                    if (subInstr != NULL)
+                    v39sub = (i32)RunSubScript(enemy, instr);
+                    if (v39sub != 0)
                     {
-                        instr = subInstr;
+                        instr = (EclRawInstr *)v39sub;
                         continue;
                     }
                 }
@@ -2173,14 +2183,15 @@ restart:
                         v89node->linkedEffect = (u32)g_EffectManager.AllocEffectSlot(0x20, &v89node->pos, 1, -1);
                         if (v89node->linkedEffect != 0)
                         {
-                            AnmVm *obj = (AnmVm *)v89node->linkedEffect;
-                            obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                            // ZUN: 每次重新解引用 linkedEffect, 不缓存 obj
+                            ((AnmVm *)v89node->linkedEffect)->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
                             // 弹幕标志 bit2 → 特效 flags bit17 (屏幕方向)
-                            ((EffectManagerParticle *)obj)->flags =
-                                (((EffectManagerParticle *)obj)->flags & ~0x20000) |
-                                (((v89node->flags >> 2) & 1) << 0x11);
+                            ((EffectManagerParticle *)v89node->linkedEffect)->flags =
+                                (((v89node->flags >> 2) & 1) != 0) << 0x11 |
+                                (((EffectManagerParticle *)v89node->linkedEffect)->flags & ~0x20000);
                             if (v89node->bulletFlags & 1)
-                                obj->prefix.angleVel.z = -obj->prefix.angleVel.z; // 反转角速度
+                                ((AnmVm *)v89node->linkedEffect)->prefix.angleVel.z =
+                                    -((AnmVm *)v89node->linkedEffect)->prefix.angleVel.z; // 反转角速度
                         }
                     }
                     v89node->ownerEnemy = enemy;
@@ -2205,14 +2216,15 @@ restart:
                         v90node->linkedEffect = (u32)g_EffectManager.AllocEffectSlot(0x20, &v90node->pos, 1, -1);
                         if (v90node->linkedEffect != 0)
                         {
-                            AnmVm *obj = (AnmVm *)v90node->linkedEffect;
-                            obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                            // ZUN: 每次重新解引用 linkedEffect, 不缓存 obj
+                            ((AnmVm *)v90node->linkedEffect)->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
                             // 弹幕标志 bit2 → 特效 flags bit17 (屏幕方向)
-                            ((EffectManagerParticle *)obj)->flags =
-                                (((EffectManagerParticle *)obj)->flags & ~0x20000) |
-                                (((v90node->flags >> 2) & 1) << 0x11);
+                            ((EffectManagerParticle *)v90node->linkedEffect)->flags =
+                                (((v90node->flags >> 2) & 1) != 0) << 0x11 |
+                                (((EffectManagerParticle *)v90node->linkedEffect)->flags & ~0x20000);
                             if (v90node->bulletFlags & 1)
-                                obj->prefix.angleVel.z = -obj->prefix.angleVel.z; // 反转角速度
+                                ((AnmVm *)v90node->linkedEffect)->prefix.angleVel.z =
+                                    -((AnmVm *)v90node->linkedEffect)->prefix.angleVel.z; // 反转角速度
                         }
                     }
                     v90node->ownerEnemy = enemy;
@@ -2239,14 +2251,15 @@ restart:
                         v91node->linkedEffect = (u32)g_EffectManager.AllocEffectSlot(0x20, &v91node->movePos, 1, -1);
                         if (v91node->linkedEffect != 0)
                         {
-                            AnmVm *obj = (AnmVm *)v91node->linkedEffect;
-                            obj->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                            // ZUN: 每次重新解引用 linkedEffect, 不缓存 obj
+                            ((AnmVm *)v91node->linkedEffect)->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
                             // 弹幕标志 bit2 → 特效 flags bit17 (屏幕方向)
-                            ((EffectManagerParticle *)obj)->flags =
-                                (((EffectManagerParticle *)obj)->flags & ~0x20000) |
-                                (((v91node->flags >> 2) & 1) << 0x11);
+                            ((EffectManagerParticle *)v91node->linkedEffect)->flags =
+                                (((v91node->flags >> 2) & 1) != 0) << 0x11 |
+                                (((EffectManagerParticle *)v91node->linkedEffect)->flags & ~0x20000);
                             if (v91node->bulletFlags & 1)
-                                obj->prefix.angleVel.z = -obj->prefix.angleVel.z; // 反转角速度
+                                ((AnmVm *)v91node->linkedEffect)->prefix.angleVel.z =
+                                    -((AnmVm *)v91node->linkedEffect)->prefix.angleVel.z; // 反转角速度
                         }
                     }
                     v91node->flags |= ECL_FLAG_TRACK_POS;
@@ -2346,11 +2359,8 @@ restart:
                 goto skipInstr;
             case 108: // opcode 109 = 计算 pos+moveVec2 写入激光输出; SetupLaserMove(&输入)
                 {
-                    // 注: 原版输入 Float3(0x2e24) 与输出 Float3(0x2e28) 字节重叠, 故逐分量写
-                    *(Float3 *)&v108x = enemy->pos + enemy->moveVec2;
-                    enemy->laserMoveYZ = ((Float3 *)&v108x)->x;
-                    enemy->laserMoveZ2 = ((Float3 *)&v108x)->y;
-                    enemy->laserMoveResultZ = ((Float3 *)&v108x)->z;
+                    // 原版: 结果直接写 laserMoveYZ@0x2e28 (12 字节), 再 SetupLaserMove
+                    *(Float3 *)&enemy->laserMoveYZ = enemy->pos + enemy->moveVec2;
                 }
                 g_BulletManager.SetupLaserMove((Float3 *)&enemy->laserMoveStartX);
                 goto skipInstr;
@@ -2632,16 +2642,20 @@ restart:
                     enemy->flags &= ~ECL_FLAG_BOSS_MARKER;
                     g_AsciiManager.SetBossMarkerInterrupt(enemy->bossMarkerIdx, 2);
                     enemy->ClearEffectSlots();
-                    Float3 offscreenPos(-999.0f, -999.0f, 0.0f);
-                    g_AsciiManager.SetBossMarkerPosition(enemy->bossMarkerIdx, &offscreenPos);
+                    // 原版: offscreenPos Float3 在槽 78-80 (&v126x 基址), 逐分量写
+                    v126x = -999.0f;
+                    v126y = -999.0f;
+                    v126z = 0.0f;
+                    g_AsciiManager.SetBossMarkerPosition(enemy->bossMarkerIdx, (Float3 *)&v126x);
                 }
                 goto skipInstr;
             case 127: // opcode 128 = 生成特效并存入 effectSlots 槽
                 {
-                    i32 idx = enemy->effectSlotIdx;
-                    AnmVm *eff = g_EffectManager.SpawnEffect(0xd, &enemy->pos, 1, ECL_EFFECT_SPAWN_COLOR);
-                    enemy->effectSlots[idx] = eff;
-                    ((EffectManagerParticle *)eff)->targetPos = *(Float3 *)&instr->args[1];
+                    // ZUN: 不缓存 idx/eff, 直接写 effectSlots[effectSlotIdx]
+                    enemy->effectSlots[enemy->effectSlotIdx] =
+                        g_EffectManager.SpawnEffect(0xd, &enemy->pos, 1, ECL_EFFECT_SPAWN_COLOR);
+                    ((EffectManagerParticle *)enemy->effectSlots[enemy->effectSlotIdx])->targetPos =
+                        *(Float3 *)&instr->args[1];
                     enemy->effectSlotValue = instr->args[4].i;
                     enemy->effectSlotIdx++;
                 }
@@ -2849,22 +2863,22 @@ restart:
                 goto skipInstr;
             case 139: // opcode 140 = 生成特效 (含局部位置 Float3)
                 {
-                    Float3 localPos;
+                    // 原版 localPos 在槽 22-24 (&v139x 基址)
                     if (instr->paramMask & 0x8)
                         v139a = enemy->GetEclFloatVar(instr->args[3].i);
                     else
                         v139a = instr->args[3].f;
-                    localPos.x = v139a;
+                    v139x = v139a;
                     if (instr->paramMask & 0x10)
                         v139b = enemy->GetEclFloatVar(instr->args[4].i);
                     else
                         v139b = instr->args[4].f;
-                    localPos.y = v139b;
+                    v139y = v139b;
                     if (instr->paramMask & 0x20)
                         v139c = enemy->GetEclFloatVar(instr->args[5].i);
                     else
                         v139c = instr->args[5].f;
-                    localPos.z = v139c;
+                    v139z = v139c;
                     if (instr->paramMask & 0x2)
                         v139d = GetVarValue(enemy, instr->args[1].i);
                     else
@@ -2873,7 +2887,7 @@ restart:
                         v139e = GetVarValue(enemy, instr->args[0].i);
                     else
                         v139e = instr->args[0].i;
-                    g_EffectManager.SpawnEffectLocal(v139e, &enemy->pos, &localPos, v139d,
+                    g_EffectManager.SpawnEffectLocal(v139e, &enemy->pos, (Float3 *)&v139x, v139d,
                                                   *GetIntPtr(enemy, &instr->args[2], instr->paramMask, 2));
                 }
                 goto skipInstr;
@@ -3077,10 +3091,7 @@ restart:
                 enemy->primaryVm.prefix.pendingInterrupt = (i16)v148a;
                 goto skipInstr;
             case 149: // opcode 150 = 设置 vms[idx] 挂起中断
-                {
-                    i32 idx = instr->args[0].i;
-                    enemy->vms[idx].prefix.pendingInterrupt = (i16)instr->args[1].i;
-                }
+                enemy->vms[instr->args[0].i].prefix.pendingInterrupt = (i16)instr->args[1].i;
                 goto skipInstr;
             case 111: // opcode 112 = RemoveAllBullets(1)
                 g_BulletManager.bulletmanager_fun_00415c60();
@@ -3253,20 +3264,27 @@ restart:
                 {
                     // 位置阈值: 96.0 (ECL_EXIT_ANGLE_X_LOW) / 288.0 (ECL_EXIT_ANGLE_X_HIGH) / 左边界
                     // 角度偏移: +3π/4 (ECL_EXIT_ANGLE_ADD≈2.356) 或 -π/4 (ECL_EXIT_ANGLE_SUB≈0.785)
-                    f32 *out = GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0);
-                    f32 exitLeftBound = *(f32 *)ECL_EXIT_LEFT_BOUND;
-                    if ((enemy->pos.x > exitLeftBound || enemy->pos.x < exitLeftBound) && enemy->pos.x > *(f32 *)ECL_EXIT_ANGLE_X_LOW)
+                    // ZUN: 左边界内先查 LOW, 否则直接查 HIGH; 分支 A 写 v168a (AddNormalizeAngle), 分支 B 写 v168b
+                    if (g_EclExitLeftBound < enemy->pos.x)
                     {
-                        *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(ECL_RANDOM_ANGLE_RANGE) + *(f32 *)ECL_EXIT_ANGLE_ADD, 0.0f);
+                        if (enemy->pos.x > *(f32 *)ECL_EXIT_ANGLE_X_LOW)
+                        {
+                            goto v168_a;
+                        }
                     }
-                    else if (enemy->pos.x > *(f32 *)ECL_EXIT_ANGLE_X_HIGH)
+                    if (enemy->pos.x <= *(f32 *)ECL_EXIT_ANGLE_X_HIGH)
                     {
-                        *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(ECL_RANDOM_ANGLE_RANGE) + *(f32 *)ECL_EXIT_ANGLE_ADD, 0.0f);
+                        goto v168_b;
                     }
-                    else
-                    {
-                        *out = g_Rng.GetRandomF32InRange(ECL_RANDOM_ANGLE_RANGE) - *(f32 *)ECL_EXIT_ANGLE_SUB;
-                    }
+                v168_a:
+                    v168a = AddNormalizeAngle(g_Rng.GetRandomF32InRange(1.5707964f) + *(f32 *)ECL_EXIT_ANGLE_ADD, 0.0f);
+                    *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v168a;
+                    goto v168_done;
+                v168_b:
+                    v168b = g_Rng.GetRandomF32InRange(1.5707964f) - *(f32 *)ECL_EXIT_ANGLE_SUB;
+                    *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v168b;
+                v168_done:
+                    ;
                 }
                 goto skipInstr;
             case 172: // opcode 173 = 设置 flags bit30
@@ -3419,15 +3437,16 @@ exit:
         {
             if (interp->fn != NULL)
             {
-                i32 type;
                 interp->timer.Tick();
                 if (interp->timer >= interp->args[0].i)
                 {
                     interp->timer.SetCurrent(interp->args[0].i);
                 }
                 t = interp->timer.AsFramesFloat() / (f32)interp->args[0].i;
-                type = interp->args[2].i - 1;
-                switch (type)
+                // ZUN: 分两步写 type (先存槽再减 1)
+                vExitType = interp->args[2].i;
+                vExitType = vExitType - 1;
+                switch (vExitType)
                 {
                 case 0:
                     t = t * t;
