@@ -268,7 +268,8 @@ ZunResult EclManager::Load(const char *path)
                   v135a, v136a, v136b, v145a, v140a, v146a, v147a, v92a, v92b, v92c, v92d, v92e, \
                   v92f, v93a, v93b, v93c, v93d, v93e, v93f, v148a, v112a, v112b, v112c, v151a, \
                   v151b, v151c, v151d, v151e, v151f, v156a, v156b, v156c, v159a, v160a, v163a, \
-                  v163b, v163c, v163d, v164a, v165a, v165b, v165c, v165d, v165e, v165f)
+                  v163b, v163c, v163d, v164a, v165a, v165b, v165c, v165d, v165e, v165f, v172a, \
+                  v182a, v81a, v82a, v173a, v174a, v176a, v181a, v183a)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -411,6 +412,15 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v163a, v163b, v163c, v163d; // slots 347-350 (case 163)
     i32 v164a;        // slot 351 (case 164)
     f32 v165a, v165b, v165c, v165d, v165e, v165f; // slots 352-357 (case 165)
+    i32 v172a;        // slot 360 (case 172: flags bit30)
+    i32 v182a;        // slot 361 (case 182: flags bit31)
+    f32 v81a;         // slot 362 (case 81: unk3350 平方)
+    i32 v82a;         // slot 363 (case 82: anmFlags bit1)
+    i32 v173a;        // slot 364 (case 173: boss 特效)
+    i32 v174a;        // slot 365 (case 174)
+    i32 v176a;        // slot 366 (case 176)
+    i32 v181a;        // slot 367 (case 181)
+    i32 v183a;        // slot 368 (case 183)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -2356,10 +2366,18 @@ restart:
                 }
                 goto skipInstr;
             case 172: // opcode 173 = 设置 flags bit30
-                enemy->flags = (enemy->flags & ~ECL_FLAG_SCORE_MODE) | ((ECL_IVAL(0) & 1) << 0x1e);
+                if (instr->paramMask & 0x1)
+                    v172a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v172a = instr->args[0].i;
+                enemy->flags = (enemy->flags & ~ECL_FLAG_SCORE_MODE) | ((v172a & 1) << 0x1e);
                 goto skipInstr;
             case 182: // opcode 183 = 设置 flags bit31
-                enemy->flags = (enemy->flags & ~ECL_FLAG_UNK31) | ((ECL_IVAL(0) & 1) << 0x1f);
+                if (instr->paramMask & 0x1)
+                    v182a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v182a = instr->args[0].i;
+                enemy->flags = (enemy->flags & ~ECL_FLAG_UNK31) | ((v182a & 1) << 0x1f);
                 goto skipInstr;
             case 175: // opcode 176 = 全局弹幕/特殊事件状态 + flags bit30
                 g_PlayerFlags |= 0x80;
@@ -2377,32 +2395,49 @@ restart:
                 enemy->flags |= ECL_FLAG_SCORE_MODE;
                 goto skipInstr;
             case 81: // opcode 82 = 速度平方: unk3350 = f0*f0
-                enemy->unk3350 = ECL_FVAL(0);
+                if (instr->paramMask & 0x1)
+                    v81a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v81a = instr->args[0].f;
+                enemy->unk3350 = v81a;
                 enemy->unk3350 *= enemy->unk3350;
                 goto skipInstr;
             case 82: // opcode 83 = 设置 anmFlags bit1
-                enemy->anmFlags = (enemy->anmFlags & ~ECL_ANM_FLAG_ISYOUKAI) | ((ECL_IVAL(0) & 1) << 1);
+                if (instr->paramMask & 0x1)
+                    v82a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v82a = instr->args[0].i;
+                enemy->anmFlags = (enemy->anmFlags & ~ECL_ANM_FLAG_ISYOUKAI) | ((v82a & 1) << 1);
                 goto skipInstr;
             case 83: case 84: // opcode 84/85 = NOP
                 goto skipInstr;
             case 173: // opcode 174 = 生成 boss 特效 (AllocEffectSlot + SetInterrupt)
                 if (enemy->unk53c8 != 0)
                     ((EffectManagerParticle *)enemy->unk53c8)->unk350 = 0;
-                {
-                    i32 v0 = ECL_IVAL(0);
-                    enemy->unk53c8 =
-                        (u32)g_EffectManager.AllocEffectSlot(v0 + 0x20, &enemy->movePos, 1, -1);
-                    ((AnmVm *)enemy->unk53c8)->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
-                    if (enemy->unk2e0c & 1)
-                        ((AnmVm *)enemy->unk53c8)->prefix.angleVel.z =
-                            -((AnmVm *)enemy->unk53c8)->prefix.angleVel.z;
-                }
+                if (instr->paramMask & 0x1)
+                    v173a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v173a = instr->args[0].i;
+                enemy->unk53c8 =
+                    (u32)g_EffectManager.AllocEffectSlot(v173a + 0x20, &enemy->movePos, 1, -1);
+                ((AnmVm *)enemy->unk53c8)->SetInterrupt(g_Player.IsYoukai() ? 2 : 1);
+                if (enemy->unk2e0c & 1)
+                    ((AnmVm *)enemy->unk53c8)->prefix.angleVel.z =
+                        -((AnmVm *)enemy->unk53c8)->prefix.angleVel.z;
                 goto skipInstr;
             case 174: // opcode 175 = 写全局 0xf54e2c
-                g_BulletSpawnFlag2 = ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v174a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v174a = instr->args[0].i;
+                g_BulletSpawnFlag2 = v174a;
                 goto skipInstr;
             case 176: // opcode 177 = 设置 unk2e04
-                enemy->unk2e04 = ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v176a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v176a = instr->args[0].i;
+                enemy->unk2e04 = v176a;
                 goto skipInstr;
             case 178: // opcode 179 = g_Gui.FUN_00439007()
                 g_Gui.FUN_00439007();
@@ -2422,10 +2457,18 @@ restart:
                 }
                 goto skipInstr;
             case 181: // opcode 182 = 设置 anmFlags bit8
-                enemy->anmFlags = (enemy->anmFlags & ~ECL_ANM_FLAG_ANM_LOADED) | ((ECL_IVAL(0) & 1) << 8);
+                if (instr->paramMask & 0x1)
+                    v181a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v181a = instr->args[0].i;
+                enemy->anmFlags = (enemy->anmFlags & ~ECL_ANM_FLAG_ANM_LOADED) | ((v181a & 1) << 8);
                 goto skipInstr;
             case 183: // opcode 184 = g_EclGlobalObj.SetGlobalFlag2(ECL_IVAL(0))
-                g_EclGlobalObj.SetGlobalFlag2(ECL_IVAL(0));
+                if (instr->paramMask & 0x1)
+                    v183a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v183a = instr->args[0].i;
+                g_EclGlobalObj.SetGlobalFlag2(v183a);
                 goto skipInstr;
             case 2: // ECL_NOP
                 goto skipInstr;
