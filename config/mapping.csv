@@ -464,7 +464,7 @@ FUN_00433070,0x433070,0x67e,unknown,,u8
 FUN_004337f0,0x4337f0,0x2a,unknown,,u8
 th08::BulletManager::DeletedCallback,0x433820,0x23,unknown,,u8
 th08::BulletManager::CutChain,0x433850,0x23,__stdcall,,void
-FUN_00433880,0x433880,0x21,unknown,,u8,u8
+th08::ComputeSinCos,0x433880,0x21,__fastcall,,void,f32*,f32*,f32
 th08::Supervisor::GetUnk164,0x4338b0,0xa,unknown,,u8
 th08::Supervisor::GetUnk168,0x4338c0,0xa,unknown,,u8
 th08::Gui::OnUpdate,0x4338ca,0x5d,unknown,,u8

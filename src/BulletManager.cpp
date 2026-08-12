@@ -11,7 +11,7 @@ namespace th08
 {
 
 // STUB: th08 0x433880
-void __fastcall FUN_00433880(f32 *sinOut, f32 *cosOut, f32 angle)
+void __fastcall ComputeSinCos(f32 *sinOut, f32 *cosOut, f32 angle)
 {
     *cosOut = cos(angle);
     *sinOut = sin(angle);
@@ -29,111 +29,114 @@ void BulletManager::Initialize()
 {
     memset(this, 0, 0x6ba578);
 
-    /* unk_1a880 是内嵌的子弹池数组起始。 */
-    this->unk_6ba56c = (i32)this->unk_1a880;
-    this->unk_660638 = 6;
-    this->unk_6ba570 = 6;
+    /* enemyBulletPool 是内嵌的子弹池数组起始。 */
+    this->bulletPoolPtr = (i32)this->enemyBulletPool;
+    this->bulletCount = 6;
+    this->itemType = 6;
 
     /* 敌弹池：0x600 个 0x10b8 字节的槽位，各槽内若干 u16 索引字段初始化为 -1。 */
-    u8 *pool = (u8 *)g_BulletPool;
-    for (i32 i = 0; i < 0x600; i++, pool += 0x10b8)
+    EnemyBullet *pool = (EnemyBullet *)g_BulletPool;
+    for (i32 i = 0; i < 0x600; i++, pool++)
     {
-        *(u16 *)(pool + 0x21a) = 0xffff;
-        *(u16 *)(pool + 0xcaa) = 0xffff;
-        *(u16 *)(pool + 0x4be) = 0xffff;
-        *(u16 *)(pool + 0x762) = 0xffff;
-        *(u16 *)(pool + 0xa06) = 0xffff;
+        /* 原版按 0x21a → 0xcaa → 0x4be → 0x762 → 0xa06 顺序写入（字节级保持）。 */
+        pool->chainIndex0 = 0xffff;
+        pool->chainIndex4 = 0xffff;
+        pool->chainIndex1 = 0xffff;
+        pool->chainIndex2 = 0xffff;
+        pool->chainIndex3 = 0xffff;
     }
 }
 
 // FUNCTION: th08 0x430830 (99% FIXME: 浮点 <= 的 jp+jmp vs jne)
 void BulletManager::RemoveAllBullets(i32 param)
 {
-    u8 *pool = (u8 *)g_BulletPool;
-    u8 *b;
+    EnemyBullet *pool = (EnemyBullet *)g_BulletPool;
+    PlayerShotData *b;
     i32 i;
     i32 r1;
 
-    for (i = 0; i < 0x600; i++, pool += 0x10b8)
+    for (i = 0; i < 0x600; i++, pool++)
     {
-        if (*(u16 *)(pool + 0xdb8) == 0 || *(u16 *)(pool + 0xdb8) == 5)
+        if (pool->state == 0 || pool->state == 5)
         {
             continue;
         }
 
-        r1 = g_Player.FUN_00449ff0((Float3 *)(pool + 0xd44), pool + 0xd34);
+        r1 = g_Player.FUN_00449ff0(&pool->pos, &pool->collisionSize);
 
-        if (g_Player.FUN_00449ff0((Float3 *)(pool + 0xd44), pool + 0xd34) == 2)
+        if (g_Player.FUN_00449ff0(&pool->pos, &pool->collisionSize) == 2)
         {
-            g_ItemManager.SpawnItem((Float3 *)(pool + 0xd44), (ItemType) * (i32 *)0x18b8988, 1);
-            memset(pool, 0, 0x10b8);
+            g_ItemManager.SpawnItem(&pool->pos, (ItemType) * (i32 *)0x18b8988, 1);
+            memset(pool, 0, sizeof(EnemyBullet));
             continue;
         }
 
         if (param != 4)
         {
-            g_ItemManager.SpawnItem((Float3 *)(pool + 0xd44), (ItemType)this->unk_6ba570, (ItemType)param);
-            memset(pool, 0, 0x10b8);
+            g_ItemManager.SpawnItem(&pool->pos, (ItemType)this->itemType, (ItemType)param);
+            memset(pool, 0, sizeof(EnemyBullet));
         }
         else
         {
-            *(u16 *)(pool + 0xdb8) = 5;
+            pool->state = 5;
         }
     }
 
     /* 0x660938：自机弹/激光对象数组，0x100 项、每项 0x59c 字节。 */
-    b = (u8 *)this + 0x660938;
+    b = (PlayerShotData *)((u8 *)this + 0x660938);
 
     Float3 pos;
     f32 sinX;
     f32 cosX;
     f32 speed;
 
-    for (i = 0; i < 0x100; i++, b += 0x59c)
+    for (i = 0; i < 0x100; i++, b++)
     {
-        if (*(u32 *)(b + 0x584) == 0)
+        if (b->isActive == 0)
         {
             continue;
         }
 
-        if (*(u16 *)(b + 0x594) & 0x4 && param != 4)
+        if (b->flags & 0x4 && param != 4)
         {
             continue;
         }
 
-        if (*(u8 *)(b + 0x598) < 2)
+        if (b->runState < 2)
         {
-            *(u8 *)(b + 0x598) = 2;
-            ((ZunTimer *)(b + 0x588))->SetCurrent(0);
-            *(u32 *)(b + 0x564) = *(u32 *)(b + 0x568);
+            b->runState = 2;
+            b->timer.SetCurrent(0);
+            /* phaseTimer 从 savedPhaseTimer 恢复（32 位拷贝，字节级保持）。 */
+            *(u32 *)&b->phaseTimer = *(u32 *)&b->savedPhaseTimer;
 
             if (param != 4)
             {
                 /* 沿当前角度每步 32.0f 掉落一组道具。 */
-                speed = *(f32 *)(b + 0x558);
+                speed = b->speed;
 
                 for (;;)
                 {
-                    FUN_00433880(&sinX, &cosX, *(f32 *)(b + 0x554));
+                    ComputeSinCos(&sinX, &cosX, b->angle);
 
-                    if (*(f32 *)(b + 0x55c) <= speed)
+                    if (b->targetSpeed <= speed)
                     {
                         break;
                     }
 
-                    pos.x = cosX * speed + *(f32 *)(b + 0x548);
-                    pos.y = sinX * speed + *(f32 *)(b + 0x54c);
+                    pos.x = cosX * speed + b->pos.x;
+                    pos.y = sinX * speed + b->pos.y;
                     pos.z = 0;
-                    g_ItemManager.SpawnItem(&pos, (ItemType)this->unk_6ba570, (ItemType)param);
+                    g_ItemManager.SpawnItem(&pos, (ItemType)this->itemType, (ItemType)param);
                     speed += *(f32 *)MEM_FLOAT_32_0;
                 }
             }
         }
 
-        *(u32 *)(b + 0x580) = 0;
+        b->param4 = 0;
     }
 
-    /* 0x6ba53c：清场计数/状态，置 10。 */
+    /* 0x6ba53c 清场计数/状态 (clearCount)：置 10。
+     * 注：结构体成员尚未对齐到该偏移（声明大小与注释偏移不符），暂用裸指针保持字节一致。 */
     *(i32 *)((u8 *)this + 0x6ba53c) = 0xa;
 }
 
