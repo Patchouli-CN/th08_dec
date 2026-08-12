@@ -253,7 +253,7 @@ ZunResult EclManager::Load(const char *path)
                   v110a, v110b, v110c, v110d, v110e, v110f, v110g, v104a, v105a, v109a, v109b, v113a, v113b, \
                   v113c, v113d, v113e, v113f, v113g, v113h, v113i, v113j, v115a, v116a, v116b, v166a, v166b, \
                   v117a, v117b, v118a, v118b, v118c, v118d, v169a, v169b, v119a, v120a, v170a, v170b, \
-                  v171a, v171b, v171c)
+                  v171a, v171b, v171c, v162a, v126a, v126b, v126c, v126d)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -360,6 +360,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v120a;        // slot 263 (case 120: RUN_EX_INS)
     i32 v170a; f32 v170b; // slots 264-265 (case 170: 子弹 unk560; idx + f)
     i32 v171a; f32 v171b, v171c; // slots 266-268 (case 171: 子弹 unk558/55c; idx + f1 + f2)
+    i32 v162a;        // slot 269 (case 162: 写全局 g_f54cec)
+    i32 v126a, v126b, v126c, v126d; // slots 270-273 (case 126: boss 血条标记)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1633,36 +1635,52 @@ restart:
                 }
                 goto skipInstr;
             case 162: // opcode 163 = 写全局 0xf54cec
-                g_f54cec = ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v162a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v162a = instr->args[0].i;
+                g_f54cec = v162a;
                 goto skipInstr;
             case 126: // opcode 127 = 设置/清除 boss 血条标记
+                if (instr->paramMask & 0x1)
+                    v126a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v126a = instr->args[0].i;
+                if (v126a >= 0)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    if (v0 >= 0)
-                    {
-                        i32 idx = ECL_IVAL(0);
-                        g_BulletObjects[idx] = (u32)enemy;
-                        if (ECL_IVAL(0) == 0)
-                        {
-                            g_Gui.FUN_00422c20(1);
-                            g_Gui.FUN_004230c0(1.0f);
-                        }
-                        enemy->flags |= ECL_FLAG_BOSS_MARKER;
-                        enemy->bossMarkerIdx = (u8)ECL_IVAL(0);
-                        g_AsciiManager.SetBossMarkerInterrupt(enemy->bossMarkerIdx, 1);
-                        enemy->unk3350 = 0;
-                    }
+                    if (instr->paramMask & 0x1)
+                        v126b = GetVarValue(enemy, instr->args[0].i);
                     else
+                        v126b = instr->args[0].i;
+                    g_BulletObjects[v126b] = (u32)enemy;
+                    if (instr->paramMask & 0x1)
+                        v126c = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v126c = instr->args[0].i;
+                    if (v126c == 0)
                     {
-                        if (enemy->bossMarkerIdx < 4)
-                            g_Gui.FUN_00422c20(0);
-                        g_BulletObjects[enemy->bossMarkerIdx] = 0;
-                        enemy->flags &= ~ECL_FLAG_BOSS_MARKER;
-                        g_AsciiManager.SetBossMarkerInterrupt(enemy->bossMarkerIdx, 2);
-                        enemy->ClearEffectSlots();
-                        Float3 offscreenPos(-1000.0f, -1000.0f, 0.0f);
-                        g_AsciiManager.SetBossMarkerPosition(enemy->bossMarkerIdx, &offscreenPos);
+                        g_Gui.FUN_00422c20(1);
+                        g_Gui.FUN_004230c0(1.0f);
                     }
+                    enemy->flags |= ECL_FLAG_BOSS_MARKER;
+                    if (instr->paramMask & 0x1)
+                        v126d = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v126d = instr->args[0].i;
+                    enemy->bossMarkerIdx = (u8)v126d;
+                    g_AsciiManager.SetBossMarkerInterrupt(enemy->bossMarkerIdx, 1);
+                    enemy->unk3350 = 0;
+                }
+                else
+                {
+                    if (enemy->bossMarkerIdx < 4)
+                        g_Gui.FUN_00422c20(0);
+                    g_BulletObjects[enemy->bossMarkerIdx] = 0;
+                    enemy->flags &= ~ECL_FLAG_BOSS_MARKER;
+                    g_AsciiManager.SetBossMarkerInterrupt(enemy->bossMarkerIdx, 2);
+                    enemy->ClearEffectSlots();
+                    Float3 offscreenPos(-999.0f, -999.0f, 0.0f);
+                    g_AsciiManager.SetBossMarkerPosition(enemy->bossMarkerIdx, &offscreenPos);
                 }
                 goto skipInstr;
             case 127: // opcode 128 = 生成特效并存入 unk5360 槽
