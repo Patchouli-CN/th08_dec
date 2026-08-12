@@ -256,7 +256,8 @@ ZunResult EclManager::Load(const char *path)
                   v171a, v171b, v171c, v162a, v126a, v126b, v126c, v126d, v158a, v123a, v125a, v125b, \
                   v124a, v130a, v157a, v157b, v157c, v157d, v131a, v132a, v132b, v132c, v132d, v132e, \
                   v132f, v133a, v133b, v133c, v134a, v134b, v134c, v138a, v138b, v139a, v139b, v139c, \
-                  v139d, v139e, v142a, v143a, v143b, v141a, v141b, v141c)
+                  v139d, v139e, v142a, v143a, v143b, v141a, v141b, v141c, v167a, v167b, v167c, \
+                  v135a, v136a, v136b, v145a, v140a, v146a, v147a)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -381,6 +382,13 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v142a;        // slot 304 (case 142: unk3304)
     i32 v143a, v143b; // slots 305-306 (case 143: unk3308/330c)
     i32 v141a, v141b, v141c; // slots 307-309 (case 141: 随机撒物品; count + Float3* x/y)
+    i32 v167a, v167b, v167c; // slots 310-312 (case 167: 随机撒物品; count + Float3* x/y)
+    i32 v135a;        // slot 313 (case 135: 间接调用 g_EclExInsn)
+    i32 v136a, v136b; // slots 314-315 (case 136: curContext func/eclExInstr)
+    i32 v145a;        // slot 316 (case 145: curContext time +=)
+    i32 v140a;        // slot 317 (case 140: 生成物品)
+    i32 v146a;        // slot 318 (case 146)
+    i32 v147a;        // slot 319 (case 147)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1993,15 +2001,24 @@ restart:
                 enemy->flags = (enemy->flags & ~0x2000000) | ((instr->args[0].b[0] & 1) << 0x19);
                 goto skipInstr;
             case 135: // opcode 136 = 间接调用 ECL ex-instr 表项 (g_EclExInsn[v0], 无参数)
-                {
-                    i32 v0 = ECL_IVAL(0);
-                    ((void (*)())g_EclExInsn[v0])();
-                }
+                if (instr->paramMask & 0x1)
+                    v135a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v135a = instr->args[0].i;
+                ((void (*)())g_EclExInsn[v135a])();
                 goto skipInstr;
             case 136: // opcode 137 = 设置 curContextPtr->func/eclExInstr (依函数表 0x4c6cb0)
-                if (ECL_IVAL(0) >= 0)
+                if (instr->paramMask & 0x1)
+                    v136a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v136a = instr->args[0].i;
+                if (v136a >= 0)
                 {
-                    enemy->curContextPtr->func = g_EclExInsn[ECL_IVAL(0)];
+                    if (instr->paramMask & 0x1)
+                        v136b = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v136b = instr->args[0].i;
+                    enemy->curContextPtr->func = g_EclExInsn[v136b];
                     enemy->curContextPtr->eclExInstr = instr;
                 }
                 else
@@ -2010,16 +2027,32 @@ restart:
                 }
                 goto skipInstr;
             case 145: // opcode 146 = curContextPtr->time += v0
-                enemy->curContextPtr->time += ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v145a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v145a = instr->args[0].i;
+                enemy->curContextPtr->time += v145a;
                 goto skipInstr;
             case 140: // opcode 141 = 生成物品
-                g_ItemManager.SpawnItem(&enemy->pos, (ItemType)ECL_IVAL(0), 0);
+                if (instr->paramMask & 0x1)
+                    v140a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v140a = instr->args[0].i;
+                g_ItemManager.SpawnItem(&enemy->pos, (ItemType)v140a, 0);
                 goto skipInstr;
             case 146: // opcode 147 = 写全局 0x4ea290
-                g_BossPhaseState = ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v146a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v146a = instr->args[0].i;
+                g_BossPhaseState = v146a;
                 goto skipInstr;
             case 147: // opcode 148 = g_Gui.FUN_00423130(v0); 全局 0x164d30c += 0x708
-                g_Gui.FUN_00423130(ECL_IVAL(0));
+                if (instr->paramMask & 0x1)
+                    v147a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v147a = instr->args[0].i;
+                g_Gui.FUN_00423130(v147a);
                 g_164d30c += 0x708;
                 goto skipInstr;
             case 92: // opcode 93 = SPAWN_ENEMY_ABS
