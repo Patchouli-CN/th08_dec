@@ -256,7 +256,7 @@ ZunResult EclManager::Load(const char *path)
                   v171a, v171b, v171c, v162a, v126a, v126b, v126c, v126d, v158a, v123a, v125a, v125b, \
                   v124a, v130a, v157a, v157b, v157c, v157d, v131a, v132a, v132b, v132c, v132d, v132e, \
                   v132f, v133a, v133b, v133c, v134a, v134b, v134c, v138a, v138b, v139a, v139b, v139c, \
-                  v139d, v139e)
+                  v139d, v139e, v142a, v143a, v143b, v141a, v141b, v141c)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -378,6 +378,9 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v134a, v134b, v134c; // slots 294-296 (case 134: dataSlots 分配/释放; idx + subId, subId re-read)
     i32 v138a, v138b; // slots 297-298 (case 138: 生成特效; a1(bit2) + a0(bit1))
     f32 v139a, v139b, v139c; i32 v139d, v139e; // slots 299-303 (case 139: 生成特效含局部pos; f3-5 + a1 + a0)
+    i32 v142a;        // slot 304 (case 142: unk3304)
+    i32 v143a, v143b; // slots 305-306 (case 143: unk3308/330c)
+    i32 v141a, v141b, v141c; // slots 307-309 (case 141: 随机撒物品; count + Float3* x/y)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1941,11 +1944,23 @@ restart:
                 }
                 goto skipInstr;
             case 142: // opcode 143 = 设置 unk3304
-                enemy->unk3304 = ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v142a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v142a = instr->args[0].i;
+                enemy->unk3304 = v142a;
                 goto skipInstr;
             case 143: // opcode 144 = 设置 unk3308/330c
-                enemy->unk3308 = ECL_IVAL(0);
-                enemy->unk330c = ECL_IVAL(1);
+                if (instr->paramMask & 0x1)
+                    v143a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v143a = instr->args[0].i;
+                enemy->unk3308 = v143a;
+                if (instr->paramMask & 0x2)
+                    v143b = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v143b = instr->args[1].i;
+                enemy->unk330c = v143b;
                 goto skipInstr;
             case 141: // opcode 142 = 随机撒物品 (依 power 决定类型)
                 {
