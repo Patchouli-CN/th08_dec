@@ -31,6 +31,10 @@ struct EnemySpawnData
 
 DIFFABLE_STATIC(EclManager, g_EclManager);
 DIFFABLE_STATIC(f32, g_EclExitLeftBound); // 0x17d61ac (op169/178/67 出口左边界, BSS 零初始化)
+DIFFABLE_STATIC(f32, g_17d61b0);          // 0x17d61b0 (GetFloatPtr varId 10059 出口角常量, BSS)
+DIFFABLE_STATIC(f32, g_17d61b4);          // 0x17d61b4 (GetFloatPtr varId 10060 出口角常量, BSS)
+DIFFABLE_STATIC(i32, g_164d334);          // 0x164d334 (GetIntPtr varId 10041 全局 ECL 数据, BSS)
+DIFFABLE_STATIC_ARRAY(i32, 8, g_EclGlobalRegion); // 0x4ece20 全局 ECL 变量区 (GetIntPtr/GetFloatPtr 各取半)
 DIFFABLE_STATIC_ARRAY(EclInterpFn, 8, g_EclInterpFnTable); // 0x4c6c90 ECL 插值函数表 (op36 SetupEclInterp 索引)
 DIFFABLE_STATIC_ARRAY(EclExInstr, 32, g_EclExInsn); // 0x4c6cb0
 DIFFABLE_STATIC(EclGlobalObj, g_EclGlobalObj);      // 0x4ea670
@@ -92,7 +96,7 @@ static const f32 ECL_RANDOM_ANGLE_RANGE = 1.5708f;
 // T in fn_diff so only the calling convention needs to be right here.
 i32 __fastcall GetVarValue(Enemy *enemy, i32 varId);                       // 0x41f420
 i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 argIdx = -1); // 0x41fe10
-f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused); // 0x420950
+f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 argIdx); // 0x420950
 void __fastcall SetEclGlobalData(Enemy *enemy, EclRawInstr *instr);      // 0x421280 (op122: 调 EclGlobalObj::0x4152a0 set-data)
 void __fastcall RunEclGlobal(Enemy *enemy, EclRawInstr *instr);          // 0x4212e0 (op123: 调 EclGlobalObj::0x4161b0 全局 ECL 更新)
 void __fastcall EclLerp(Enemy *enemy, EclRawInstr *instr);               // 0x421300 (op35: *f0 = f2 + (f1-f2)*f3 线性插值)
@@ -116,6 +120,7 @@ Enemy *__fastcall InitEnemySpawnData(Enemy *enemy);                            /
 
 f32 __stdcall EclAtan2(f32 a, f32 b); // wraps CRT atan2 (original 0x41f090)
 
+// FUNCTION: th08 0x41f420
 i32 __fastcall GetVarValue(Enemy *enemy, i32 varId)
 {
     return 0;
@@ -168,19 +173,197 @@ void Enemy::UpdateLaserScript()
 {
 }
 
+// FUNCTION: th08 0x41fe10
 i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 argIdx)
 {
-    return NULL;
-}
+    // paramMask 的 bit(argIdx) 置位 → args[argIdx].i 是变量 id，解析成变量指针；
+    // 否则（或 argIdx<0 / 越界）返回指向 args[argIdx].i 的指针（字面量就地）。
+    if (argIdx >= 0 && !(paramMask & (1 << argIdx)))
+        return &args[0].i;
 
+    switch (args[0].i)
+    {
+    case 0x2710:
+        return &enemy->curContextPtr->eclContextArgs.intVars1[0];
+    case 0x2711:
+        return &enemy->curContextPtr->eclContextArgs.intVars1[1];
+    case 0x2712:
+        return &enemy->curContextPtr->eclContextArgs.intVars1[2];
+    case 0x2713:
+        return &enemy->curContextPtr->eclContextArgs.intVars1[3];
+    case 0x2714:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.floatVars1[0];
+    case 0x2715:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.floatVars1[1];
+    case 0x2716:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.floatVars1[2];
+    case 0x2717:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.floatVars1[3];
+    case 0x2718:
+        return (i32 *)((u8 *)enemy + 0x2ca8);
+    case 0x2719:
+        return (i32 *)((u8 *)enemy + 0x2cac);
+    case 0x271a:
+        return (i32 *)((u8 *)enemy + 0x2cb0);
+    case 0x271b:
+        return (i32 *)((u8 *)enemy + 0x2cb4);
+    case 0x271c:
+        return (i32 *)((u8 *)enemy + 0x2cb8);
+    case 0x271d:
+        return (i32 *)((u8 *)enemy + 0x2cbc);
+    case 0x271e:
+        return (i32 *)((u8 *)enemy + 0x2cc0);
+    case 0x271f:
+        return (i32 *)((u8 *)enemy + 0x2cc4);
+    case 0x2745:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.globalVars.floatVars[0];
+    case 0x2746:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.globalVars.floatVars[1];
+    case 0x2747:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.globalVars.floatVars[2];
+    case 0x2748:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.globalVars.floatVars[3];
+    case 0x2734:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.floatVars2[0];
+    case 0x2735:
+        return (i32 *)&enemy->curContextPtr->eclContextArgs.floatVars2[1];
+    case 0x2736:
+        return &enemy->curContextPtr->eclContextArgs.globalVars.intVars[0];
+    case 0x2737:
+        return &enemy->curContextPtr->eclContextArgs.globalVars.intVars[1];
+    case 0x2738:
+        // 0x160f538 = g_GameManager + 0x30（进行中符卡/流程计数）
+        return (i32 *)((u8 *)&g_GameManager + 0x30);
+    case 0x2739:
+        return &g_164d334;
+    case 0x2741:
+        return (i32 *)&enemy->eclTimer.current;
+    case 0x2743:
+        return &enemy->laserActive;
+    case 0x276c:
+        return &enemy->eclData0;
+    case 0x276d:
+        return (i32 *)((u8 *)enemy + 0x2e08);
+    case 0x274d:
+        return &g_EclGlobalRegion[0];
+    case 0x274e:
+        return &g_EclGlobalRegion[1];
+    case 0x274f:
+        return &g_EclGlobalRegion[2];
+    case 0x2750:
+        return &g_EclGlobalRegion[3];
+    default:
+        return &args[0].i;
+    }
+}
+// FUNCTION: th08 0x420120
 f32 Enemy::GetEclFloatVar(i32 varId)
 {
     return 0.0f;
 }
 
-f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused)
+// FUNCTION: th08 0x420950
+f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 argIdx)
 {
-    return NULL;
+    // 同 GetIntPtr，但 varId 按浮点读取（flds→ftol），基址 0x2720，解析成 f32 指针。
+    if (argIdx >= 0 && !(paramMask & (1 << argIdx)))
+        return &args[0].f;
+
+    switch ((i32)args[0].f)
+    {
+    case 0x2720:
+        return &enemy->curContextPtr->eclContextArgs.floatVars1[4];
+    case 0x2721:
+        return &enemy->curContextPtr->eclContextArgs.floatVars1[5];
+    case 0x2722:
+        return &enemy->curContextPtr->eclContextArgs.floatVars1[6];
+    case 0x2723:
+        return &enemy->curContextPtr->eclContextArgs.floatVars1[7];
+    case 0x2724:
+        return (f32 *)&enemy->curContextPtr->eclContextArgs.intVars2[0];
+    case 0x2725:
+        return (f32 *)&enemy->curContextPtr->eclContextArgs.intVars2[1];
+    case 0x2726:
+        return (f32 *)&enemy->curContextPtr->eclContextArgs.intVars2[2];
+    case 0x2727:
+        return (f32 *)&enemy->curContextPtr->eclContextArgs.intVars2[3];
+    case 0x2728:
+        return (f32 *)((u8 *)enemy + 0x2cc8);
+    case 0x2729:
+        return (f32 *)((u8 *)enemy + 0x2ccc);
+    case 0x272a:
+        return (f32 *)((u8 *)enemy + 0x2cd0);
+    case 0x272b:
+        return (f32 *)((u8 *)enemy + 0x2cd4);
+    case 0x272c:
+        return (f32 *)((u8 *)enemy + 0x2cd8);
+    case 0x272d:
+        return (f32 *)((u8 *)enemy + 0x2cdc);
+    case 0x272e:
+        return (f32 *)((u8 *)enemy + 0x2ce0);
+    case 0x272f:
+        return (f32 *)((u8 *)enemy + 0x2ce4);
+    case 0x2749:
+        return (f32 *)((u8 *)enemy->curContextPtr + 0x80);
+    case 0x274a:
+        return (f32 *)((u8 *)enemy->curContextPtr + 0x84);
+    case 0x274b:
+        return (f32 *)((u8 *)enemy->curContextPtr + 0x88);
+    case 0x274c:
+        return (f32 *)((u8 *)enemy->curContextPtr + 0x8c);
+    case 0x273a:
+        return &enemy->pos.x;
+    case 0x273b:
+        return &enemy->pos.y;
+    case 0x273c:
+        return &enemy->pos.z;
+    case 0x273d:
+        return &g_EclExitLeftBound;
+    case 0x273e:
+        return &g_17d61b0;
+    case 0x273f:
+        return &g_17d61b4;
+    case 0x276e:
+        return (f32 *)&enemy->curContextPtr->eclContextArgs.globalVars.intVars[2];
+    case 0x276f:
+        return (f32 *)&enemy->curContextPtr->eclContextArgs.globalVars.intVars[3];
+    case 0x2751:
+        return (f32 *)&g_EclGlobalRegion[4];
+    case 0x2752:
+        return (f32 *)&g_EclGlobalRegion[5];
+    case 0x2753:
+        return (f32 *)&g_EclGlobalRegion[6];
+    case 0x2754:
+        return (f32 *)&g_EclGlobalRegion[7];
+    case 0x275a:
+        return &enemy->moveInterp1;
+    case 0x275b:
+        return &enemy->moveInterp2;
+    case 0x275c:
+        return (f32 *)((u8 *)enemy + 0x2dd8);
+    case 0x275f:
+        return &enemy->moveVelVec.x;
+    case 0x2760:
+        return &enemy->moveVelVec.y;
+    case 0x2761:
+        return &enemy->moveVelVec.z;
+    case 0x2755:
+        return &enemy->moveAngle;
+    case 0x2756:
+        return &enemy->moveSpeed;
+    case 0x2757:
+        return &enemy->moveRadius;
+    case 0x2758:
+        return &enemy->moveRadiusStep;
+    case 0x2759:
+        return &enemy->moveInterp5;
+    case 0x275d:
+        return &enemy->moveInterp3;
+    case 0x275e:
+        return &enemy->moveInterp4;
+    default:
+        return &args[0].f;
+    }
 }
 
 void __fastcall SetEclGlobalData(Enemy *enemy, EclRawInstr *instr)
