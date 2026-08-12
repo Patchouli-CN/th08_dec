@@ -254,7 +254,8 @@ ZunResult EclManager::Load(const char *path)
                   v113c, v113d, v113e, v113f, v113g, v113h, v113i, v113j, v115a, v116a, v116b, v166a, v166b, \
                   v117a, v117b, v118a, v118b, v118c, v118d, v169a, v169b, v119a, v120a, v170a, v170b, \
                   v171a, v171b, v171c, v162a, v126a, v126b, v126c, v126d, v158a, v123a, v125a, v125b, \
-                  v124a, v130a, v157a, v157b, v157c, v157d, v131a)
+                  v124a, v130a, v157a, v157b, v157c, v157d, v131a, v132a, v132b, v132c, v132d, v132e, \
+                  v132f)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -371,6 +372,7 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v130a;        // slot 279 (case 130: 激光字段; v130i@20 循环计数)
     i32 v157a, v157b, v157c, v157d; // slots 280-283 (case 157: Gui 数据; v0 + a1 + a2 + a3)
     i32 v131a;        // slot 284 (case 131: unk2e14 计时器)
+    i32 v132a, v132b, v132c, v132d, v132e, v132f; // slots 285-290 (case 132: unk3358/unk3368; 非boss: value1+idx1+value2+idx2, boss: value1+idx1)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -382,7 +384,7 @@ restart:
 #define ECL_FVAL(n) ((instr->paramMask & (1 << (n))) ? enemy->GetEclFloatVar(instr->args[n].i) : instr->args[n].f)
     // Boss-mode gate: bit14 (extra stage) AND bits7-8 set → several boss-only
     // ECL opcodes skip their non-boss write and take a shorter path.
-#define IS_BOSS_MODE() ((g_PlayerFlags & 0x4000) && (((g_PlayerFlags >> 7) & 3) != 0))
+#define IS_BOSS_MODE() ((((g_PlayerFlags >> 0xe) & 1) != 0) && (((g_PlayerFlags >> 7) & 3) != 0))
     instr = enemy->curContextPtr->curInstr;
     if (enemy->runInterrupt >= 0)
     {
@@ -1802,14 +1804,38 @@ restart:
                 enemy->unk2e14.SetCurrent(v131a);
                 goto skipInstr;
             case 132: // opcode 133 = 设置 unk3358/unk3368 (boss 模式只写 3358)
-                if (IS_BOSS_MODE())
+                if (!IS_BOSS_MODE())
                 {
-                    enemy->unk3358[ECL_IVAL(0)] = ECL_IVAL(1);
+                    if (instr->paramMask & 0x2)
+                        v132a = GetVarValue(enemy, instr->args[1].i);
+                    else
+                        v132a = instr->args[1].i;
+                    if (instr->paramMask & 0x1)
+                        v132b = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v132b = instr->args[0].i;
+                    enemy->unk3358[v132b] = v132a;
+                    if (instr->paramMask & 0x4)
+                        v132c = GetVarValue(enemy, instr->args[2].i);
+                    else
+                        v132c = instr->args[2].i;
+                    if (instr->paramMask & 0x1)
+                        v132d = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v132d = instr->args[0].i;
+                    enemy->unk3368[v132d] = v132c;
                 }
                 else
                 {
-                    enemy->unk3358[ECL_IVAL(0)] = ECL_IVAL(1);
-                    enemy->unk3368[ECL_IVAL(0)] = ECL_IVAL(2);
+                    if (instr->paramMask & 0x2)
+                        v132e = GetVarValue(enemy, instr->args[1].i);
+                    else
+                        v132e = instr->args[1].i;
+                    if (instr->paramMask & 0x1)
+                        v132f = GetVarValue(enemy, instr->args[0].i);
+                    else
+                        v132f = instr->args[0].i;
+                    enemy->unk3358[v132f] = v132e;
                 }
                 goto skipInstr;
             case 133: // opcode 134 = 设置 unk3378/unk337c (boss 模式只写 3378) + unk2e14 重置
