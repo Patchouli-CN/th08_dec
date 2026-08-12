@@ -148,15 +148,15 @@ struct GuiFlags
 struct Gui
 {
     void FUN_00439810(i32 arg);
-    void FUN_00423130(i32 a0); // 0x423130 (ECL set-data helper)
-    void FUN_004230e0(i32 a0, f32 a1, f32 a2); // 0x4230e0
-    void FUN_00423110(i32 a0, i32 a1);         // 0x423110
-    void FUN_00422c20(i32 a0);                 // 0x422c20 (boss-marker visibility)
-    void FUN_004230c0(f32 a0);                 // 0x4230c0
-    void FUN_00439007();                       // 0x439007
-    void FUN_00439050();                       // 0x439050
-    void FUN_00439093();                       // 0x439093
-    void FUN_004390d6();                       // 0x4390d6
+    void SetEclLives(i32 a0);          // 0x423130 (ECL 设定剩余命数)
+    void SetBossLifeBarSegment(i32 a0, f32 a1, f32 a2); // 0x4230e0 (boss 血条段 start/stop)
+    void SetBossLifeSegmentColor(i32 a0, i32 a1);       // 0x423110 (boss 血条段颜色)
+    void SetBossPresent(i32 a0);       // 0x422c20 (boss 在场标记可见性)
+    void SetBossLifeBarMaxSize(f32 a0); // 0x4230c0 (boss 血条最大尺寸)
+    void ShowClock();                  // 0x439007 (显示当前小时时钟)
+    void UpdateClockHour();            // 0x439050 (时钟报时+1, 非 12 时)
+    void UpdateClockNoon();            // 0x439093 (时钟报时到 12 时)
+    void ResetClock();                 // 0x4390d6 (清时钟显示标志)
     static ChainCallbackResult OnUpdate(Gui *gui);
     static ChainCallbackResult OnDraw(Gui *gui);
 

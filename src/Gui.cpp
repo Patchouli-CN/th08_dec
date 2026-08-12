@@ -703,39 +703,39 @@ void Gui::FUN_00439810(i32 arg)
     this->impl->FUN_0043396d(arg);
 }
 
-void Gui::FUN_00423130(i32 a0)
+void Gui::SetEclLives(i32 a0)
 {
 }
 
-void Gui::FUN_004230e0(i32 a0, f32 a1, f32 a2)
+void Gui::SetBossLifeBarSegment(i32 a0, f32 a1, f32 a2)
 {
 }
 
-void Gui::FUN_00423110(i32 a0, i32 a1)
+void Gui::SetBossLifeSegmentColor(i32 a0, i32 a1)
 {
 }
 
-void Gui::FUN_00422c20(i32 a0)
+void Gui::SetBossPresent(i32 a0)
 {
 }
 
-void Gui::FUN_004230c0(f32 a0)
+void Gui::SetBossLifeBarMaxSize(f32 a0)
 {
 }
 
-void Gui::FUN_00439007()
+void Gui::ShowClock()
 {
 }
 
-void Gui::FUN_00439050()
+void Gui::UpdateClockHour()
 {
 }
 
-void Gui::FUN_00439093()
+void Gui::UpdateClockNoon()
 {
 }
 
-void Gui::FUN_004390d6()
+void Gui::ResetClock()
 {
 }
 

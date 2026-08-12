@@ -64,7 +64,17 @@ enum
     // 撒物品随机偏移 (op142/168): 范围 128, 偏移 -32
     ECL_ITEM_SCATTER_RANGE = 0x4b443c,      // 随机半径 128.0f (内存浮点)
     ECL_ITEM_SCATTER_OFFSET = 0x4b42c8,     // 偏移 -32.0f (内存浮点)
+
+    // case 168 (op169) 出口随机角常量 — 内存浮点地址 (值见注释)
+    ECL_EXIT_LEFT_BOUND = 0x17d61ac,        // 左边界 (BSS 零初始化, 值 0.0f)
+    ECL_EXIT_ANGLE_X_LOW = 0x4b42c4,        // 96.0  低 x 阈值 (pos.x > 96 走 +3π/4 分支)
+    ECL_EXIT_ANGLE_X_HIGH = 0x4b4888,       // 288.0 高 x 阈值
+    ECL_EXIT_ANGLE_ADD = 0x4b4884,          // 3π/4 ≈ 2.3562 随机角偏移 (AddNormalizeAngle 相加)
+    ECL_EXIT_ANGLE_SUB = 0x4b4524,          // π/4 ≈ 0.7854 随机角偏移 (直接相减)
 };
+
+// op169 出口随机角范围 ≈ π/2 (字面量保留原版 1.5708f, 值 ≈ 0x3fc90ff9)
+static const f32 ECL_RANDOM_ANGLE_RANGE = 1.5708f;
 
 // ECL variable access helpers (th08 standalone functions; th07 had these as
 // EclManager static methods). Stubs for now; RunEcl's call targets normalize to
@@ -72,18 +82,18 @@ enum
 i32 __fastcall GetVarValue(Enemy *enemy, i32 varId);                       // 0x41f420
 i32 *__fastcall GetIntPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 argIdx = -1); // 0x41fe10
 f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unused); // 0x420950
-void __fastcall FUN_00421280(Enemy *enemy, EclRawInstr *instr);           // 0x421280
-void __fastcall FUN_004212e0(Enemy *enemy, EclRawInstr *instr);           // 0x4212e0
-void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr);           // 0x421300
-void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr);           // 0x4213f0
+void __fastcall SetEclGlobalData(Enemy *enemy, EclRawInstr *instr);      // 0x421280 (op122: 调 EclGlobalObj::0x4152a0 set-data)
+void __fastcall RunEclGlobal(Enemy *enemy, EclRawInstr *instr);          // 0x4212e0 (op123: 调 EclGlobalObj::0x4161b0 全局 ECL 更新)
+void __fastcall EclLerp(Enemy *enemy, EclRawInstr *instr);               // 0x421300 (op35: *f0 = f2 + (f1-f2)*f3 线性插值)
+void __fastcall SetupEclInterp(Enemy *enemy, EclRawInstr *instr);        // 0x4213f0 (op36: 填充 EclInterp 槽, fn 取 0x4c6c90 表)
 EclRawInstr *__fastcall RunSubScript(Enemy *enemy, EclRawInstr *instr);   // 0x4215f0 子脚本 (op40-51)
 void __fastcall MoveInterp(Enemy *enemy, EclRawInstr *instr);           // 0x420f40
 void __fastcall StartSubContext(Enemy *enemy, EclRawInstr *instr, i32 arg0); // 0x421bd0
 i32 __fastcall RunSubContext(Enemy *enemy, EclRawInstr *instr);            // 0x421cb0
-void __fastcall FUN_00420d10(Enemy *enemy, EclRawInstr *instr);           // 0x420d10 (op66/69 条件分支)
-void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr);           // 0x421e50
-void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr);           // 0x422020
-void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr);           // 0x4224a0
+void __fastcall SetMoveVelocity(Enemy *enemy, EclRawInstr *instr);       // 0x420d10 (op66/69 arg0>0: 角度→速度向量 + 插值起点)
+void __fastcall SetSubVmAnm(Enemy *enemy, EclRawInstr *instr);           // 0x421e50 (op57/61: 在 enemy->vms[arg0] 播动画, arg1<0 停)
+void __fastcall SetMoveAngleToPlayer(Enemy *enemy, EclRawInstr *instr);  // 0x422020 (op67: 依玩家角度+unk3340 阈值算瞄准角)
+void __fastcall SetRandomExitAngle(Enemy *enemy, EclRawInstr *instr);    // 0x4224a0 (op178: 依 pos.x 计算出口随机角)
 void __fastcall RunLaserScript(Enemy *enemy, EclRawInstr *instr);           // 0x422720 (laser op96-104)
 
 // op90-93 底层 helper（内部逻辑无需逆向，call 目标归一化为 T，只需签名/返回类型正确）
@@ -123,11 +133,11 @@ void Enemy::ClearEffectSlots()
 {
 }
 
-void Enemy::FUN_00422c40()
+void Enemy::UpdateEnemyMove()
 {
 }
 
-void Enemy::FUN_00423150()
+void Enemy::UpdateLaserScript()
 {
 }
 
@@ -146,19 +156,19 @@ f32 *__fastcall GetFloatPtr(Enemy *enemy, AnyArg *args, u16 paramMask, i32 unuse
     return NULL;
 }
 
-void __fastcall FUN_00421280(Enemy *enemy, EclRawInstr *instr)
+void __fastcall SetEclGlobalData(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-void __fastcall FUN_004212e0(Enemy *enemy, EclRawInstr *instr)
+void __fastcall RunEclGlobal(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-void __fastcall FUN_00421300(Enemy *enemy, EclRawInstr *instr)
+void __fastcall EclLerp(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-void __fastcall FUN_004213f0(Enemy *enemy, EclRawInstr *instr)
+void __fastcall SetupEclInterp(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
@@ -180,19 +190,19 @@ i32 __fastcall RunSubContext(Enemy *enemy, EclRawInstr *instr)
     return 0;
 }
 
-void __fastcall FUN_00420d10(Enemy *enemy, EclRawInstr *instr)
+void __fastcall SetMoveVelocity(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-void __fastcall FUN_00421e50(Enemy *enemy, EclRawInstr *instr)
+void __fastcall SetSubVmAnm(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-void __fastcall FUN_00422020(Enemy *enemy, EclRawInstr *instr)
+void __fastcall SetMoveAngleToPlayer(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
-void __fastcall FUN_004224a0(Enemy *enemy, EclRawInstr *instr)
+void __fastcall SetRandomExitAngle(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
@@ -782,11 +792,11 @@ restart:
                 v36b = AddNormalizeAngle(v36a, 0);
                 *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v36b;
                 goto skipInstr;
-            case 34: // opcode 35 = 子脚本 (FUN_00421300)
-                FUN_00421300(enemy, instr);
+            case 34: // opcode 35 = 线性插值 (EclLerp: *f0 = f2 + (f1-f2)*f3)
+                EclLerp(enemy, instr);
                 goto skipInstr;
-            case 35: // opcode 36 = 子脚本 (FUN_004213f0)
-                FUN_004213f0(enemy, instr);
+            case 35: // opcode 36 = 填充插值槽 (SetupEclInterp)
+                SetupEclInterp(enemy, instr);
                 goto skipInstr;
             case 37: // opcode 38 = 角度转坐标: *f[0]=cos(a)*m; *f[1]=sin(a)*m
                 if (instr->paramMask & 0x4)
@@ -893,8 +903,8 @@ restart:
                 enemy->EclSubCall(v55f, v55e, v55d, v55c, v55b, v55a);
                 enemy->anmFlags &= ~ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
-            case 56: // opcode 57 = 子脚本 (FUN_00421e50)
-                FUN_00421e50(enemy, instr);
+            case 56: // opcode 57 = 子 VM 播动画 (SetSubVmAnm), 清 SUB_ANM 标志
+                SetSubVmAnm(enemy, instr);
                 enemy->anmFlags &= ~ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
             case 57: // ECL_SET_ANM_SUB: play on the secondary animation set
@@ -942,9 +952,9 @@ restart:
                 enemy->EclSubCall(v59f, v59e, v59d, v59c, v59b, v59a);
                 enemy->anmFlags &= ~ECL_ANM_FLAG_SET_SUB_ANM;
                 goto skipInstr;
-            case 60: // opcode 61 = 子脚本 (FUN_00421e50)
+            case 60: // opcode 61 = 子 VM 播动画 (SetSubVmAnm), 置 SUB_ANM 标志
                 enemy->anmFlags |= ECL_ANM_FLAG_SET_SUB_ANM;
-                FUN_00421e50(enemy, instr);
+                SetSubVmAnm(enemy, instr);
                 goto skipInstr;
             case 61: // ECL_SET_ANM_SWITCH: play anim on the set chosen by anmFlags bit2
                 if (((enemy->anmFlags >> 2) & 1) == 0)
@@ -989,10 +999,10 @@ restart:
                 enemy->unk2de8 = 0;
                 enemy->unk2ddc.SetCurrent(0);
                 goto skipInstr;
-            case 177: // opcode 178 = 子脚本 (FUN_004224a0)
-                FUN_004224a0(enemy, instr);
+            case 177: // opcode 178 = 出口随机角 (SetRandomExitAngle)
+                SetRandomExitAngle(enemy, instr);
                 goto skipInstr;
-            case 65: // ECL_SET_MOVE_ANGLE: arg0>0 走 FUN_00420d10; 否则 moveAngle/unk2da8/flags/unk2de8/unk2ddc
+            case 65: // ECL_SET_MOVE_ANGLE: arg0>0 走 SetMoveVelocity; 否则 moveAngle/unk2da8/flags/unk2de8/unk2ddc
                 if (instr->paramMask & 0x1)
                     v65a = GetVarValue(enemy, instr->args[0].i);
                 else
@@ -1014,10 +1024,10 @@ restart:
                     enemy->unk2ddc.SetCurrent(0);
                     goto skipInstr;
                 }
-                FUN_00420d10(enemy, instr);
+                SetMoveVelocity(enemy, instr);
                 goto skipInstr;
-            case 66: // opcode 67 = 子脚本 (FUN_00422020)
-                FUN_00422020(enemy, instr);
+            case 66: // opcode 67 = 瞄准玩家移动 (SetMoveAngleToPlayer)
+                SetMoveAngleToPlayer(enemy, instr);
                 goto skipInstr;
             case 67: // opcode 68 = 设瞄准玩家角度 + 移动速度 (AngleToPlayer + AddNormalizeAngle)
                 if (instr->paramMask & 0x1)
@@ -1031,7 +1041,7 @@ restart:
                     v67b = instr->args[1].f;
                 enemy->unk2da8 = v67b;
                 goto skipInstr;
-            case 68: // opcode 69 = 瞄准+速度 (条件: arg0>0 走 FUN_00420d10)
+            case 68: // opcode 69 = 瞄准+速度 (条件: arg0>0 走 SetMoveVelocity)
                 if (instr->paramMask & 0x1)
                     v68a = GetVarValue(enemy, instr->args[0].i);
                 else
@@ -1057,7 +1067,7 @@ restart:
                     enemy->unk2ddc.SetCurrent(v68d);
                     goto skipInstr;
                 }
-                FUN_00420d10(enemy, instr);
+                SetMoveVelocity(enemy, instr);
                 goto skipInstr;
             case 69: // opcode 70 = SET_MOVE_SPEED: moveSpeed + flag bit12
                 if (instr->paramMask & 0x1)
@@ -1767,8 +1777,8 @@ restart:
                         v126c = instr->args[0].i;
                     if (v126c == 0)
                     {
-                        g_Gui.FUN_00422c20(1);
-                        g_Gui.FUN_004230c0(1.0f);
+                        g_Gui.SetBossPresent(1);
+                        g_Gui.SetBossLifeBarMaxSize(1.0f);
                     }
                     enemy->flags |= ECL_FLAG_BOSS_MARKER;
                     if (instr->paramMask & 0x1)
@@ -1782,7 +1792,7 @@ restart:
                 else
                 {
                     if (enemy->bossMarkerIdx < 4)
-                        g_Gui.FUN_00422c20(0);
+                        g_Gui.SetBossPresent(0);
                     g_BulletObjects[enemy->bossMarkerIdx] = 0;
                     enemy->flags &= ~ECL_FLAG_BOSS_MARKER;
                     g_AsciiManager.SetBossMarkerInterrupt(enemy->bossMarkerIdx, 2);
@@ -1859,7 +1869,7 @@ restart:
                 if (enemy->bossMarkerIdx == 0 && ((enemy->flags >> 1) & 1))
                 {
                     for (v130i = 0; v130i < 8; v130i++)
-                        g_Gui.FUN_004230e0(v130i, 0.0f, 0.0f);
+                        g_Gui.SetBossLifeBarSegment(v130i, 0.0f, 0.0f);
                 }
                 goto skipInstr;
             case 157: // opcode 158 = 设置 Gui 数据 (v0, a1/laserData, a2/laserData) + 若 bit3 调 23110
@@ -1876,22 +1886,22 @@ restart:
                     v157c = GetVarValue(enemy, instr->args[1].i);
                 else
                     v157c = instr->args[1].i;
-                g_Gui.FUN_004230e0(v157v, (f32)v157c / (f32)enemy->laserData,
-                                   (f32)v157b / (f32)enemy->laserData);
+                g_Gui.SetBossLifeBarSegment(v157v, (f32)v157c / (f32)enemy->laserData,
+                                            (f32)v157b / (f32)enemy->laserData);
                 if (instr->paramMask & 0x8)
                 {
                     if (instr->paramMask & 0x8)
                         v157d = GetVarValue(enemy, instr->args[3].i);
                     else
                         v157d = instr->args[3].i;
-                    g_Gui.FUN_00423110(v157v, v157d);
+                    g_Gui.SetBossLifeSegmentColor(v157v, v157d);
                 }
                 goto skipInstr;
-            case 121: // opcode 122 = 子脚本 (FUN_00421280)
-                FUN_00421280(enemy, instr);
+            case 121: // opcode 122 = 设置 ECL 全局对象数据 (SetEclGlobalData)
+                SetEclGlobalData(enemy, instr);
                 goto skipInstr;
-            case 122: // opcode 123 = 子脚本 (FUN_004212e0)
-                FUN_004212e0(enemy, instr);
+            case 122: // opcode 123 = ECL 全局对象更新 (RunEclGlobal)
+                RunEclGlobal(enemy, instr);
                 goto skipInstr;
             case 131: // opcode 132 = 设置 unk2e14 计时器
                 if (instr->paramMask & 0x1)
@@ -2140,12 +2150,12 @@ restart:
                     v146a = instr->args[0].i;
                 g_BossPhaseState = v146a;
                 goto skipInstr;
-            case 147: // opcode 148 = g_Gui.FUN_00423130(v0); 全局 0x164d30c += 0x708
+            case 147: // opcode 148 = g_Gui.SetEclLives(v0); 全局 0x164d30c += 0x708
                 if (instr->paramMask & 0x1)
                     v147a = GetVarValue(enemy, instr->args[0].i);
                 else
                     v147a = instr->args[0].i;
-                g_Gui.FUN_00423130(v147a);
+                g_Gui.SetEclLives(v147a);
                 g_164d30c += 0x708;
                 goto skipInstr;
             case 92: // opcode 93 = SPAWN_ENEMY_ABS
@@ -2330,8 +2340,8 @@ restart:
                 enemy->unk5352 = (i16)v156c;
                 if (enemy->unk534c & 0x8)
                 {
-                    g_AnmManager->FUN_004649a0(&enemy->primaryVm, (void *)&enemy->eclContext,
-                                               (i32)(((i32)(i16)enemy->unk5352 / (i32)(i16)enemy->unk534e) << 1));
+                    g_AnmManager->SetupSpriteStrip(&enemy->primaryVm, (void *)&enemy->eclContext,
+                                                   (i32)(((i32)(i16)enemy->unk5352 / (i32)(i16)enemy->unk534e) << 1));
                 }
                 goto skipInstr;
             case 159: // opcode 160 = unk5354 ZunTimer.SetCurrent(v0)
@@ -2341,12 +2351,12 @@ restart:
                     v159a = instr->args[0].i;
                 enemy->unk5354.SetCurrent(v159a);
                 goto skipInstr;
-            case 160: // opcode 161 = 生成特效 at movePos (g_BulletManager.FUN_00430d30)
+            case 160: // opcode 161 = 清除 movePos 半径内子弹 (g_BulletManager.ClearBulletsInRadius)
                 if (instr->paramMask & 0x1)
                     v160a = enemy->GetEclFloatVar(instr->args[0].i);
                 else
                     v160a = instr->args[0].f;
-                g_BulletManager.FUN_00430d30(&enemy->movePos, v160a);
+                g_BulletManager.ClearBulletsInRadius(&enemy->movePos, v160a);
                 goto skipInstr;
             case 161: // opcode 162 = RemoveAllBullets(4)
                 g_BulletManager.RemoveAllBullets(4);
@@ -2406,21 +2416,21 @@ restart:
                 goto skipInstr;
             case 168: // opcode 169 = 依 pos.x 位置阈值决定随机角度 (出口角度)
                 {
-                    // 位置阈值: 64.0 (0x4b42c4) / 288.0 (0x4b4888) / 0x17d61ac
-                    // 角度偏移: +3π/4 (0x4b4884≈2.356) 或 -π/4 (0x4b4524≈0.785)
+                    // 位置阈值: 96.0 (ECL_EXIT_ANGLE_X_LOW) / 288.0 (ECL_EXIT_ANGLE_X_HIGH) / 左边界
+                    // 角度偏移: +3π/4 (ECL_EXIT_ANGLE_ADD≈2.356) 或 -π/4 (ECL_EXIT_ANGLE_SUB≈0.785)
                     f32 *out = GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0);
-                    f32 exitLeftBound = *(f32 *)0x17d61ac;
-                    if ((enemy->pos.x > exitLeftBound || enemy->pos.x < exitLeftBound) && enemy->pos.x > *(f32 *)0x4b42c4)
+                    f32 exitLeftBound = *(f32 *)ECL_EXIT_LEFT_BOUND;
+                    if ((enemy->pos.x > exitLeftBound || enemy->pos.x < exitLeftBound) && enemy->pos.x > *(f32 *)ECL_EXIT_ANGLE_X_LOW)
                     {
-                        *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(1.5708f) + *(f32 *)0x4b4884, 0.0f);
+                        *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(ECL_RANDOM_ANGLE_RANGE) + *(f32 *)ECL_EXIT_ANGLE_ADD, 0.0f);
                     }
-                    else if (enemy->pos.x > *(f32 *)0x4b4888)
+                    else if (enemy->pos.x > *(f32 *)ECL_EXIT_ANGLE_X_HIGH)
                     {
-                        *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(1.5708f) + *(f32 *)0x4b4884, 0.0f);
+                        *out = AddNormalizeAngle(g_Rng.GetRandomF32InRange(ECL_RANDOM_ANGLE_RANGE) + *(f32 *)ECL_EXIT_ANGLE_ADD, 0.0f);
                     }
                     else
                     {
-                        *out = g_Rng.GetRandomF32InRange(1.5708f) - *(f32 *)0x4b4524;
+                        *out = g_Rng.GetRandomF32InRange(ECL_RANDOM_ANGLE_RANGE) - *(f32 *)ECL_EXIT_ANGLE_SUB;
                     }
                 }
                 goto skipInstr;
@@ -2498,11 +2508,11 @@ restart:
                     v176a = instr->args[0].i;
                 enemy->unk2e04 = v176a;
                 goto skipInstr;
-            case 178: // opcode 179 = g_Gui.FUN_00439007()
-                g_Gui.FUN_00439007();
+            case 178: // opcode 179 = 显示时钟 (ShowClock)
+                g_Gui.ShowClock();
                 goto skipInstr;
-            case 179: // opcode 180 = g_Gui.FUN_004390d6()
-                g_Gui.FUN_004390d6();
+            case 179: // opcode 180 = 重置时钟显示 (ResetClock)
+                g_Gui.ResetClock();
                 goto skipInstr;
             case 180: // opcode 181 = 若时钟<12h 播声+加时钟+依是否=12h 调 Gui
                 if (g_GameManager.GetClockTime() < 0xc)
@@ -2510,9 +2520,9 @@ restart:
                     g_SoundPlayer.PlaySoundByIdx((SoundIdx)ECL_SOUND_CLOCK_CHIME, 0);
                     g_GameManager.AddToClockTime(1);
                     if (g_GameManager.GetClockTime() == 0xc)
-                        g_Gui.FUN_00439093();
+                        g_Gui.UpdateClockNoon();
                     else
-                        g_Gui.FUN_00439050();
+                        g_Gui.UpdateClockHour();
                 }
                 goto skipInstr;
             case 181: // opcode 182 = 设置 anmFlags bit8
@@ -2646,8 +2656,8 @@ exit:
     }
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
-    enemy->FUN_00422c40();
-    enemy->FUN_00423150();
+    enemy->UpdateEnemyMove();
+    enemy->UpdateLaserScript();
     return ZUN_SUCCESS;
 }
 

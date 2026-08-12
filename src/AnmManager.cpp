@@ -1388,7 +1388,7 @@ i32 AnmManager::FUN_004639e0(AnmVm *vm)
     return 0;
 }
 
-void AnmManager::FUN_004649a0(AnmVm *vm, void *a1, i32 a2)
+void AnmManager::SetupSpriteStrip(AnmVm *vm, void *a1, i32 a2)
 {
 }
 

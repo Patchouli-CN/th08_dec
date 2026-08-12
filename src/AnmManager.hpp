@@ -509,7 +509,7 @@ struct AnmManager
     void DrawPlayerBullet(AnmVm *vm);
     ZunResult Draw2DNoRound(AnmVm *vm);
     i32 FUN_004639e0(AnmVm *vm);
-    void FUN_004649a0(AnmVm *vm, void *a1, i32 a2); // 0x4649a0 (ECL set-AI helper)
+    void SetupSpriteStrip(AnmVm *vm, void *a1, i32 a2); // 0x4649a0 (ECL set-AI helper: 依 sprite 尺寸生成拉伸 quad 条)
     void FUN_00463d60(AnmVm *vm);
     ZunResult FUN_00463cf0(AnmVm *vm);
     ZunResult FUN_00464070(AnmVm *vm);

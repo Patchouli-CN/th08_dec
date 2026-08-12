@@ -26,7 +26,7 @@ struct BulletManager
     void Initialize();
     void RemoveAllBullets(i32);
     void bulletmanager_fun_00415c60();
-    void FUN_00430d30(Float3 *pos, f32 a1); // 0x430d30 (ECL effect)
+    void ClearBulletsInRadius(Float3 *pos, f32 a1); // 0x430d30 (清除 pos 半径内敌弹并掉落物品)
     void SetupLaserMove(Float3 *pos);          // 0x430e10 (ECL laser/move setup)
     EnemySubData *AllocShotSlot(EnemyShotData *src); // 0x430f20 (claim a data slot)
 

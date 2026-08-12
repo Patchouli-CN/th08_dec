@@ -142,7 +142,7 @@ void BulletManager::bulletmanager_fun_00415c60()
     this->RemoveAllBullets(1);
 }
 
-void BulletManager::FUN_00430d30(Float3 *pos, f32 a1)
+void BulletManager::ClearBulletsInRadius(Float3 *pos, f32 a1)
 {
 }
 

@@ -73,8 +73,8 @@ C_ASSERT(sizeof(EnemySubData) == 0x5a0);
 struct Enemy
 {
     void FUN_0042bc90();
-    void FUN_00422c40();
-    void FUN_00423150();
+    void UpdateEnemyMove();   // 0x422c40 (逐帧按移动模式更新位置)
+    void UpdateLaserScript(); // 0x423150 (运行缓冲的激光子脚本)
     void EclSubCall(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5); // ECL sub-call (0x421de0)
     void InitMoveAfterSetPos(); // move init after SET_POS (0x42c180)
     void ClearEffectSlots(); // 0x42a820 (op127 boss-marker setup)
