@@ -12,6 +12,8 @@
 #include "EffectManager.hpp"
 #include "AsciiManager.hpp"
 
+#include <math.h>
+
 namespace th08
 {
 
@@ -102,23 +104,25 @@ Enemy *__fastcall InitBulletPattern(Enemy *enemy, EclRawInstr *instr);        //
 Enemy *__fastcall InitBulletPatternAbs(Enemy *enemy, EclRawInstr *instr);        // 0x41f280 初始化弹幕 Enemy (变体)
 Enemy *__fastcall InitEnemySpawnData(Enemy *enemy);                            // 0x41f400 初始化 Enemy Float3 (ecx)
 
-f32 __stdcall EclAtan2(f32 a, f32 b); // th08 0x41f090 (wraps CRT atan2)
+f32 __stdcall EclAtan2(f32 a, f32 b); // wraps CRT atan2 (original 0x41f090)
 
 i32 __fastcall GetVarValue(Enemy *enemy, i32 varId)
 {
     return 0;
 }
 
+// FUNCTION: th08 0x41f090
 f32 __stdcall EclAtan2(f32 a, f32 b)
 {
-    return 0.0f;
+    return (f32)atan2((double)a, (double)b);
 }
 
-f32 __fastcall EclAngleFromDxDy(f32 dx, f32 dy); // th08 0x40c7b0 (atan2 variant)
+f32 __stdcall EclAngleFromDxDy(f32 dx, f32 dy); // original 0x40c7b0, __stdcall per original bytes
 
-f32 __fastcall EclAngleFromDxDy(f32 dx, f32 dy)
+// FUNCTION: th08 0x40c7b0
+f32 __stdcall EclAngleFromDxDy(f32 dx, f32 dy)
 {
-    return 0.0f;
+    return (f32)atan2((double)dx, (double)dy);
 }
 
 void Enemy::EclSubCall(i32 a0, i32 a1, i32 a2, i32 a3, i32 a4, i32 a5)
