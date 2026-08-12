@@ -266,7 +266,9 @@ ZunResult EclManager::Load(const char *path)
                   v132f, v133a, v133b, v133c, v134a, v134b, v134c, v138a, v138b, v139a, v139b, v139c, \
                   v139d, v139e, v142a, v143a, v143b, v141a, v141b, v141c, v167a, v167b, v167c, \
                   v135a, v136a, v136b, v145a, v140a, v146a, v147a, v92a, v92b, v92c, v92d, v92e, \
-                  v92f, v93a, v93b, v93c, v93d, v93e, v93f)
+                  v92f, v93a, v93b, v93c, v93d, v93e, v93f, v148a, v112a, v112b, v112c, v151a, \
+                  v151b, v151c, v151d, v151e, v151f, v156a, v156b, v156c, v159a, v160a, v163a, \
+                  v163b, v163c, v163d, v164a, v165a, v165b, v165c, v165d, v165e, v165f)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -400,6 +402,15 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v147a;        // slot 319 (case 147)
     f32 v92a, v92b, v92c; i32 v92d, v92e, v92f; // slots 320-325 (case 92: SpawnEnemy; f1-3 + arg4/5/6)
     f32 v93a, v93b, v93c; i32 v93d, v93e, v93f; // slots 326-331 (case 93: SpawnEnemy rel; f1-3 + arg4/5/6)
+    i32 v148a;        // slot 332 (case 148: primaryVm 挂起中断)
+    i32 v112a, v112b, v112c; // slots 333-335 (case 112: 生命回调; v0 + threshold + sub)
+    f32 v151a, v151b; i32 v151c, v151d, v151e, v151f; // slots 336-341 (case 151: 移动界限字段)
+    i32 v156a, v156b, v156c; // slots 342-344 (case 156: AI 字段)
+    i32 v159a;        // slot 345 (case 159: unk5354 SetCurrent)
+    f32 v160a;        // slot 346 (case 160: 生成特效 at movePos)
+    i32 v163a, v163b, v163c, v163d; // slots 347-350 (case 163)
+    i32 v164a;        // slot 351 (case 164)
+    f32 v165a, v165b, v165c, v165d, v165e, v165f; // slots 352-357 (case 165)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -2145,7 +2156,11 @@ restart:
                 g_EnemyManager.RemoveEnemiesByScore(0x1f40, 0);
                 goto skipInstr;
             case 148: // opcode 149 = 设置 primaryVm 挂起中断
-                enemy->primaryVm.prefix.pendingInterrupt = (i16)ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v148a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v148a = instr->args[0].i;
+                enemy->primaryVm.prefix.pendingInterrupt = (i16)v148a;
                 goto skipInstr;
             case 149: // opcode 150 = 设置 vms[idx] 挂起中断
                 {
@@ -2157,30 +2172,63 @@ restart:
                 g_BulletManager.bulletmanager_fun_00415c60();
                 goto skipInstr;
             case 112: // opcode 113 = 生命回调阈值/子脚本: lifeCallbackState/24/28
+                if (instr->paramMask & 0x1)
+                    v112a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v112a = instr->args[0].i;
+                if (v112a >= 0)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    if (v0 >= 0)
-                    {
-                        enemy->lifeCallbackThreshold = ECL_IVAL(0);
-                        enemy->lifeCallbackState |= 0x200;
-                    }
+                    if (instr->paramMask & 0x1)
+                        v112b = GetVarValue(enemy, instr->args[0].i);
                     else
-                    {
-                        enemy->lifeCallbackState &= ~0x200;
-                    }
-                    enemy->lifeCallbackSub = ECL_IVAL(1);
+                        v112b = instr->args[0].i;
+                    enemy->lifeCallbackThreshold = v112b;
+                    enemy->lifeCallbackState |= 0x200;
                 }
+                else
+                {
+                    enemy->lifeCallbackState &= ~0x200;
+                }
+                if (instr->paramMask & 0x2)
+                    v112c = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v112c = instr->args[1].i;
+                enemy->lifeCallbackSub = v112c;
                 goto skipInstr;
             case 150: // opcode 151 = 设置 flags bit26
                 enemy->flags = (enemy->flags & ~ECL_FLAG_NO_SAVE_ON_INTERRUPT) | ((instr->args[0].b[0] & 1) << 0x1a);
                 goto skipInstr;
             case 151: // opcode 152 = 写移动界限字段 unk2dec/2df0/2df4..2dfa
-                enemy->unk2dec = ECL_FVAL(0);
-                enemy->unk2df0 = ECL_FVAL(1);
-                enemy->unk2df4 = (i16)ECL_IVAL(2);
-                enemy->unk2df6 = (i16)ECL_IVAL(3);
-                enemy->unk2df8 = (i16)ECL_IVAL(4);
-                enemy->unk2dfa = (i16)ECL_IVAL(5);
+                if (instr->paramMask & 0x1)
+                    v151a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v151a = instr->args[0].f;
+                enemy->unk2dec = v151a;
+                if (instr->paramMask & 0x2)
+                    v151b = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v151b = instr->args[1].f;
+                enemy->unk2df0 = v151b;
+                if (instr->paramMask & 0x4)
+                    v151c = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v151c = instr->args[2].i;
+                enemy->unk2df4 = (i16)v151c;
+                if (instr->paramMask & 0x8)
+                    v151d = GetVarValue(enemy, instr->args[3].i);
+                else
+                    v151d = instr->args[3].i;
+                enemy->unk2df6 = (i16)v151d;
+                if (instr->paramMask & 0x10)
+                    v151e = GetVarValue(enemy, instr->args[4].i);
+                else
+                    v151e = instr->args[4].i;
+                enemy->unk2df8 = (i16)v151e;
+                if (instr->paramMask & 0x20)
+                    v151f = GetVarValue(enemy, instr->args[5].i);
+                else
+                    v151f = instr->args[5].i;
+                enemy->unk2dfa = (i16)v151f;
                 goto skipInstr;
             case 152: // opcode 153 = unk337c = unk2cee; unk2e14.SetCurrent(0)
                 enemy->unk337c = enemy->unk2cee;
@@ -2196,9 +2244,21 @@ restart:
                 goto skipInstr;
             case 156: // opcode 157 = 设置 AI 字段 unk534c/534e/5350/5352 + 若 bit3 调 AnmManager
                 enemy->unk534c = instr->args[0].b[0];
-                enemy->unk534e = (i16)ECL_IVAL(1);
-                enemy->unk5350 = (i16)ECL_IVAL(2);
-                enemy->unk5352 = (i16)ECL_IVAL(3);
+                if (instr->paramMask & 0x2)
+                    v156a = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v156a = instr->args[1].i;
+                enemy->unk534e = (i16)v156a;
+                if (instr->paramMask & 0x4)
+                    v156b = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v156b = instr->args[2].i;
+                enemy->unk5350 = (i16)v156b;
+                if (instr->paramMask & 0x8)
+                    v156c = GetVarValue(enemy, instr->args[3].i);
+                else
+                    v156c = instr->args[3].i;
+                enemy->unk5352 = (i16)v156c;
                 if (enemy->unk534c & 0x8)
                 {
                     g_AnmManager->FUN_004649a0(&enemy->primaryVm, (void *)&enemy->eclContext,
@@ -2206,28 +2266,74 @@ restart:
                 }
                 goto skipInstr;
             case 159: // opcode 160 = unk5354 ZunTimer.SetCurrent(v0)
-                enemy->unk5354.SetCurrent(ECL_IVAL(0));
+                if (instr->paramMask & 0x1)
+                    v159a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v159a = instr->args[0].i;
+                enemy->unk5354.SetCurrent(v159a);
                 goto skipInstr;
             case 160: // opcode 161 = 生成特效 at movePos (g_BulletManager.FUN_00430d30)
-                g_BulletManager.FUN_00430d30(&enemy->movePos, ECL_FVAL(0));
+                if (instr->paramMask & 0x1)
+                    v160a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v160a = instr->args[0].f;
+                g_BulletManager.FUN_00430d30(&enemy->movePos, v160a);
                 goto skipInstr;
             case 161: // opcode 162 = RemoveAllBullets(4)
                 g_BulletManager.RemoveAllBullets(4);
                 goto skipInstr;
             case 163: // opcode 164 = 设置全局标志 + 目标位置
+                if (instr->paramMask & 0x1)
+                    v163a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v163a = instr->args[0].i;
+                arg = v163a;
+                g_EclGlobalObj.SetGlobalFlag(arg);
+                if (arg == 0)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    g_EclGlobalObj.SetGlobalFlag(v0);
-                    if (v0 == 0)
-                        g_EclGlobalObj.SetTargetPos(ECL_FVAL(1), ECL_FVAL(2), ECL_FVAL(3));
+                    if (instr->paramMask & 0x8)
+                        v163b = enemy->GetEclFloatVar(instr->args[3].i);
+                    else
+                        v163b = instr->args[3].f;
+                    if (instr->paramMask & 0x4)
+                        v163c = enemy->GetEclFloatVar(instr->args[2].i);
+                    else
+                        v163c = instr->args[2].f;
+                    if (instr->paramMask & 0x2)
+                        v163d = enemy->GetEclFloatVar(instr->args[1].i);
+                    else
+                        v163d = instr->args[1].f;
+                    g_EclGlobalObj.SetTargetPos(v163d, v163c, v163b);
                 }
                 goto skipInstr;
             case 164: // opcode 165 = 写 primaryVm Z 旋转 (prefix.rotation.z)
-                enemy->primaryVm.prefix.rotation.z = ECL_FVAL(0);
+                if (instr->paramMask & 0x1)
+                    v164a = enemy->GetEclFloatVar(instr->args[0].i);
+                else
+                    v164a = instr->args[0].f;
+                enemy->primaryVm.prefix.rotation.z = v164a;
                 goto skipInstr;
             case 165: // opcode 166 = 极坐标→直角: *float[1]=sin(f2)*f3; *float[0]=cos(f2)*f3
-                *GetFloatPtr(enemy, &instr->args[1], instr->paramMask, 0) = sinf(ECL_FVAL(2)) * ECL_FVAL(3);
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = cosf(ECL_FVAL(2)) * ECL_FVAL(3);
+                if (instr->paramMask & 0x4)
+                    v165a = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v165a = instr->args[2].f;
+                if (instr->paramMask & 0x8)
+                    v165b = enemy->GetEclFloatVar(instr->args[3].i);
+                else
+                    v165b = instr->args[3].f;
+                v165c = sinf(v165a) * v165b;
+                *GetFloatPtr(enemy, &instr->args[1], instr->paramMask, 0) = v165c;
+                if (instr->paramMask & 0x4)
+                    v165d = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v165d = instr->args[2].f;
+                if (instr->paramMask & 0x8)
+                    v165e = enemy->GetEclFloatVar(instr->args[3].i);
+                else
+                    v165e = instr->args[3].f;
+                v165f = cosf(v165d) * v165e;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v165f;
                 goto skipInstr;
             case 168: // opcode 169 = 依 pos.x 位置阈值决定随机角度 (出口角度)
                 {
