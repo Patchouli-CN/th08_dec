@@ -252,7 +252,8 @@ ZunResult EclManager::Load(const char *path)
                   v78a, v79a, v80a, v85a, v85b, v86a, v86b, v86c, v87a, v88a, v88b, v88c, v89a, v90a, v91a, \
                   v110a, v110b, v110c, v110d, v110e, v110f, v110g, v104a, v105a, v109a, v109b, v113a, v113b, \
                   v113c, v113d, v113e, v113f, v113g, v113h, v113i, v113j, v115a, v116a, v116b, v166a, v166b, \
-                  v117a, v117b, v118a, v118b, v118c, v118d)
+                  v117a, v117b, v118a, v118b, v118c, v118d, v169a, v169b, v119a, v120a, v170a, v170b, \
+                  v171a, v171b, v171c)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -354,6 +355,11 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v166a; f32 v166b; // slots 252-253 (case 166: 子弹 angle)
     i32 v117a; f32 v117b; // slots 254-255 (case 117: 子弹角度到玩家)
     i32 v118a; f32 v118b, v118c, v118d; // slots 256-259 (case 118: 子弹 pos; idx + f1-3)
+    i32 v169a; i32 v169b; // slots 260-261 (case 169: 子弹+0x599; idx + value)
+    i32 v119a;        // slot 262 (case 119: curContext intVars)
+    i32 v120a;        // slot 263 (case 120: RUN_EX_INS)
+    i32 v170a; f32 v170b; // slots 264-265 (case 170: 子弹 unk560; idx + f)
+    i32 v171a; f32 v171b, v171c; // slots 266-268 (case 171: 子弹 unk558/55c; idx + f1 + f2)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1546,31 +1552,43 @@ restart:
                 }
                 goto skipInstr;
             case 169: // opcode 170 = 写子弹对象+0x599 (byte)
+                if (instr->paramMask & 0x1)
+                    v169a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v169a = instr->args[0].i;
+                arg = v169a;
+                if (enemy->shotSlots[arg] != 0)
                 {
-                    i32 idx = ECL_IVAL(0);
-                    if (enemy->shotSlots[idx] != 0)
-                        enemy->shotSlots[idx]->unk599 = (u8)ECL_IVAL(1);
+                    if (instr->paramMask & 0x2)
+                        v169b = GetVarValue(enemy, instr->args[1].i);
+                    else
+                        v169b = instr->args[1].i;
+                    enemy->shotSlots[arg]->unk599 = (u8)v169b;
                 }
                 goto skipInstr;
             case 119: // opcode 120 = 设置 curContext globalVar intVars[0] (依 shotSlots 子弹对象)
-                {
-                    i32 v0 = ECL_IVAL(0);
-                    if (enemy->shotSlots[v0] != 0 && enemy->shotSlots[v0]->isActive != 0)
-                        enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 1;
-                    else
-                        enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 0;
-                }
+                if (instr->paramMask & 0x1)
+                    v119a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v119a = instr->args[0].i;
+                arg = v119a;
+                if (enemy->shotSlots[arg] != 0 && enemy->shotSlots[arg]->isActive != 0)
+                    enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 1;
+                else
+                    enemy->curContextPtr->eclContextArgs.globalVars.intVars[0] = 0;
                 goto skipInstr;
             case 120: // opcode 121 = RUN_EX_INS (子弹对象: unk598<2 时设状态)
+                if (instr->paramMask & 0x1)
+                    v120a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v120a = instr->args[0].i;
+                arg = v120a;
+                if (enemy->shotSlots[arg] != 0 && enemy->shotSlots[arg]->isActive != 0 &&
+                    enemy->shotSlots[arg]->runState < 2)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    EnemySubData *slot = enemy->shotSlots[v0];
-                    if (slot != 0 && slot->isActive != 0 && slot->runState < 2)
-                    {
-                        slot->runState = 2;
-                        slot->timer.SetCurrent(0);
-                        slot->unk564 = slot->unk568;
-                    }
+                    enemy->shotSlots[arg]->runState = 2;
+                    enemy->shotSlots[arg]->timer.SetCurrent(0);
+                    enemy->shotSlots[arg]->unk564 = enemy->shotSlots[arg]->unk568;
                 }
                 goto skipInstr;
             case 153: // opcode 154 = 清空 shotSlots[0x20]
@@ -1580,20 +1598,38 @@ restart:
                 }
                 goto skipInstr;
             case 170: // opcode 171 = 设置子弹对象 unk560
+                if (instr->paramMask & 0x1)
+                    v170a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v170a = instr->args[0].i;
+                arg = v170a;
+                if (enemy->shotSlots[arg] != 0)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    if (enemy->shotSlots[v0] != 0)
-                        enemy->shotSlots[v0]->unk560 = ECL_FVAL(1);
+                    if (instr->paramMask & 0x2)
+                        v170b = enemy->GetEclFloatVar(instr->args[1].i);
+                    else
+                        v170b = instr->args[1].f;
+                    enemy->shotSlots[arg]->unk560 = v170b;
                 }
                 goto skipInstr;
             case 171: // opcode 172 = 设置子弹对象 unk558/55c
+                if (instr->paramMask & 0x1)
+                    v171a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v171a = instr->args[0].i;
+                arg = v171a;
+                if (enemy->shotSlots[arg] != 0)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    if (enemy->shotSlots[v0] != 0)
-                    {
-                        enemy->shotSlots[v0]->unk558 = ECL_FVAL(1);
-                        enemy->shotSlots[v0]->unk55c = ECL_FVAL(2);
-                    }
+                    if (instr->paramMask & 0x2)
+                        v171b = enemy->GetEclFloatVar(instr->args[1].i);
+                    else
+                        v171b = instr->args[1].f;
+                    enemy->shotSlots[arg]->unk558 = v171b;
+                    if (instr->paramMask & 0x4)
+                        v171c = enemy->GetEclFloatVar(instr->args[2].i);
+                    else
+                        v171c = instr->args[2].f;
+                    enemy->shotSlots[arg]->unk55c = v171c;
                 }
                 goto skipInstr;
             case 162: // opcode 163 = 写全局 0xf54cec
