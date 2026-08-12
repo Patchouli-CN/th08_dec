@@ -15,6 +15,14 @@
 namespace th08
 {
 
+// SpawnEnemy op 参数拷贝 (case 92/93): 7 dword = subId + Float3 + 3 int
+struct EnemySpawnData
+{
+    i32 subId;   // +0
+    Float3 pos;  // +4
+    i32 a, b, c; // +0x10
+};
+
 DIFFABLE_STATIC(EclManager, g_EclManager);
 DIFFABLE_STATIC_ARRAY(EclExInstr, 32, g_EclExInsn); // 0x4c6cb0
 DIFFABLE_STATIC(EclGlobalObj, g_EclGlobalObj);      // 0x4ea670
@@ -257,7 +265,8 @@ ZunResult EclManager::Load(const char *path)
                   v124a, v130a, v157a, v157b, v157c, v157d, v131a, v132a, v132b, v132c, v132d, v132e, \
                   v132f, v133a, v133b, v133c, v134a, v134b, v134c, v138a, v138b, v139a, v139b, v139c, \
                   v139d, v139e, v142a, v143a, v143b, v141a, v141b, v141c, v167a, v167b, v167c, \
-                  v135a, v136a, v136b, v145a, v140a, v146a, v147a)
+                  v135a, v136a, v136b, v145a, v140a, v146a, v147a, v92a, v92b, v92c, v92d, v92e, \
+                  v92f, v93a, v93b, v93c, v93d, v93e, v93f)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -389,6 +398,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v140a;        // slot 317 (case 140: 生成物品)
     i32 v146a;        // slot 318 (case 146)
     i32 v147a;        // slot 319 (case 147)
+    f32 v92a, v92b, v92c; i32 v92d, v92e, v92f; // slots 320-325 (case 92: SpawnEnemy; f1-3 + arg4/5/6)
+    f32 v93a, v93b, v93c; i32 v93d, v93e, v93f; // slots 326-331 (case 93: SpawnEnemy rel; f1-3 + arg4/5/6)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -2058,11 +2069,37 @@ restart:
             case 92: // opcode 93 = SPAWN_ENEMY_ABS
                 if (enemy->laserActive > 0)
                 {
-                    Float3 pos = Float3(ECL_FVAL(1), ECL_FVAL(2), ECL_FVAL(3));
-                    i32 life = ECL_IVAL(6);
-                    i32 itemDrop = ECL_IVAL(5);
-                    i32 score = ECL_IVAL(4);
-                    g_EnemyManager.SpawnEnemy2(instr->args[0].i, &pos, life, itemDrop, score,
+                    EnemySpawnData data;
+                    data = *(EnemySpawnData *)&instr->args[0];
+                    Float3 pos;
+                    if (instr->paramMask & 0x2)
+                        v92a = enemy->GetEclFloatVar(data.pos.x);
+                    else
+                        v92a = data.pos.x;
+                    pos.x = v92a;
+                    if (instr->paramMask & 0x4)
+                        v92b = enemy->GetEclFloatVar(data.pos.y);
+                    else
+                        v92b = data.pos.y;
+                    pos.y = v92b;
+                    if (instr->paramMask & 0x8)
+                        v92c = enemy->GetEclFloatVar(data.pos.z);
+                    else
+                        v92c = data.pos.z;
+                    pos.z = v92c;
+                    if (instr->paramMask & 0x40)
+                        v92d = GetVarValue(enemy, instr->args[6].i);
+                    else
+                        v92d = instr->args[6].i;
+                    if (instr->paramMask & 0x20)
+                        v92e = GetVarValue(enemy, instr->args[5].i);
+                    else
+                        v92e = instr->args[5].i;
+                    if (instr->paramMask & 0x10)
+                        v92f = GetVarValue(enemy, instr->args[4].i);
+                    else
+                        v92f = instr->args[4].i;
+                    g_EnemyManager.SpawnEnemy2(data.subId, &pos, v92f, v92e, v92d,
                                                &enemy->curContextPtr->eclContextArgs);
                 }
                 goto skipInstr;
