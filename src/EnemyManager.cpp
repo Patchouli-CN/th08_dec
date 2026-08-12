@@ -275,7 +275,7 @@ ZunResult EnemyManager::DeletedCallback(EnemyManager *enemyManager)
     enemy = &enemyManager->enemies[0];
     for (i = 0; i < 0x1e0; i++, enemy++)
     {
-        enemy->FUN_0042bc90();
+        enemy->ClearDataSlots();
     }
     if (!IsDisableResourceReload())
     {
@@ -314,7 +314,7 @@ void EnemyManager::RemoveEnemiesByScore(i32 a0, i32 a1)
 {
 }
 
-void Enemy::FUN_0042bc90()
+void Enemy::ClearDataSlots()
 {
     i32 i;
 
@@ -335,7 +335,7 @@ DIFFABLE_STATIC(ChainElem, g_EffectManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_EffectManagerDrawChain);
 
 // STUB: th08 0x4281e0
-void EffectManager::FUN_004281e0()
+void EffectManager::DrawParticles()
 {
 }
 
@@ -371,7 +371,7 @@ ZunResult EffectManager::RegisterChain()
 }
 
 // FUNCTION: th08 0x425430
-AnmVm *EffectManager::FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c)
+AnmVm *EffectManager::SpawnEffect(i32 a, Float3 *pos, i32 b, i32 c)
 {
     EffectManagerParticle *p = &this->particles[this->unk0];
     AnmVm *result;
@@ -385,7 +385,7 @@ AnmVm *EffectManager::FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c)
             this->unk0 = 0;
         }
 
-        if (p->unk350 != 0)
+        if (p->alive != 0)
         {
             if (this->unk0 == 0)
             {
@@ -398,30 +398,30 @@ AnmVm *EffectManager::FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c)
             continue;
         }
 
-        if (p->unk358 != NULL)
+        if (p->dataPtr != NULL)
         {
-            g_ZunMemory.Free(p->unk358);
+            g_ZunMemory.Free(p->dataPtr);
         }
 
         memset(p, 0, sizeof(EffectManagerParticle));
 
-        p->unk350 = 1;
-        p->unk351 = (i8)a;
+        p->alive = 1;
+        p->type = (i8)a;
         p->unk2a4 = *pos;
         this->unk8b054->SetAndExecuteScriptIdx((AnmVm *)p, g_EffectTemplates[a].field0);
 
         p->flags |= 0x2000;
-        p->unk1f0 = c;
-        p->unk288 = 0;
-        p->unk28c = 0;
-        p->unk290 = 0;
-        p->unk348 = g_EffectTemplates[a].field4;
+        p->spawnParam = c;
+        p->drawOffsetX = 0;
+        p->drawOffsetY = 0;
+        p->drawOffsetZ = 0;
+        p->updateFn = g_EffectTemplates[a].field4;
 
         if (g_EffectTemplates[a].field8 != NULL)
         {
             if (g_EffectTemplates[a].field8(p) != 0)
             {
-                p->unk350 = 0;
+                p->alive = 0;
             }
         }
 
@@ -456,20 +456,20 @@ AnmVm *EffectManager::FUN_00425430(i32 a, Float3 *pos, i32 b, i32 c)
 }
 
 // FUNCTION: th08 0x425870
-AnmVm *EffectManager::FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d)
+AnmVm *EffectManager::SpawnEffectAtSlot(i32 a, Float3 *pos, i32 b, i32 c, i32 d)
 {
     EffectManagerParticle *p = &this->particles[b + 0x280];
 
-    if (p->unk358 != NULL)
+    if (p->dataPtr != NULL)
     {
-        g_ZunMemory.Free(p->unk358);
+        g_ZunMemory.Free(p->dataPtr);
     }
 
     memset(p, 0, sizeof(EffectManagerParticle));
 
-    p->unk328 = b;
-    p->unk350 = 1;
-    p->unk351 = (i8)a;
+    p->slotIdx = b;
+    p->alive = 1;
+    p->type = (i8)a;
     p->unk2a4 = *pos;
 
     if (g_EffectTemplates[a].field0 >= 0)
@@ -478,17 +478,17 @@ AnmVm *EffectManager::FUN_00425870(i32 a, Float3 *pos, i32 b, i32 c, i32 d)
     }
 
     p->flags |= 0x2000;
-    p->unk1f0 = d;
-    p->unk288 = 0;
-    p->unk28c = 0;
-    p->unk290 = 0;
-    p->unk348 = g_EffectTemplates[a].field4;
+    p->spawnParam = d;
+    p->drawOffsetX = 0;
+    p->drawOffsetY = 0;
+    p->drawOffsetZ = 0;
+    p->updateFn = g_EffectTemplates[a].field4;
 
     if (g_EffectTemplates[a].field8 != NULL)
     {
         if (g_EffectTemplates[a].field8(p) != 0)
         {
-            p->unk350 = 0;
+            p->alive = 0;
         }
     }
 
@@ -502,7 +502,7 @@ void *EffectManager::AllocEffectSlot(i32 type, Float3 *pos, i32 b, i32 c)
     return NULL;
 }
 
-void EffectManager::FUN_00425650(i32 a0, Float3 *pos, Float3 *localPos, i32 a1, i32 a2)
+void EffectManager::SpawnEffectLocal(i32 a0, Float3 *pos, Float3 *localPos, i32 a1, i32 a2)
 {
 }
 

@@ -600,8 +600,8 @@ i32 Player::FUN_0044cbf0()
                 *(u8 *)(this->unkE2b28 + 0x350) = 0;
                 this->unkE2b28 = 0;
             }
-            g_EffectManager.FUN_00425870(0xc, &this->positionCenter, 3, 1, 0xff4040ff);
-            g_EffectManager.FUN_00425430(0x6, &this->positionCenter, 0x10, -1);
+            g_EffectManager.SpawnEffectAtSlot(0xc, &this->positionCenter, 3, 1, 0xff4040ff);
+            g_EffectManager.SpawnEffect(0x6, &this->positionCenter, 0x10, -1);
             g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0xf, this->positionCenter.x);
             g_PlayerFlags &= ~PLAYER_FLAG_ANIM_PAUSE_MASK;
             g_AnmManager->FUN_0040bab0();
@@ -908,12 +908,12 @@ i32 Player::FUN_0044aec0()
                 this->velocityX = 0;
                 if (this->unk8 >= 4)
                 {
-                    g_EffectManager.FUN_00425430(0x1d, &this->positionCenter, 1, 0x80ff8080);
+                    g_EffectManager.SpawnEffect(0x1d, &this->positionCenter, 1, 0x80ff8080);
                 }
             }
             if (this->effectVm == 0)
             {
-                this->effectVm = g_EffectManager.FUN_00425870(0x16, &this->positionCenter, 2, 1, -1);
+                this->effectVm = g_EffectManager.SpawnEffectAtSlot(0x16, &this->positionCenter, 2, 1, -1);
             }
             this->unk8 = 0;
             this->unkE2ae8.SetCurrent(0);
@@ -972,7 +972,7 @@ i32 Player::FUN_0044aec0()
                 this->velocityX = 0;
                 if (this->unk8 >= 4)
                 {
-                    g_EffectManager.FUN_00425430(0x1c, &this->positionCenter, 1, 0x808080ff);
+                    g_EffectManager.SpawnEffect(0x1c, &this->positionCenter, 1, 0x808080ff);
                 }
             }
             if (this->effectVm != 0)
@@ -1168,7 +1168,7 @@ i32 Player::FUN_0044aec0()
     {
         if (this->barrierParticle == 0)
         {
-            this->barrierParticle = (EffectManagerParticle *)g_EffectManager.FUN_00425870(0x19, &this->positionCenter, 8, 1, -1);
+            this->barrierParticle = (EffectManagerParticle *)g_EffectManager.SpawnEffectAtSlot(0x19, &this->positionCenter, 8, 1, -1);
         }
     }
     if (this->barrierParticle != 0)
@@ -1176,7 +1176,7 @@ i32 Player::FUN_0044aec0()
         this->barrierParticle->unk2a4 = this->positionCenter;
         if (g_GameManager.GaugeIsExtremelyHuman() == 0 && g_GameManager.GaugeIsExtremelyYoukai() == 0)
         {
-            this->barrierParticle->unk350 = 0;
+            this->barrierParticle->alive = 0;
             this->barrierParticle = NULL;
         }
     }

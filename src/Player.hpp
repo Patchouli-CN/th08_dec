@@ -198,7 +198,7 @@ struct Player
     void (Player::*unk_1014[4])(); // 0x1014
     unknown_fields(0x1024, 0xb7810);
     ShotSlot shots[0x180];       // 0xb8834 (0xbb834 = &shots[0xc0] aliases a sub-range)
-    AnmVm *effectVm;             // 0xbe834  bound/barrier effect particle VM (FUN_00425870)
+    AnmVm *effectVm;             // 0xbe834  bound/barrier effect particle VM (SpawnEffectAtSlot)
     PlayerBulletVm bullets[0x80];
     unknown_fields(0xe2a38, 0x30);
     i32 shotIndex;               // 0xe2a68
@@ -229,7 +229,7 @@ struct Player
     ChainElem *drawChainLowPrio;
     i32 unkE2b1c;                // 0xe2b1c
     unknown_fields(0xe2b20, 0x4);
-    EffectManagerParticle *barrierParticle;  // 0xe2b24  (EffectManager::FUN_00425870 handle)
+    EffectManagerParticle *barrierParticle;  // 0xe2b24  (EffectManager::SpawnEffectAtSlot handle)
     i32 unkE2b28;                // 0xe2b28
     i32 unkE2b2c;                // 0xe2b2c
     unknown_fields(0xe2b30, 0x18c);

@@ -70,7 +70,7 @@ ChainCallbackResult Background::OnUpdate(Background *background)
         if (background->unk0xae8 == NULL)
         {
             Float3 effectPos = Float3(0.0f, 0.0f, 0.0f);
-            background->unk0xae8 = g_EffectManager.FUN_00425870(0x40, &effectPos, 0xc, 1, -1);
+            background->unk0xae8 = g_EffectManager.SpawnEffectAtSlot(0x40, &effectPos, 0xc, 1, -1);
             background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xb);
         }
         if (background->unk0x6260 == 1)
@@ -503,7 +503,7 @@ afterDispatchLoop:
             {
                 for (i = 0; i < 12; i++)
                 {
-                    sprite = (u8 *)g_EffectManager.FUN_00425430(0x3e, &background->unk0x6480[i], 1, 0x20ffffff);
+                    sprite = (u8 *)g_EffectManager.SpawnEffect(0x3e, &background->unk0x6480[i], 1, 0x20ffffff);
                     sprite[0x354] = 4;
                 }
             }
@@ -698,7 +698,7 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
                 g_Supervisor.DisableFog();
             }
 
-            g_EffectManager.FUN_004281e0();
+            g_EffectManager.DrawParticles();
 
             if (background->unk0xb24 == 1)
             {
@@ -1112,9 +1112,9 @@ void __fastcall FUN_00426d10(Float3 *pos)
 
     for (i32 i = 0; i < 512; i++, p++)
     {
-        if (p->unk351 == 0x33)
+        if (p->type == 0x33)
         {
-            p->unk2d4 += *pos;
+            p->pos += *pos;
         }
     }
 }

@@ -69,7 +69,7 @@ struct EclContext
     ZunTimer waitTimer;            // 0x90
     EclInterp interps[8];          // 0x9c (8 * 0x30 = 0x180)
     i32 laserNotInUse;             // 0x21c
-    i32 unk220;                    // 0x220  sub-context index (set by exit)
+    i32 subContextIndex;           // 0x220  sub-context index (set by exit; 0 = top context)
     i16 subId;                     // 0x224
     unknown_fields(0x226, 0x2);
 };

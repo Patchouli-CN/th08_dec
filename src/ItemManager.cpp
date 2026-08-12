@@ -626,7 +626,7 @@ void ItemManager::ConvertAllPowerItemsToTimeOrbs(Item *item)
                     cur->startPositionOrVelocity.y = -0.5f;
                     cur->startPositionOrVelocity.z = 0.0f;
                 }
-                g_EffectManager.FUN_00425430(0, &cur->currentPosition, 1, -1);
+                g_EffectManager.SpawnEffect(0, &cur->currentPosition, 1, -1);
                 cur->itemType = ITEM_POINT_SMALL;
                 g_EffectAnmLoaded->SetAndExecuteScriptIdx(&cur->sprite, 0x45);
             }
