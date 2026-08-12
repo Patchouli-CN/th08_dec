@@ -41,7 +41,8 @@ struct EffectManagerParticle
     unknown_fields(0x34c, 0x4);
     i8 alive;                         // 0x350  (1 = active, 0 = done)
     i8 type;                          // 0x351  (effect template type a)
-    unknown_fields(0x352, 0x6);
+    i8 despawnFlag;                   // 0x352  (set to 1 by Enemy::ClearEffectSlots to kill the effect)
+    unknown_fields(0x353, 0x5);
     void *dataPtr;                    // 0x358  (allocated data pointer freed on despawn)
     unknown_fields(0x35c, 0x4);
 };

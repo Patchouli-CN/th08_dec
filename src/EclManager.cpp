@@ -17,6 +17,10 @@
 namespace th08
 {
 
+// ECL arg access macros for the RunEcl helper functions (各 helper 的形参名统一为 enemy/instr)。
+#define ECL_ARG_INT(n) ((instr->paramMask & (1 << (n))) ? GetVarValue(enemy, instr->args[n].i) : instr->args[n].i)
+#define ECL_ARG_FLT(n) ((instr->paramMask & (1 << (n))) ? enemy->GetEclFloatVar(instr->args[n].i) : instr->args[n].f)
+
 // SpawnEnemy op 参数拷贝 (case 92/93): 7 dword = subId + Float3 + 3 int
 struct EnemySpawnData
 {
@@ -26,6 +30,8 @@ struct EnemySpawnData
 };
 
 DIFFABLE_STATIC(EclManager, g_EclManager);
+DIFFABLE_STATIC(f32, g_EclExitLeftBound); // 0x17d61ac (op169/178/67 出口左边界, BSS 零初始化)
+DIFFABLE_STATIC_ARRAY(EclInterpFn, 8, g_EclInterpFnTable); // 0x4c6c90 ECL 插值函数表 (op36 SetupEclInterp 索引)
 DIFFABLE_STATIC_ARRAY(EclExInstr, 32, g_EclExInsn); // 0x4c6cb0
 DIFFABLE_STATIC(EclGlobalObj, g_EclGlobalObj);      // 0x4ea670
 DIFFABLE_STATIC(EclInterruptTable, g_EclInterruptTable); // 0x4eccb8
@@ -51,6 +57,9 @@ enum
     ECL_FLAG_CLEAR_MOVE = 0x80000,          // 清除移动 (op76)
     ECL_FLAG_SPECIAL_EFFECT = 0x10000000,   // 特殊特效 (op79/80)
     ECL_FLAG_ITEM_SCATTER = 0x4000,         // (保留位, op79/80 相关)
+    ECL_FLAG_MOVE_VEL_MASK = 0xfffe3fff,    // 清 bits14-17 (SetMoveVelocity 速度移动模式位)
+    ECL_FLAG_MOVE_VEL2 = 0x2000,            // bit13 (SetMoveVelocity 设置; 与 bits12-13 MOVE_MODE 相区分)
+    ECL_FLAG_FLIP_VEL_X = 0x40000,          // bit18 (SetMoveVelocity: 置位时反转 moveVelVec.x)
     ECL_FLAG_NO_SAVE_ON_INTERRUPT = 0x4000000, // 中断时不保存上下文 (op151, handleInterrupt)
     ECL_FLAG_SCORE_MODE = 0x40000000,       // (op173/176)
     ECL_FLAG_TRACK_POS = 0x200,             // 按位置移动 (op92)
@@ -97,6 +106,7 @@ void __fastcall SetSubVmAnm(Enemy *enemy, EclRawInstr *instr);           // 0x42
 void __fastcall SetMoveAngleToPlayer(Enemy *enemy, EclRawInstr *instr);  // 0x422020 (op67: 依玩家角度+moveSpeedA 阈值算瞄准角)
 void __fastcall SetRandomExitAngle(Enemy *enemy, EclRawInstr *instr);    // 0x4224a0 (op178: 依 pos.x 计算出口随机角)
 void __fastcall RunLaserScript(Enemy *enemy, EclRawInstr *instr);           // 0x422720 (laser op96-104)
+void __fastcall FUN_004222b0(Enemy *enemy, EclRawInstr *instr, f32 angle); // 0x4222b0 (op67/178 瞄准角辅助, 未逆向)
 
 // op90-93 底层 helper（内部逻辑无需逆向，call 目标归一化为 T，只需签名/返回类型正确）
 Enemy *__fastcall GetLastSubEnemy(Enemy *enemy);                            // 0x41efc0 获取关联 Enemy (ecx)
@@ -133,8 +143,21 @@ void Enemy::InitMoveAfterSetPos()
 {
 }
 
+// FUNCTION: th08 0x42a820
+#pragma var_order(i)
 void Enemy::ClearEffectSlots()
 {
+    i32 i;
+    for (i = 0; i < this->effectSlotIdx; i++)
+    {
+        if (this->effectSlots[i] == 0)
+        {
+            continue;
+        }
+        ((EffectManagerParticle *)this->effectSlots[i])->despawnFlag = 1;
+        this->effectSlots[i] = NULL;
+    }
+    this->effectSlotIdx = 0;
 }
 
 void Enemy::UpdateEnemyMove()
@@ -168,12 +191,44 @@ void __fastcall RunEclGlobal(Enemy *enemy, EclRawInstr *instr)
 {
 }
 
+// FUNCTION: th08 0x421300
+#pragma var_order(t)
 void __fastcall EclLerp(Enemy *enemy, EclRawInstr *instr)
 {
+    // op35: *f0 = f2 + (f1-f2)*f3 — 原版两次读取 arg2 (一次算 f1-f2, 一次做最终加法)
+    f32 t;
+    t = ((instr->paramMask & 0x2) ? enemy->GetEclFloatVar(instr->args[1].i) : instr->args[1].f) -
+        ((instr->paramMask & 0x4) ? enemy->GetEclFloatVar(instr->args[2].i) : instr->args[2].f);
+    *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
+        t * ((instr->paramMask & 0x8) ? enemy->GetEclFloatVar(instr->args[3].i) : instr->args[3].f) +
+        ((instr->paramMask & 0x4) ? enemy->GetEclFloatVar(instr->args[2].i) : instr->args[2].f);
 }
 
+// FUNCTION: th08 0x4213f0
+#pragma var_order(i, interp)
 void __fastcall SetupEclInterp(Enemy *enemy, EclRawInstr *instr)
 {
+    // op36: 找空槽 (fn==0) 或 args[7].f 匹配的槽, 填充插值参数
+    EclInterp *interp;
+    i32 i;
+    interp = &enemy->curContextPtr->interps[0];
+    for (i = 0; i < 8; i++, interp++)
+    {
+        if (interp->fn == 0 || interp->args[7].f == instr->args[0].f)
+        {
+            interp->timer.SetCurrent(0);
+            interp->args[7].i = instr->args[0].i;
+            interp->args[0].i = (instr->paramMask & 0x2) ? GetVarValue(enemy, instr->args[1].i) : instr->args[1].i;
+            interp->args[1].i = (instr->paramMask & 0x4) ? GetVarValue(enemy, instr->args[2].i) : instr->args[2].i;
+            interp->args[2].i = (instr->paramMask & 0x8) ? GetVarValue(enemy, instr->args[3].i) : instr->args[3].i;
+            interp->fn = g_EclInterpFnTable[interp->args[1].i];
+            interp->args[3].f = (instr->paramMask & 0x10) ? enemy->GetEclFloatVar(instr->args[4].i) : instr->args[4].f;
+            interp->args[4].f = (instr->paramMask & 0x20) ? enemy->GetEclFloatVar(instr->args[5].i) : instr->args[5].f;
+            interp->args[5].f = (instr->paramMask & 0x40) ? enemy->GetEclFloatVar(instr->args[6].i) : instr->args[6].f;
+            interp->args[6].f = (instr->paramMask & 0x80) ? enemy->GetEclFloatVar(instr->args[7].i) : instr->args[7].f;
+            break;
+        }
+    }
 }
 
 EclRawInstr *__fastcall RunSubScript(Enemy *enemy, EclRawInstr *instr)
@@ -194,16 +249,124 @@ i32 __fastcall RunSubContext(Enemy *enemy, EclRawInstr *instr)
     return 0;
 }
 
+// FUNCTION: th08 0x420d10
+#pragma var_order(angle)
 void __fastcall SetMoveVelocity(Enemy *enemy, EclRawInstr *instr)
 {
+    // op66/69 arg0>0: 角度→速度向量 (moveVelVec) + 插值起点 (moveInterp1=movePos) + 移动模式位
+    f32 angle;
+    angle = AddNormalizeAngle(ECL_ARG_FLT(2), 0.0f);
+    enemy->moveVelVec.x = cosf(angle) * ECL_ARG_FLT(3) * ECL_ARG_INT(0);
+    enemy->moveVelVec.y = sinf(angle) * ECL_ARG_FLT(3) * ECL_ARG_INT(0);
+    enemy->moveVelVec.z = 0;
+    *(Float3 *)&enemy->moveInterp1 = enemy->movePos;
+    enemy->moveTimer.SetCurrent(enemy->moveTicks = ECL_ARG_INT(0));
+    enemy->flags = ((ECL_ARG_INT(1) & 0x7) << 0xe) | (enemy->flags & ECL_FLAG_MOVE_VEL_MASK);
+    enemy->flags = (enemy->flags & 0xffffcfff) | ECL_FLAG_MOVE_VEL2;
+    if ((enemy->flags >> 0x12) & 1)
+    {
+        enemy->moveVelVec.x = -enemy->moveVelVec.x;
+    }
 }
 
+// FUNCTION: th08 0x421e50
 void __fastcall SetSubVmAnm(Enemy *enemy, EclRawInstr *instr)
 {
+    // op57/61: 在 enemy->vms[arg0] 播动画; arg1<0 则设 scriptIndex=0xffff 停播
+    if (ECL_ARG_INT(0) >= 2)
+    {
+        th08::utils::DebugPrint("error : sub anim overflow\r\n");
+    }
+    if (ECL_ARG_INT(1) >= 0)
+    {
+        if ((enemy->anmFlags >> 2) & 1)
+        {
+            g_EnemyAnmLoaded2.SetAndExecuteScriptIdx(&enemy->vms[ECL_ARG_INT(0)], ECL_ARG_INT(1));
+        }
+        else
+        {
+            g_EnemyAnmLoaded.SetAndExecuteScriptIdx(&enemy->vms[ECL_ARG_INT(0)], ECL_ARG_INT(1));
+        }
+    }
+    else
+    {
+        enemy->vms[ECL_ARG_INT(0)].scriptIndex = -1;
+    }
 }
 
+// 0x4222b0 (op67/178 辅助, 未逆向 — 仅提供符号供链接)
+void __fastcall FUN_004222b0(Enemy *enemy, EclRawInstr *instr, f32 angle)
+{
+}
+
+// FUNCTION: th08 0x422020
+#pragma var_order(angle)
 void __fastcall SetMoveAngleToPlayer(Enemy *enemy, EclRawInstr *instr)
 {
+    // op67: 依玩家角度+moveSpeedA/C/B/D 阈值算瞄准角; arg0>0 走 0x4222b0, 否则写 moveAngle/moveRadius
+    f32 angle;
+    if (g_EclExitLeftBound < enemy->pos.x)
+    {
+        angle = AddNormalizeAngle(g_Rng.GetRandomF32InRange(1.5707964f) + 2.3561945f, 0.0f);
+    }
+    else
+    {
+        angle = g_Rng.GetRandomF32InRange(1.5707964f) - 0.7853982f;
+    }
+    if (enemy->moveSpeedA + 96.0f > enemy->pos.x)
+    {
+        if (angle > 1.5707964f)
+        {
+            angle = 3.1415927f - angle;
+        }
+        else if (angle < -1.5707964f)
+        {
+            angle = -3.1415927f - angle;
+        }
+    }
+    if (enemy->moveSpeedC - 96.0f < enemy->pos.x)
+    {
+        if (angle < 1.5707964f)
+        {
+            if (angle >= 0.0f)
+            {
+                angle = 3.1415927f - enemy->moveAngle;
+            }
+        }
+        else
+        {
+            if (angle <= 0.0f)
+            {
+                angle = -3.1415927f - angle;
+            }
+        }
+    }
+    if (enemy->moveSpeedB + 48.0f > enemy->pos.y)
+    {
+        if (angle < 0.0f)
+        {
+            angle = -angle;
+        }
+    }
+    if (enemy->moveSpeedD - 48.0f < enemy->pos.y)
+    {
+        if (angle > 0.0f)
+        {
+            angle = -angle;
+        }
+    }
+    if (ECL_ARG_INT(0) > 0)
+    {
+        FUN_004222b0(enemy, instr, angle);
+    }
+    else
+    {
+        enemy->moveAngle = angle;
+        enemy->moveRadius = ECL_ARG_FLT(2);
+        enemy->flags = (enemy->flags & 0xffffcfff) | 0x1000;
+        enemy->moveTicks = 0;
+        enemy->moveTimer.SetCurrent(0);
+    }
 }
 
 void __fastcall SetRandomExitAngle(Enemy *enemy, EclRawInstr *instr)

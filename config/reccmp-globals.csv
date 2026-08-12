@@ -45,6 +45,7 @@ th08::g_LastSpellNumbers,0x4c6b90,global
 th08::g_LastSpellCount,0x4c6c3c,global
 th08::g_SpellcardNumbersPerStage,0x4c6c40,global
 th08::g_SpellcardCountPerStage,0x4c6c68,global
+th08::g_EclInterpFnTable,0x4c6c90,global
 th08::g_EclExInsn,0x4c6cb0,global
 th08::g_EffectTemplates,0x4c6d30,global
 th08::g_StageAnmFiles,0x4c72f8,global
@@ -138,6 +139,7 @@ th08::g_Supervisor,0x17ce758,global
 th08::g_SupervisorLoadingVms,0x17ceac0,global
 th08::g_MusicRoom,0x17cf4c8,global
 th08::g_Player,0x17d5ef8,global
+th08::g_EclExitLeftBound,0x17d61ac,global
 th08::g_ReplayManager,0x18b8a28,global
 th08::g_ScreenEffectCounter,0x18b8a2c,global
 th08::g_ScreenEffect,0x18b8a30,global
@@ -207,6 +209,7 @@ th08::g_PlayerUnknown0bd,0x164d0bd,global
 th08::g_CurrentSpellcardNumber,0x164d0b8,global
 th08::g_EnemyAnmLoaded,0xf54e0c,global
 th08::g_EnemyAnmLoaded2,0xf54e10,global
+th08::g_EclInterpFnTable,0x4c6c90,global
 th08::g_EclExInsn,0x4c6cb0,global
 th08::g_BulletSpawnFlag,0xf54e18,global
 th08::g_BulletSpawnFlag2,0xf54e2c,global

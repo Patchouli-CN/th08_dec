@@ -119,7 +119,7 @@ struct Enemy
     f32 moveInterp5;                   // 0x2db0  SET_MOVE_INTERP arg5 (mode3 螺旋半径)
     f32 moveInterp6;                   // 0x2db4  SET_MOVE_INTERP arg6 (mode3 径向速度)
     Float3 moveVec2;                    // 0x2db8  (movement vector, op110 sets it)
-    unknown_fields(0x2dc4, 0xc);       // 0x2dc4-0x2dd0
+    Float3 moveVelVec;                  // 0x2dc4  (角度→速度向量; SetMoveVelocity op66/69 写入, 逐帧累加到 movePos)
     f32 moveInterp1;                   // 0x2dd0  SET_MOVE_INTERP arg1 (mode3 螺旋中心 x / mode2 插值起点)
     f32 moveInterp2;                   // 0x2dd4  SET_MOVE_INTERP arg2 (mode3 螺旋中心 y)
     unknown_fields(0x2dd8, 0x4);       // 0x2dd8-0x2ddc
