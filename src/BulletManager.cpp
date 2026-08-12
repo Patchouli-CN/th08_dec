@@ -25,6 +25,7 @@ DIFFABLE_STATIC(AnmLoaded *, g_BulletAnm);
 DIFFABLE_STATIC_ARRAY(u8, 0x600 * 0x10b8, g_BulletPool);
 
 // FUNCTION: th08 0x42f360
+#pragma var_order(i, pool)
 void BulletManager::Initialize()
 {
     memset(this, 0, 0x6ba578);
@@ -36,7 +37,8 @@ void BulletManager::Initialize()
 
     /* 敌弹池：0x600 个 0x10b8 字节的槽位，各槽内若干 u16 索引字段初始化为 -1。 */
     EnemyBullet *pool = (EnemyBullet *)g_BulletPool;
-    for (i32 i = 0; i < 0x600; i++, pool++)
+    i32 i;
+    for (i = 0; i < 0x600; i++, pool++)
     {
         /* 原版按 0x21a → 0xcaa → 0x4be → 0x762 → 0xa06 顺序写入（字节级保持）。 */
         pool->chainIndex0 = 0xffff;
@@ -48,6 +50,7 @@ void BulletManager::Initialize()
 }
 
 // FUNCTION: th08 0x430830 (99% FIXME: 浮点 <= 的 jp+jmp vs jne)
+#pragma var_order(pos, r1, i, cosX, pool, b, sinX, speed)
 void BulletManager::RemoveAllBullets(i32 param)
 {
     EnemyBullet *pool = (EnemyBullet *)g_BulletPool;
@@ -135,9 +138,8 @@ void BulletManager::RemoveAllBullets(i32 param)
         b->param4 = 0;
     }
 
-    /* 0x6ba53c 清场计数/状态 (clearCount)：置 10。
-     * 注：结构体成员尚未对齐到该偏移（声明大小与注释偏移不符），暂用裸指针保持字节一致。 */
-    *(i32 *)((u8 *)this + 0x6ba53c) = 0xa;
+    /* 0x6ba53c 清场计数/状态 (clearCount)：置 10。 */
+    this->clearCount = 0xa;
 }
 
 void BulletManager::bulletmanager_fun_00415c60()

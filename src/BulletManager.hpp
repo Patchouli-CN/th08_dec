@@ -85,19 +85,19 @@ struct BulletManager
     EnemySubData *AllocShotSlot(EnemyShotData *src); // 0x430f20 (claim a data slot)
 
     unknown_fields(0x0, 0x1a880);
-    /* NOTE: 原版该区域为 0x1a880..0x660638 (0x645db8 字节, 敌弹池 + 0xdb8 字节其余数据)。
-     * 此处按现状声明 0x4a5b8 字节——修正大小会改变 Initialize/RemoveAllBullets 的
-     * 编译字节输出，故为保持字节级一致而保留。 */
-    u8 enemyBulletPool[0x4a5b8]; /* 0x1a880 敌弹池区域 (原版 OnUpdate 用 this+0x1a880 作 0x600 槽池基址) */
-    u16 bulletCount;             /* 0x660638 计数/索引 (Initialize 设 6; 原版仅此处写入) */
-    unknown_fields(0x66063a, 0x45116);  /* 0x66063a */
-    char *etamaAnmPath;          /* 0x6ba550 */
-    unknown_fields(0x6ba554, 0x18);     /* 0x6ba554 */
-    i32 bulletPoolPtr;           /* 0x6ba56c 弹池起始/当前槽指针 (Initialize: (i32)&enemyBulletPool) */
-    i32 itemType;                /* 0x6ba570 清场掉落的道具类型 (SpawnItem itemType; Initialize 设 6) */
-    unknown_fields(0x6ba574, 0x4);      /* 0x6ba574 */
-    /* 0x6ba53c 清场计数/状态 (clearCount): RemoveAllBullets 置 10——因结构体成员尚未对齐到
-     * 该偏移，cpp 中以裸指针访问 (*(i32 *)((u8 *)this + 0x6ba53c))。 */
+    /* 0x1a880..0x660638: 敌弹池区域 (0x600 x 0x10b8 槽 + 0xdb8 其余数据)。
+     * 原版 OnUpdate 用 this+0x1a880 作 0x600 槽池基址; Initialize/RemoveAllBullets
+     * 经 g_BulletPool (即 g_BulletManager+0x1a880, 同一块内存) 访问。 */
+    u8 enemyBulletPool[0x645db8];        /* 0x1a880 */
+    u16 bulletCount;                     /* 0x660638 计数/索引 (Initialize 设 6; 原版仅此处写入) */
+    unknown_fields(0x66063a, 0x59f02);   /* 0x66063a..0x6ba53c */
+    i32 clearCount;                      /* 0x6ba53c 清场计数/状态 (RemoveAllBullets 置 10) */
+    unknown_fields(0x6ba540, 0x10);      /* 0x6ba540..0x6ba550 */
+    char *etamaAnmPath;                  /* 0x6ba550 */
+    unknown_fields(0x6ba554, 0x18);      /* 0x6ba554..0x6ba56c */
+    i32 bulletPoolPtr;                   /* 0x6ba56c 弹池起始/当前槽指针 (Initialize: (i32)&enemyBulletPool) */
+    i32 itemType;                        /* 0x6ba570 清场掉落的道具类型 (SpawnItem itemType; Initialize 设 6) */
+    unknown_fields(0x6ba574, 0x4);       /* 0x6ba574..0x6ba578 */
 
     static ZunResult RegisterChain(char *path);
     static ChainCallbackResult OnUpdate(BulletManager *bulletManager);
@@ -106,6 +106,7 @@ struct BulletManager
     static ZunResult DeletedCallback(BulletManager *bulletManager);
     static void CutChain();
 };
+C_ASSERT(sizeof(BulletManager) == 0x6ba578);
 
 DIFFABLE_EXTERN(BulletManager, g_BulletManager);
 DIFFABLE_EXTERN(AnmLoaded *, g_BulletAnm);
