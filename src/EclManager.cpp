@@ -236,7 +236,7 @@ ZunResult EclManager::Load(const char *path)
 
 // FUNCTION: th08 0x4184b0 (逆向中)
 #pragma var_order(arg, subCtxIdx, instr, p4,                                                                            \
-                  p5, p6, p7, p8, v89node, v89head, v90node, v90head, v91node, v91head, v110ld, p16, p17, p18, p19,    \
+                  p5, p6, p7, p8, v89node, v89head, v90node, v90head, v91node, v91head, v110ld, v113sd, v113args, p18, p19, \
                   p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
                   p50, p51, p52, p53, p54, p55, p56, iInterp, t, flag, interp, savedPos, i, p65, p66,                 \
@@ -268,7 +268,9 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     Enemy *v91node;       // slot 13 (case 91: 弹幕生成 node)
     Enemy *v91head;       // slot 14 (case 91: 弹幕生成 head)
     EnemyLaserData *v110ld; // slot 15 (case 110: 激光数据指针)
-    i32 p16, p17, p18, p19;
+    EnemyShotData *v113sd;    // slot 16 (case 113: 弹幕数据指针)
+    AnyArg *v113args;    // slot 17 (case 113: args 指针)
+    i32 p18, p19;
     i32 p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34;
     i32 p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49;
     i32 p50, p51, p52, p53, p54, p55, p56;
@@ -1405,26 +1407,65 @@ restart:
                 enemy->moveVec2.z = 0;
                 goto skipInstr;
             case 113: case 114: // opcode 114-115 = 注册弹幕数据 (填充 shotData → AllocShotSlot)
-                {
-                    EnemyShotData *sd = &enemy->shotData;
-                    sd->pos = enemy->movePos + enemy->moveVec2;
-                    sd->subId = (i16)instr->args[0].i;
-                    sd->anmIdx = (i16)ECL_IVAL(1);
-                    sd->unk10 = ECL_FVAL(2);
-                    sd->unk18 = ECL_FVAL(3);
-                    sd->unk1d0 = ECL_FVAL(4);
-                    sd->unk1d4 = ECL_FVAL(5);
-                    sd->unk1d8 = ECL_FVAL(6);
-                    sd->unk1dc = ECL_FVAL(7);
-                    sd->unk1e0 = ECL_IVAL(8);
-                    sd->unk1e4 = ECL_IVAL(9);
-                    sd->unk1e8 = ECL_IVAL(10);
-                    sd->unk1ec = instr->args[11].i;
-                    sd->unk1f0 = instr->args[12].i;
-                    sd->unk1f8 = (instr->id == ECL_SHOT_SLOT_ID_LASER) ? 0 : 1;
-                    sd->unk1fc = instr->args[13].i;
-                    enemy->shotSlots[enemy->shotSlotIdx] = g_BulletManager.AllocShotSlot(sd);
-                }
+                v113args = instr->args;
+                v113sd = &enemy->shotData;
+                v113sd->pos = enemy->movePos + enemy->moveVec2;
+                v113sd->subId = (i16)v113args[0].i;
+                if (instr->paramMask & 0x2)
+                    v113a = GetVarValue(enemy, v113args[1].i);
+                else
+                    v113a = v113args[1].i;
+                v113sd->anmIdx = (i16)v113a;
+                if (instr->paramMask & 0x4)
+                    v113b = enemy->GetEclFloatVar(v113args[2].i);
+                else
+                    v113b = v113args[2].f;
+                v113sd->unk10 = v113b;
+                if (instr->paramMask & 0x8)
+                    v113c = enemy->GetEclFloatVar(v113args[3].i);
+                else
+                    v113c = v113args[3].f;
+                v113sd->unk18 = v113c;
+                if (instr->paramMask & 0x10)
+                    v113d = enemy->GetEclFloatVar(v113args[4].i);
+                else
+                    v113d = v113args[4].f;
+                v113sd->unk1d0 = v113d;
+                if (instr->paramMask & 0x20)
+                    v113e = enemy->GetEclFloatVar(v113args[5].i);
+                else
+                    v113e = v113args[5].f;
+                v113sd->unk1d4 = v113e;
+                if (instr->paramMask & 0x40)
+                    v113f = enemy->GetEclFloatVar(v113args[6].i);
+                else
+                    v113f = v113args[6].f;
+                v113sd->unk1d8 = v113f;
+                if (instr->paramMask & 0x80)
+                    v113g = enemy->GetEclFloatVar(v113args[7].i);
+                else
+                    v113g = v113args[7].f;
+                v113sd->unk1dc = v113g;
+                if (instr->paramMask & 0x100)
+                    v113h = GetVarValue(enemy, v113args[8].i);
+                else
+                    v113h = v113args[8].i;
+                v113sd->unk1e0 = v113h;
+                if (instr->paramMask & 0x200)
+                    v113i = GetVarValue(enemy, v113args[9].i);
+                else
+                    v113i = v113args[9].i;
+                v113sd->unk1e4 = v113i;
+                if (instr->paramMask & 0x400)
+                    v113j = GetVarValue(enemy, v113args[10].i);
+                else
+                    v113j = v113args[10].i;
+                v113sd->unk1e8 = v113j;
+                v113sd->unk1ec = v113args[11].i;
+                v113sd->unk1f0 = v113args[12].i;
+                v113sd->unk1f8 = (instr->id == ECL_SHOT_SLOT_ID_LASER) ? 0 : 1;
+                v113sd->unk1fc = v113args[13].i;
+                enemy->shotSlots[enemy->shotSlotIdx] = g_BulletManager.AllocShotSlot(v113sd);
                 goto skipInstr;
             case 115: // opcode 116 = 设置 shotSlotIdx
                 if (instr->paramMask & 0x1)
