@@ -245,7 +245,7 @@ ZunResult EclManager::Load(const char *path)
 // FUNCTION: th08 0x4184b0 (逆向中)
 #pragma var_order(arg, subCtxIdx, instr, v37n, v37m, v38dx, v38dy, p8,                                              \
                   v89node, v89head, v90node, v90head, v91node, v91head, v110ld, v113sd, v113args, p18, p19, \
-                  v130i, v157v, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
+                  v130i, v157v, p22, p23, p24, v141cnt, v141i, v141z, v141y, v141x, v167cnt, v167i, v167z, v167y, v167x, \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
                   p50, p51, p52, p53, p54, p55, p56, iInterp, t, flag, interp, savedPos, i, p65, p66,                 \
                   p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81, p82, v1, v4a, v4b, v5, \
@@ -292,7 +292,13 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     AnyArg *v113args;    // slot 17 (case 113: args 指针)
     i32 p18, p19;
     i32 v130i, v157v;  // slots 20-21 (case 130 loop counter / case 157 v0 copy)
-    i32 p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34;
+    i32 p22, p23, p24;
+    i32 v141cnt;                  // slot 25 (case 141 循环计数)
+    i32 v141i;                    // slot 26 (case 141 循环变量)
+    f32 v141z, v141y, v141x;      // slots 27/28/29 (case 141 Float3: &v141x 为基址)
+    i32 v167cnt;                  // slot 30 (case 167 循环计数)
+    i32 v167i;                    // slot 31 (case 167 循环变量)
+    f32 v167z, v167y, v167x;      // slots 32/33/34 (case 167 Float3: &v167x 为基址)
     i32 p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49;
     i32 p50, p51, p52, p53, p54, p55, p56;
     i32 p65, p66, p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80;
@@ -397,8 +403,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     f32 v139a, v139b, v139c; i32 v139d, v139e; // slots 299-303 (case 139: 生成特效含局部pos; f3-5 + a1 + a0)
     i32 v142a;        // slot 304 (case 142: unk3304)
     i32 v143a, v143b; // slots 305-306 (case 143: unk3308/330c)
-    i32 v141a, v141b, v141c; // slots 307-309 (case 141: 随机撒物品; count + Float3* x/y)
-    i32 v167a, v167b, v167c; // slots 310-312 (case 167: 随机撒物品; count + Float3* x/y)
+    i32 v141a; f32 *v141b, *v141c; // slots 307-309 (case 141: 随机撒物品; count + Float3* x/y)
+    i32 v167a; f32 *v167b, *v167c; // slots 310-312 (case 167: 随机撒物品; count + Float3* x/y)
     i32 v135a;        // slot 313 (case 135: 间接调用 g_EclExInsn)
     i32 v136a, v136b; // slots 314-315 (case 136: curContext func/eclExInstr)
     i32 v145a;        // slot 316 (case 145: curContext time +=)
@@ -2038,30 +2044,42 @@ restart:
                 enemy->unk330c = v143b;
                 goto skipInstr;
             case 141: // opcode 142 = 随机撒物品 (依 power 决定类型)
+                if (instr->paramMask & 0x1)
+                    v141a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v141a = instr->args[0].i;
+                v141cnt = v141a;
+                for (v141i = 0; v141i < v141cnt; v141i++)
                 {
-                    i32 count = ECL_IVAL(0);
-                    for (i = 0; i < count; i++)
-                    {
-                        Float3 pos = enemy->pos;
-                        pos.x += g_Rng.GetRandomF32() * *(f32 *)ECL_ITEM_SCATTER_RANGE - *(f32 *)ECL_ITEM_SCATTER_OFFSET; // *128 - 32
-                        pos.y += g_Rng.GetRandomF32() * *(f32 *)ECL_ITEM_SCATTER_RANGE - *(f32 *)ECL_ITEM_SCATTER_OFFSET;
-                        if (g_GameManager.GetPower() < 0x80)
-                            g_ItemManager.SpawnItem(&pos, (ItemType)(i == 0 ? 2 : 0), 0);
-                        else
-                            g_ItemManager.SpawnItem(&pos, (ItemType)1, 0);
-                    }
+                    v141x = enemy->pos.x;
+                    v141y = enemy->pos.y;
+                    v141z = enemy->pos.z;
+                    v141b = &((Float3 *)&v141x)->x;
+                    *v141b += g_Rng.GetRandomF32() * *(f32 *)ECL_ITEM_SCATTER_RANGE - *(f32 *)ECL_ITEM_SCATTER_OFFSET; // *128 - 32
+                    v141c = &((Float3 *)&v141x)->y;
+                    *v141c += g_Rng.GetRandomF32() * *(f32 *)ECL_ITEM_SCATTER_RANGE - *(f32 *)ECL_ITEM_SCATTER_OFFSET;
+                    if (g_GameManager.GetPower() < 0x80)
+                        g_ItemManager.SpawnItem((Float3 *)&v141x, (ItemType)(v141i == 0 ? 2 : 0), 0);
+                    else
+                        g_ItemManager.SpawnItem((Float3 *)&v141x, (ItemType)1, 0);
                 }
                 goto skipInstr;
             case 167: // opcode 168 = 随机撒物品 (固定类型 1)
+                if (instr->paramMask & 0x1)
+                    v167a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v167a = instr->args[0].i;
+                v167cnt = v167a;
+                for (v167i = 0; v167i < v167cnt; v167i++)
                 {
-                    i32 count = ECL_IVAL(0);
-                    for (i = 0; i < count; i++)
-                    {
-                        Float3 pos = enemy->pos;
-                        pos.x += g_Rng.GetRandomF32() * *(f32 *)ECL_ITEM_SCATTER_RANGE - *(f32 *)ECL_ITEM_SCATTER_OFFSET; // *128 - 32
-                        pos.y += g_Rng.GetRandomF32() * *(f32 *)ECL_ITEM_SCATTER_RANGE - *(f32 *)ECL_ITEM_SCATTER_OFFSET;
-                        g_ItemManager.SpawnItem(&pos, (ItemType)1, 0);
-                    }
+                    v167x = enemy->pos.x;
+                    v167y = enemy->pos.y;
+                    v167z = enemy->pos.z;
+                    v167b = &((Float3 *)&v167x)->x;
+                    *v167b += g_Rng.GetRandomF32() * *(f32 *)ECL_ITEM_SCATTER_RANGE - *(f32 *)ECL_ITEM_SCATTER_OFFSET; // *128 - 32
+                    v167c = &((Float3 *)&v167x)->y;
+                    *v167c += g_Rng.GetRandomF32() * *(f32 *)ECL_ITEM_SCATTER_RANGE - *(f32 *)ECL_ITEM_SCATTER_OFFSET;
+                    g_ItemManager.SpawnItem((Float3 *)&v167x, (ItemType)1, 0);
                 }
                 goto skipInstr;
             case 144: // opcode 145 = 设置 flags bit25
