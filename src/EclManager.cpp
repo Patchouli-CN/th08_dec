@@ -2106,12 +2106,38 @@ restart:
             case 93: // opcode 94 = SPAWN_ENEMY_REL (pos 相对敌人)
                 if (enemy->laserActive > 0)
                 {
-                    Float3 pos = Float3(ECL_FVAL(1), ECL_FVAL(2), ECL_FVAL(3));
-                    pos = pos + enemy->pos;
-                    i32 life = ECL_IVAL(6);
-                    i32 itemDrop = ECL_IVAL(5);
-                    i32 score = ECL_IVAL(4);
-                    g_EnemyManager.SpawnEnemy2(instr->args[0].i, &pos, life, itemDrop, score,
+                    EnemySpawnData data;
+                    data = *(EnemySpawnData *)&instr->args[0];
+                    Float3 pos;
+                    if (instr->paramMask & 0x2)
+                        v93a = enemy->GetEclFloatVar(data.pos.x);
+                    else
+                        v93a = data.pos.x;
+                    pos.x = v93a;
+                    if (instr->paramMask & 0x4)
+                        v93b = enemy->GetEclFloatVar(data.pos.y);
+                    else
+                        v93b = data.pos.y;
+                    pos.y = v93b;
+                    if (instr->paramMask & 0x8)
+                        v93c = enemy->GetEclFloatVar(data.pos.z);
+                    else
+                        v93c = data.pos.z;
+                    pos.z = v93c;
+                    pos += enemy->pos;
+                    if (instr->paramMask & 0x40)
+                        v93d = GetVarValue(enemy, instr->args[6].i);
+                    else
+                        v93d = instr->args[6].i;
+                    if (instr->paramMask & 0x20)
+                        v93e = GetVarValue(enemy, instr->args[5].i);
+                    else
+                        v93e = instr->args[5].i;
+                    if (instr->paramMask & 0x10)
+                        v93f = GetVarValue(enemy, instr->args[4].i);
+                    else
+                        v93f = instr->args[4].i;
+                    g_EnemyManager.SpawnEnemy2(data.subId, &pos, v93f, v93e, v93d,
                                                &enemy->curContextPtr->eclContextArgs);
                 }
                 goto skipInstr;
