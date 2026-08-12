@@ -248,7 +248,7 @@ ZunResult EclManager::Load(const char *path)
                   v130i, v157v, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
                   p50, p51, p52, p53, p54, p55, p56, iInterp, t, flag, interp, savedPos, i, p65, p66,                 \
-                  p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81, p82, v1, p84, p85, v5, \
+                  p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81, p82, v1, v4a, v4b, v5, \
                   v6, v7, v8a, v8b, v8c, v9a, v9b, v14a, v14b, v10a, v10b, v15a, v15b, v11a, v11b, v16a, v16b, \
                   v12a, v12b, v17a, v17b, v13a, v13b, v18b, v18a, v18c, v19a, v19b, v24a, v24b, v24c, v20a, v20b, \
                   v25a, v25b, v25c, v21a, v21b, v26a, v26b, v26c, v22a, v22b, v27a, v27b, v27c, v23a, v23b, \
@@ -301,8 +301,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     EclInterp *interp;
     Float3 savedPos;
     i32 v1;   // slot 83 (case 1: SET_WAIT_TIMER)
-    i32 p84;  // slot 84 (case 4: DEC_JUMP GetIntPtr ptr, not yet converted)
-    i32 p85;  // slot 85 (case 4: DEC_JUMP arg1, not yet converted)
+    i32 *v4a; // slot 84 (case 4: DEC_JUMP GetIntPtr ptr)
+    i32 v4b;  // slot 85 (case 4: DEC_JUMP arg2)
     i32 v5;   // slot 86 (case 5: SET_INT)
     f32 v6;   // slot 87 (case 6: SET_FLOAT)
     i32 v7;   // slot 88 (case 7: RAND_SIGN)
@@ -465,10 +465,14 @@ restart:
                     v1 = instr->args[0].i;
                 enemy->curContextPtr->waitTimer.SetCurrent(v1);
                 goto skipInstr;
-            case 4: // ECL_DEC_JUMP: *arg2--; if (arg1 > 0) jump
-                *GetIntPtr(enemy, &instr->args[2], instr->paramMask, 2) -= 1;
-                arg = ECL_IVAL(1);
-                if (arg > 0)
+            case 4: // ECL_DEC_JUMP: *arg2--; if (arg2 > 0) jump
+                v4a = GetIntPtr(enemy, &instr->args[2], instr->paramMask, 2);
+                *v4a -= 1;
+                if (instr->paramMask & 0x4)
+                    v4b = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v4b = instr->args[2].i;
+                if (v4b > 0)
                 {
                     enemy->curContextPtr->time.current = instr->args[0].i;
                     instr = (EclRawInstr *)((u8 *)instr + instr->args[1].i);
