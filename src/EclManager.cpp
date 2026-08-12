@@ -243,7 +243,7 @@ ZunResult EclManager::Load(const char *path)
 }
 
 // FUNCTION: th08 0x4184b0 (逆向中)
-#pragma var_order(arg, subCtxIdx, instr, p4,                                                                            \
+#pragma var_order(arg, subCtxIdx, instr, v37n, v37m, v38dx, v38dy, p8,                                              \
                   p5, p6, p7, p8, v89node, v89head, v90node, v90head, v91node, v91head, v110ld, v113sd, v113args, p18, p19, \
                   v130i, v157v, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
@@ -253,7 +253,7 @@ ZunResult EclManager::Load(const char *path)
                   v12a, v12b, v17a, v17b, v13a, v13b, v18b, v18a, v18c, v19a, v19b, v24a, v24b, v24c, v20a, v20b, \
                   v25a, v25b, v25c, v21a, v21b, v26a, v26b, v26c, v22a, v22b, v27a, v27b, v27c, v23a, v23b, \
                   v28a, v28b, v28c, v29a, v30a, v31a, p141, v32a, p143, v33a, v33b, v33c, v33d, v33e, v36a, v36b, \
-                  p151, p152, p153, p154, p155, p156, p157, p158, p159, v53a, v54a, v55a, v55b, v55c, v55d, v55e, \
+                  v37a, v37b, v37c, v37d, v38a, v38b, v38c, v38d, v38e, v53a, v54a, v55a, v55b, v55c, v55d, v55e, \
                   v55f, v57a, v58a, v59a, v59b, v59c, v59d, v59e, v59f, v62a, v62b, v64a, v64b, v65a, v65b, v65c, \
                   v67a, v67b, v68a, v68b, v68c, v68d, v69a, v70a, v71a, v71b, v71c, v71d, v71e, v71f, v71g, \
                   v72a, v72b, v72c, v72d, v73a, v73b, v73c, v74a, v74b, v74c, v74d, v76a, v76b, v77a, v77b, \
@@ -276,8 +276,11 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 arg;
     i32 subCtxIdx = -1;
     i32 i;
-    i32 p4;               // slot 4 (case 37/38 低槽临时, 尚未转换)
-    i32 p5, p6, p7, p8;
+    f32 v37n;             // slot 4 (case 37 低槽: 归一化角度)
+    f32 v37m;             // slot 5 (case 37 低槽: f3 副本)
+    f32 v38dx;            // slot 6 (case 38 低槽: dx)
+    f32 v38dy;            // slot 7 (case 38 低槽: dy)
+    i32 p8;
     Enemy *v89node;       // slot 9 (case 89: 弹幕生成 node)
     Enemy *v89head;       // slot 10 (case 89: 弹幕生成 head)
     Enemy *v90node;       // slot 11 (case 90: 弹幕生成 node)
@@ -335,7 +338,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 p143;           // slot 143 (unused)
     f32 v33a, v33b, v33c, v33d, v33e; // slots 144-148 (case 33: 两点角度; read order f3,f1,f4,f2,result)
     f32 v36a, v36b; // slots 149-150 (case 36: NORMALIZE_ANGLE; ECL_FVAL(0), result)
-    i32 p151, p152, p153, p154, p155, p156, p157, p158, p159; // slots 151-159 (case 37/38, not yet converted)
+    f32 v37a, v37b, v37c, v37d; // slots 151-154 (case 37: 角度转坐标; f2 + f3 + cos + sin)
+    f32 v38a, v38b, v38c, v38d, v38e; // slots 155-159 (case 38: 两点距离; f1 + f3 + f2 + f4 + result)
     i32 v53a;       // slot 160 (case 53: SET_ANM)
     i32 v54a;       // slot 161 (case 54: SET_ANM arg0 temp)
     i32 v55a, v55b, v55c, v55d, v55e, v55f; // slots 162-167 (case 55: SUB_CALL; eval order arg5..arg0)
@@ -771,15 +775,42 @@ restart:
                 FUN_004213f0(enemy, instr);
                 goto skipInstr;
             case 37: // opcode 38 = 角度转坐标: *f[0]=cos(a)*m; *f[1]=sin(a)*m
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    cosf(AddNormalizeAngle(ECL_FVAL(2), 0)) * ECL_FVAL(3);
-                *GetFloatPtr(enemy, &instr->args[1], instr->paramMask, 0) =
-                    sinf(AddNormalizeAngle(ECL_FVAL(2), 0)) * ECL_FVAL(3);
+                if (instr->paramMask & 0x4)
+                    v37a = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v37a = instr->args[2].f;
+                v37n = AddNormalizeAngle(v37a, 0);
+                if (instr->paramMask & 0x8)
+                    v37b = enemy->GetEclFloatVar(instr->args[3].i);
+                else
+                    v37b = instr->args[3].f;
+                v37m = v37b;
+                v37c = cosf(v37n) * v37m;
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v37c;
+                v37d = sinf(v37n) * v37m;
+                *GetFloatPtr(enemy, &instr->args[1], instr->paramMask, 0) = v37d;
                 goto skipInstr;
             case 38: // opcode 39 = 两点距离: *float[0]=sqrt((f1-f3)^2+(f2-f4)^2)
-                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) =
-                    sqrtf((ECL_FVAL(1) - ECL_FVAL(3)) * (ECL_FVAL(1) - ECL_FVAL(3)) +
-                          (ECL_FVAL(2) - ECL_FVAL(4)) * (ECL_FVAL(2) - ECL_FVAL(4)));
+                if (instr->paramMask & 0x2)
+                    v38a = enemy->GetEclFloatVar(instr->args[1].i);
+                else
+                    v38a = instr->args[1].f;
+                if (instr->paramMask & 0x8)
+                    v38b = enemy->GetEclFloatVar(instr->args[3].i);
+                else
+                    v38b = instr->args[3].f;
+                v38dx = v38a - v38b;
+                if (instr->paramMask & 0x4)
+                    v38c = enemy->GetEclFloatVar(instr->args[2].i);
+                else
+                    v38c = instr->args[2].f;
+                if (instr->paramMask & 0x10)
+                    v38d = enemy->GetEclFloatVar(instr->args[4].i);
+                else
+                    v38d = instr->args[4].f;
+                v38dy = v38c - v38d;
+                v38e = sqrtf(v38dx * v38dx + v38dy * v38dy);
+                *GetFloatPtr(enemy, &instr->args[0], instr->paramMask, 0) = v38e;
                 goto skipInstr;
             case 39: case 40: case 41: case 42: case 43: case 44:
             case 45: case 46: case 47: case 48: case 49: case 50:
