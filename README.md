@@ -5,7 +5,7 @@
   <img alt="Decomp Progress" src="resources/progress.svg">
 </picture>
 
-> **当前 RunEcl (0x4184b0) 字节匹配进度：53.22%** — 184/184 opcode 全部实现，170 个 case 全部完成 EBP 槽对齐转换。EclAtan2/EclAngleFromDxDy 已实现为 atan2 stdcall wrapper（90%）。
+> **当前 RunEcl (0x4184b0) 字节匹配进度：71.89%** — 184/184 opcode 全部实现，帧布局对齐至 /Od 匿名临时下限（帧 0x600 vs 原版 0x5c4，余 15 槽为编译器匿名临时无法绑定）。ECL 变量系统 4 getter 99%+，EclLerp/ComputeSinCos 100%。
 
 [![Discord][discord-badge]][discord] <- click here to join discord server.
 
