@@ -10,11 +10,18 @@
 namespace th08
 {
 
-// STUB: th08 0x433880
+// FUNCTION: th08 0x433880
 void __fastcall ComputeSinCos(f32 *sinOut, f32 *cosOut, f32 angle)
 {
-    *cosOut = cos(angle);
-    *sinOut = sin(angle);
+    __asm
+    {
+        fld [angle]
+        fsincos
+        mov eax, [cosOut]
+        fstp float ptr [eax]
+        mov eax, [sinOut]
+        fstp float ptr [eax]
+    }
 }
 
 DIFFABLE_STATIC(BulletManager, g_BulletManager);
