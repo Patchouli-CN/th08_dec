@@ -237,7 +237,7 @@ ZunResult EclManager::Load(const char *path)
 // FUNCTION: th08 0x4184b0 (逆向中)
 #pragma var_order(arg, subCtxIdx, instr, p4,                                                                            \
                   p5, p6, p7, p8, v89node, v89head, v90node, v90head, v91node, v91head, v110ld, v113sd, v113args, p18, p19, \
-                  p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
+                  v130i, v157v, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
                   p50, p51, p52, p53, p54, p55, p56, iInterp, t, flag, interp, savedPos, i, p65, p66,                 \
                   p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81, p82, v1, p84, p85, v5, \
@@ -253,7 +253,8 @@ ZunResult EclManager::Load(const char *path)
                   v110a, v110b, v110c, v110d, v110e, v110f, v110g, v104a, v105a, v109a, v109b, v113a, v113b, \
                   v113c, v113d, v113e, v113f, v113g, v113h, v113i, v113j, v115a, v116a, v116b, v166a, v166b, \
                   v117a, v117b, v118a, v118b, v118c, v118d, v169a, v169b, v119a, v120a, v170a, v170b, \
-                  v171a, v171b, v171c, v162a, v126a, v126b, v126c, v126d)
+                  v171a, v171b, v171c, v162a, v126a, v126b, v126c, v126d, v158a, v123a, v125a, v125b, \
+                  v124a, v130a, v157a, v157b, v157c, v157d, v131a)
 ZunResult EclManager::RunEcl(Enemy *enemy)
 {
     EclRawInstr *instr;
@@ -272,7 +273,8 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     EnemyShotData *v113sd;    // slot 16 (case 113: 弹幕数据指针)
     AnyArg *v113args;    // slot 17 (case 113: args 指针)
     i32 p18, p19;
-    i32 p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34;
+    i32 v130i, v157v;  // slots 20-21 (case 130 loop counter / case 157 v0 copy)
+    i32 p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34;
     i32 p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49;
     i32 p50, p51, p52, p53, p54, p55, p56;
     i32 p65, p66, p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80;
@@ -362,6 +364,13 @@ ZunResult EclManager::RunEcl(Enemy *enemy)
     i32 v171a; f32 v171b, v171c; // slots 266-268 (case 171: 子弹 unk558/55c; idx + f1 + f2)
     i32 v162a;        // slot 269 (case 162: 写全局 g_f54cec)
     i32 v126a, v126b, v126c, v126d; // slots 270-273 (case 126: boss 血条标记)
+    i32 v158a;        // slot 274 (case 158: 写 unk332f byte)
+    i32 v123a;        // slot 275 (case 123: 播放音效)
+    i32 v125a, v125b; // slots 276-277 (case 125: interrupts 数组; value + idx)
+    i32 v124a;        // slot 278 (case 124: 触发中断子程序)
+    i32 v130a;        // slot 279 (case 130: 激光字段; v130i@20 循环计数)
+    i32 v157a, v157b, v157c, v157d; // slots 280-283 (case 157: Gui 数据; v0 + a1 + a2 + a3)
+    i32 v131a;        // slot 284 (case 131: unk2e14 计时器)
 
     enemy->savedStackPtr = &enemy->savedContextStack[0];
     enemy->curContextPtr = &enemy->eclContext;
@@ -1694,10 +1703,18 @@ restart:
                 }
                 goto skipInstr;
             case 158: // opcode 159 = 设置 unk332f (byte)
-                enemy->unk332f = (u8)ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v158a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v158a = instr->args[0].i;
+                enemy->unk332f = (u8)v158a;
                 goto skipInstr;
             case 123: // opcode 124 = 播放音效 (声音索引 v0, 位置 pos.x)
-                g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)ECL_IVAL(0), enemy->pos.x);
+                if (instr->paramMask & 0x1)
+                    v123a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v123a = instr->args[0].i;
+                g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)v123a, enemy->pos.x);
                 goto skipInstr;
             case 128: // opcode 129 = 设置 flags bit20-22 (boss 模式跳过)
                 if (!IS_BOSS_MODE())
@@ -1708,10 +1725,22 @@ restart:
                     enemy->unk2cee = (i16)instr->args[0].i;
                 goto skipInstr;
             case 125: // opcode 126 = 设置 interrupts 数组元素
-                enemy->interrupts[ECL_IVAL(1)] = (i16)ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v125a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v125a = instr->args[0].i;
+                if (instr->paramMask & 0x2)
+                    v125b = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v125b = instr->args[1].i;
+                enemy->interrupts[v125b] = (i16)v125a;
                 goto skipInstr;
             case 124: // opcode 125 = 触发中断子程序
-                enemy->runInterrupt = (i16)ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v124a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v124a = instr->args[0].i;
+                enemy->runInterrupt = (i16)v124a;
                 enemy->curContextPtr->curInstr = (EclRawInstr *)((u8 *)instr + instr->size);
                 if (((enemy->flags >> 0x1a) & 1) == 0)
                     enemy->savedContextStack[enemy->stackDepth] = enemy->eclContext;
@@ -1721,22 +1750,42 @@ restart:
                 enemy->runInterrupt = 0xffff;
                 goto restart;
             case 130: // opcode 131 = 设置激光字段 laserData/2dfc/2e04 + 若条件清 Gui
-                enemy->laserData = ECL_IVAL(0);
-                enemy->laserActive = ECL_IVAL(0);
-                enemy->unk2e04 = ECL_IVAL(0);
+                if (instr->paramMask & 0x1)
+                    v130a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v130a = instr->args[0].i;
+                enemy->laserData = v130a;
+                enemy->laserActive = v130a;
+                enemy->unk2e04 = v130a;
                 if (enemy->bossMarkerIdx == 0 && ((enemy->flags >> 1) & 1))
                 {
-                    for (i = 0; i < 8; i++)
-                        g_Gui.FUN_004230e0(i, 0.0f, 0.0f);
+                    for (v130i = 0; v130i < 8; v130i++)
+                        g_Gui.FUN_004230e0(v130i, 0.0f, 0.0f);
                 }
                 goto skipInstr;
             case 157: // opcode 158 = 设置 Gui 数据 (v0, a1/laserData, a2/laserData) + 若 bit3 调 23110
+                if (instr->paramMask & 0x1)
+                    v157a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v157a = instr->args[0].i;
+                v157v = v157a;
+                if (instr->paramMask & 0x4)
+                    v157b = GetVarValue(enemy, instr->args[2].i);
+                else
+                    v157b = instr->args[2].i;
+                if (instr->paramMask & 0x2)
+                    v157c = GetVarValue(enemy, instr->args[1].i);
+                else
+                    v157c = instr->args[1].i;
+                g_Gui.FUN_004230e0(v157v, (f32)v157c / (f32)enemy->laserData,
+                                   (f32)v157b / (f32)enemy->laserData);
+                if (instr->paramMask & 0x8)
                 {
-                    i32 v0 = ECL_IVAL(0);
-                    g_Gui.FUN_004230e0(v0, (f32)ECL_IVAL(1) / (f32)enemy->laserData,
-                                       (f32)ECL_IVAL(2) / (f32)enemy->laserData);
                     if (instr->paramMask & 0x8)
-                        g_Gui.FUN_00423110(v0, ECL_IVAL(3));
+                        v157d = GetVarValue(enemy, instr->args[3].i);
+                    else
+                        v157d = instr->args[3].i;
+                    g_Gui.FUN_00423110(v157v, v157d);
                 }
                 goto skipInstr;
             case 121: // opcode 122 = 子脚本 (FUN_00421280)
@@ -1746,7 +1795,11 @@ restart:
                 FUN_004212e0(enemy, instr);
                 goto skipInstr;
             case 131: // opcode 132 = 设置 unk2e14 计时器
-                enemy->unk2e14.SetCurrent(ECL_IVAL(0));
+                if (instr->paramMask & 0x1)
+                    v131a = GetVarValue(enemy, instr->args[0].i);
+                else
+                    v131a = instr->args[0].i;
+                enemy->unk2e14.SetCurrent(v131a);
                 goto skipInstr;
             case 132: // opcode 133 = 设置 unk3358/unk3368 (boss 模式只写 3358)
                 if (IS_BOSS_MODE())

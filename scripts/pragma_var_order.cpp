@@ -311,7 +311,7 @@ void DoVarDebug()
     varDebug = true;
 }
 
-HashNode *ordering[256];
+HashNode *ordering[1024]; // original 256 → 1024 to support larger var_order lists
 int orderingPos = 0;
 Scope *outerScope = NULL;
 
