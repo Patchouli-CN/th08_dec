@@ -244,7 +244,7 @@ ZunResult EclManager::Load(const char *path)
 
 // FUNCTION: th08 0x4184b0 (逆向中)
 #pragma var_order(arg, subCtxIdx, instr, v37n, v37m, v38dx, v38dy, p8,                                              \
-                  p5, p6, p7, p8, v89node, v89head, v90node, v90head, v91node, v91head, v110ld, v113sd, v113args, p18, p19, \
+                  v89node, v89head, v90node, v90head, v91node, v91head, v110ld, v113sd, v113args, p18, p19, \
                   v130i, v157v, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34,                         \
                   p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49,                         \
                   p50, p51, p52, p53, p54, p55, p56, iInterp, t, flag, interp, savedPos, i, p65, p66,                 \
