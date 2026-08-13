@@ -703,40 +703,70 @@ void Gui::FUN_00439810(i32 arg)
     this->impl->FUN_0043396d(arg);
 }
 
+// 原版这些 boss 状态 setter 属于 /Od 编译单元（纯 dword/byte 直传 + mov/pop epilogue）。
+// 注意：本文件以 /Os 编译，VC7 #pragma optimize 不生效，代码生成与 /Od 略有差异
+// （f32 赋值用 fld/fstp 而非原版 mov；SetBossPresent 缺 /Od 的冗余重读）。
+// 语义正确，指令级匹配受编译选项限制。
+// FUNCTION: th08 0x423130
 void Gui::SetEclLives(i32 a0)
 {
+    this->eclSetLives = a0;
 }
 
+// FUNCTION: th08 0x4230e0
 void Gui::SetBossLifeBarSegment(i32 a0, f32 a1, f32 a2)
 {
+    this->bossLifeBarSegmentStart[a0] = a1;
+    this->bossLifeBarSegmentStop[a0] = a2;
 }
 
+// FUNCTION: th08 0x423110
 void Gui::SetBossLifeSegmentColor(i32 a0, i32 a1)
 {
+    this->bossLifeBarSegmentColor[a0] = a1;
 }
 
+// FUNCTION: th08 0x422c20
 void Gui::SetBossPresent(i32 a0)
 {
+    this->bossPresent = (u8)a0;
 }
 
+// FUNCTION: th08 0x4230c0
 void Gui::SetBossLifeBarMaxSize(f32 a0)
 {
+    this->bossLifeBarMaxSize = a0;
 }
 
-void Gui::ShowClock()
+// FUNCTION: th08 0x439007
+ZunResult Gui::ShowClock()
 {
+    this->timesAnm->ExecuteAnmIdx(&this->impl->vmK, 2);
+    this->timesAnm->SetSprite(&this->impl->vmK, g_GameManager.GetClockTime());
+    return ZUN_SUCCESS;
 }
 
-void Gui::UpdateClockHour()
+// FUNCTION: th08 0x439050
+ZunResult Gui::UpdateClockHour()
 {
+    this->timesAnm->SetSprite(&this->impl->vmK, g_GameManager.GetClockTime());
+    this->impl->vmK.SetInterrupt(1);
+    return ZUN_SUCCESS;
 }
 
-void Gui::UpdateClockNoon()
+// FUNCTION: th08 0x439093
+ZunResult Gui::UpdateClockNoon()
 {
+    this->timesAnm->SetSprite(&this->impl->vmK, g_GameManager.GetClockTime());
+    this->impl->vmK.SetInterrupt(2);
+    return ZUN_SUCCESS;
 }
 
-void Gui::ResetClock()
+// FUNCTION: th08 0x4390d6
+ZunResult Gui::ResetClock()
 {
+    this->impl->vmK.prefix.color1.a &= 0;
+    return ZUN_SUCCESS;
 }
 
 // STUB: th08 0x43542b

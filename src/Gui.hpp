@@ -153,10 +153,10 @@ struct Gui
     void SetBossLifeSegmentColor(i32 a0, i32 a1);       // 0x423110 (boss 血条段颜色)
     void SetBossPresent(i32 a0);       // 0x422c20 (boss 在场标记可见性)
     void SetBossLifeBarMaxSize(f32 a0); // 0x4230c0 (boss 血条最大尺寸)
-    void ShowClock();                  // 0x439007 (显示当前小时时钟)
-    void UpdateClockHour();            // 0x439050 (时钟报时+1, 非 12 时)
-    void UpdateClockNoon();            // 0x439093 (时钟报时到 12 时)
-    void ResetClock();                 // 0x4390d6 (清时钟显示标志)
+    ZunResult ShowClock();             // 0x439007 (显示当前小时时钟)
+    ZunResult UpdateClockHour();       // 0x439050 (时钟报时+1, 非 12 时)
+    ZunResult UpdateClockNoon();       // 0x439093 (时钟报时到 12 时)
+    ZunResult ResetClock();            // 0x4390d6 (清时钟显示标志)
     static ChainCallbackResult OnUpdate(Gui *gui);
     static ChainCallbackResult OnDraw(Gui *gui);
 
