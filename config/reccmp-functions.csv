@@ -824,7 +824,7 @@ th08::Player::FUN_00451500,0x451500,function
 FUN_00451640,0x451640,function
 th08::Player::FUN_00451670,0x451670,function
 FUN_00451ce0,0x451ce0,function
-th08::Player::FUN_00451d50,0x451d50,function
+th08::IsSpecialShotActive,0x451d50,function
 th08::ReplayManager::LoadReplayData,0x451d90,function
 th08::ReplayManager::RegisterChain,0x451f90,function
 th08::ReplayManager::OnUpdateLowPrio,0x4522a0,function

@@ -812,9 +812,34 @@ void Background::FUN_0040a1b0(u32 param)
 {
 }
 
-// STUB: th08 0x40b5a0
+// FUNCTION: th08 0x40b5a0 (97.59% FIXME: 仅剩 2 处 call 目标名 — 原版调 ZUN 自实现 D3DXMatrix*LH，
+// 重编译调 d3dx8.lib import thunk (_D3DXMatrixLookAtLH@16)，与 InitD3DRendering 同款已知差异)
+/* 设置 D3D 视图/投影变换（本函数不使用 this，仅基于视口尺寸计算）。
+   local4 = 视口高/2 / tan(视角/2)，用于 LookAt 的 eye.z。 */
+#pragma var_order(local4, local2, local1, aspect, angle)
 void Background::SetCamera1()
 {
+    f32 local1;
+    f32 local2;
+    f32 aspect;
+    f32 angle;
+    f32 local4;
+
+    local1 = (f32)g_Supervisor.viewport.Width / 2.0f;
+    local2 = (f32)g_Supervisor.viewport.Height / 2.0f;
+    aspect = (f32)g_Supervisor.viewport.Width / (f32)g_Supervisor.viewport.Height;
+    angle = ZUN_PI / 10.0f;
+    local4 = local2 / (f32)tan(angle / 2.0f);
+
+    D3DXMatrixLookAtLH(&g_Supervisor.viewMatrix,
+                       (D3DXVECTOR3 *)&Float3(local1, local2, local4),
+                       (D3DXVECTOR3 *)&Float3(local1, local2, 0.0f),
+                       (D3DXVECTOR3 *)&Float3(0.0f, -1.0f, 0.0f));
+
+    D3DXMatrixPerspectiveFovLH(&g_Supervisor.projectionMatrix, angle, aspect, 1.0f, 10000.0f);
+
+    g_Supervisor.d3dDevice->SetTransform(D3DTS_VIEW, &g_Supervisor.viewMatrix);
+    g_Supervisor.d3dDevice->SetTransform(D3DTS_PROJECTION, &g_Supervisor.projectionMatrix);
 }
 
 // FUNCTION: th08 0x409850

@@ -81,10 +81,12 @@ i32 __fastcall FUN_0040d3d0(ZunTimer *timer)
     return 0;
 }
 
-// STUB: th08 0x451d50
-i32 __fastcall FUN_00451d50(Player *player)
+// FUNCTION: th08 0x451d50
+/* 当前是否处于第 4 号射击（妖形态特殊射击）进行中的状态。
+   非 0 时禁止再发动新射击（FUN_00451500 检查）。 */
+i32 __fastcall IsSpecialShotActive(Player *player)
 {
-    return 0;
+    return (player->unkFdc != 0 && player->unkFe0 == 4) ? 1 : 0;
 }
 
 // STUB: th08 0x450f60
@@ -1267,7 +1269,7 @@ i32 Player::FUN_00451500()
         return 0;
     }
 
-    if (FUN_00451d50(this) != 0)
+    if (IsSpecialShotActive(this) != 0)
     {
         return 0;
     }
