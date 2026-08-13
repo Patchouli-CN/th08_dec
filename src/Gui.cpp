@@ -11,10 +11,10 @@
 namespace th08
 {
 
-// STUB: th08 0x4396f8 (AnmVm::FUN_004396f8)
-u32 __fastcall FUN_004396f8(AnmVm *vm)
+// FUNCTION: th08 0x4396f8 (AnmVm::IsStopped — 检查 prefix.flags bit14)
+u32 __fastcall IsStopped(AnmVm *vm)
 {
-    return 0;
+    return (vm->prefix.flags >> 0xe) & 1;
 }
 
 DIFFABLE_STATIC(Gui, g_Gui);
@@ -347,7 +347,7 @@ i32 Gui::IsBossPortraitVisible()
     i32 result;
 
     if (this->impl->vmD.activeSpriteIndex >= 0 &&
-        FUN_004396f8(&this->impl->vmD) != 0)
+        IsStopped(&this->impl->vmD) != 0)
     {
         result = 1;
     }
@@ -1182,7 +1182,7 @@ void Gui::UpdateBossHud()
             }
             else
             {
-                if (FUN_004396f8(&impl->vmsA[12]) != 0)
+                if (IsStopped(&impl->vmsA[12]) != 0)
                 {
                     impl->bossHudState = 2;
                 }
@@ -1213,7 +1213,7 @@ void Gui::UpdateBossHud()
                 {
                     this->bossUIOpacity = 0;
                 }
-                if (FUN_004396f8(&impl->vmsA[12]) != 0)
+                if (IsStopped(&impl->vmsA[12]) != 0)
                 {
                     impl->bossHudState = 0;
                     this->bossLifeBarSize = 0.0f;
