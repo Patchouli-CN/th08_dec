@@ -523,7 +523,7 @@ switch_shot:
             this->unkE2b28 = 0;
         }
         g_PlayerFlags &= ~PLAYER_FLAG_ANIM_PAUSE_MASK;
-        g_AnmManager->FUN_0040bab0();
+        g_AnmManager->SetMixColorDefault();
 
         this->unkFe0 = this->isYoukaiMode;
         if (this->unk4 != 0)
@@ -604,7 +604,7 @@ i32 Player::FUN_0044cbf0()
             g_EffectManager.SpawnEffect(0x6, &this->positionCenter, 0x10, -1);
             g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0xf, this->positionCenter.x);
             g_PlayerFlags &= ~PLAYER_FLAG_ANIM_PAUSE_MASK;
-            g_AnmManager->FUN_0040bab0();
+            g_AnmManager->SetMixColorDefault();
             ((AnmVm *)this->unk_10)->prefix.flags &= ~0x20000;
             g_ReplayManager->replayEventFlags |= 4;
             g_PlayerUnknown0b0 = 0;

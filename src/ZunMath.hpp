@@ -50,20 +50,9 @@ struct Float3
         }
     }
 
-    Float3 operator*(f32 scale)
-    {
-        return Float3(scale * this->x, scale * this->y, scale * this->z);
-    }
-
-    Float3 operator+(const Float3 &other)
-    {
-        return Float3(this->x + other.x, this->y + other.y, this->z + other.z);
-    }
-
-    Float3 operator-(const Float3 &other)
-    {
-        return Float3(this->x - other.x, this->y - other.y, this->z - other.z);
-    }
+    Float3 operator*(f32 scale);            /* out-of-line @ 0x409120 */
+    Float3 operator+(const Float3 &other);  /* out-of-line @ 0x409080 */
+    Float3 operator-(const Float3 &other);  /* out-of-line @ 0x4090d0 */
 
     Float3 operator/(f32 divisor)
     {

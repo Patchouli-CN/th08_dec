@@ -982,58 +982,8 @@ ZunBool AnmManager::SpriteHasTexture(AnmVm *vm)
     return this->anmFiles[vm->loadedSprite->anmIdx].textures != NULL;
 }
 
-// STUB: th08 0x40baf0
-void AnmManager::FUN_0040baf0(AnmVm *vm)
-{
-}
-
-// STUB: th08 0x40bab0
-void AnmManager::FUN_0040bab0()
-{
-}
-
 // STUB: th08 0x462e00
 void AnmManager::FUN_00462e00()
-{
-}
-
-// STUB: th08 0x40b9f0
-void AnmManager::FUN_0040b9f0()
-{
-}
-
-// STUB: th08 0x40ba50
-void AnmManager::FUN_0040ba50()
-{
-}
-
-// STUB: th08 0x40ba10
-void AnmManager::FUN_0040ba10()
-{
-}
-
-// STUB: th08 0x40b9d0
-void AnmManager::FUN_0040b9d0()
-{
-}
-
-// STUB: th08 0x40b9b0
-void AnmManager::FUN_0040b9b0()
-{
-}
-
-// STUB: th08 0x40ba30
-void AnmManager::FUN_0040ba30()
-{
-}
-
-// STUB: th08 0x40bb20
-void AnmManager::FUN_0040bb20()
-{
-}
-
-// STUB: th08 0x40ba70
-void AnmManager::FUN_0040ba70()
 {
 }
 
@@ -2679,44 +2629,59 @@ out:
     SAFE_RELEASE(backbuffer);
 }
 
+// FUNCTION: th08 0x40b9d0
 void AnmManager::ClearColorOp()
 {
     this->currentColorOp = 0xff;
 }
 
+// FUNCTION: th08 0x40b9b0
 void AnmManager::ClearBlendMode()
 {
     this->currentBlendMode = 3;
 }
 
+// FUNCTION: th08 0x40b9f0
 void AnmManager::ClearVertexShader()
 {
     this->currentVertexShader = 0xff;
 }
 
+// FUNCTION: th08 0x40ba30
 void AnmManager::ClearZWriteSetting()
 {
     this->disableZWrite = 0xff;
 }
 
+// FUNCTION: th08 0x40ba50
 void AnmManager::ClearSprite()
 {
     this->currentSprite = NULL;
 }
 
+// FUNCTION: th08 0x40ba10
 void AnmManager::ClearTexture()
 {
     this->currentTexture = NULL;
 }
 
+// FUNCTION: th08 0x40ba70
 void AnmManager::ClearCameraSettings()
 {
     this->cameraMode = 0xff;
 }
 
+// FUNCTION: th08 0x40ba90
 void AnmManager::SetCameraMode(u8 mode)
 {
     this->cameraMode = mode;
+}
+
+// FUNCTION: th08 0x40baf0
+void AnmManager::Draw2DAndFlush(AnmVm *vm)
+{
+    this->Draw2D(vm);
+    this->FlushVertexBuffer();
 }
 
 }; // Namespace th08

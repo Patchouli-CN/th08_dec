@@ -105,3 +105,15 @@ x=cos, y=sin。另有 `sincosf` 函数版 / `sincosf_macro` 宏版。
 5. 角度→向量统一 FromAngleMagnitude/sincos；替换 ComputeSinCos
 6. 魔数保留字面值；AddNormalizeAngle(x,0) 习惯照抄
 7. 遇 `// ZUN bloat` 类冗余一律照抄并注释，不清理
+
+## 7. 编译选项混合单元（重要发现）
+
+原版某些 .cpp 是 **/Od 与 /Os 混合**编译的（不同函数用不同选项）：
+- **证据**：GameManager.cpp 若整体改 /Od，Gauge 系列（GaugeIsExtremelyYoukai 等）从 40% 升到 93%，但 IsStageCleared/CalcChecksum/RegisterChain 等原本 100% 的函数**回归**到 25-65%。说明这些函数原版分别属不同编译单元（或 ZUN 拆了文件）。
+- **结论**：单文件编译选项无法同时匹配 /Od 和 /Os 混合的函数。configure.py 的 `/Os` 分配是团队调过的，别整体改。
+- **影响**：原版 /Od 的函数（如 Gauge 系列 getter/setter）在 /Os 下语义正确但 epilogue 差一条指令（`leave` vs `mov/pop`），指令级 40-93%。这是反编译固有限制（除非拆文件），**接受语义正确 + 低指令匹配**。
+- **辨识 /Od 特征**：epilogue 用 `mov esp,ebp; pop ebp`（vs /Os 的 `leave`）、f32 赋值用纯 `mov`（vs /Os 的 fld/fstp）、可能有冗余重读死代码（如 SetBossPresent 的 `mov al,[ebp+8]`）。
+
+## 8. VC7 #pragma optimize 无效
+
+VC7 的 `#pragma optimize("agstwy", off)` 在 /Os 编译下**不生效**（函数级关优化无法覆盖命令行 /Os）。要在 /Os 文件里复现 /Od 代码生成只能拆文件或改整体编译选项，不能靠 pragma。

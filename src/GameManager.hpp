@@ -136,8 +136,8 @@ struct GameManager
     u32 GetFlag3();
     u32 GetFlag14();
     i32 GetYoukaiGauge();
-    i32 FUN_00418130(i32 spellcardIdx);
-    u32 FUN_00418180(i32 a, i32 b);
+    i32 IsSpellNumberEqualTo(i32 spellcardIdx);
+    u32 IsSpellNumberInRange(i32 a, i32 b);
     i32 GaugeIsModeratelyHuman();
     void SetLives(i32 lives);
     void SetYoukaiGauge(u16 gauge);

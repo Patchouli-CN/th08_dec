@@ -9,11 +9,55 @@
 
 namespace th08
 {
+// FUNCTION: th08 0x418130
+// /Od original; GameManager.obj is /Os-compiled so define these in this /Od file.
+// (this/result EBP slot swap vs original is an unsolved var_order-this quirk: 73.91%)
+i32 GameManager::IsSpellNumberEqualTo(i32 spellcardIdx)
+{
+    i32 result;
+
+    if (this->flags.isSpellPractice)
+    {
+        result = (this->currentSpellCardNumber == spellcardIdx);
+    }
+    else
+    {
+        result = 0;
+    }
+
+    return result;
+}
+
+// FUNCTION: th08 0x418180
+// Same reason: /Od original function compiled here to match.
+u32 GameManager::IsSpellNumberInRange(i32 a, i32 b)
+{
+    i32 result;
+    u32 retVal;
+
+    if (this->flags.isSpellPractice)
+    {
+        if (this->currentSpellCardNumber >= a && this->currentSpellCardNumber <= b)
+        {
+            result = 1;
+        }
+        else
+        {
+            result = 0;
+        }
+
+        retVal = result;
+    }
+    else
+    {
+        retVal = 0;
+    }
+
+    return retVal;
+}
+
 void __fastcall FUN_00426d10(Float3 *pos);
 
-Float3 *__fastcall FUN_004090d0(Float3 *self, Float3 *out, Float3 *p2);
-Float3 *__fastcall FUN_00409120(Float3 *self, Float3 *tmp3, f32 f, Float3 *tmp2, Float3 *p2);
-Float3 *__fastcall FUN_00409080(Float3 *self);
 f32 __stdcall FUN_00408fc0(f32 a, f32 b, f32 c, f32 d, f32 e);
 DIFFABLE_STATIC(Background, g_Background);
 DIFFABLE_STATIC(ChainElem, g_BackgroundCalcChain);
@@ -543,14 +587,14 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
     *(i32 *)(D3D_DEVICE_VIEWPORT + 0xc) = 0x1c0;
 
     g_AnmManager->FUN_00462e00();
-    g_AnmManager->FUN_0040b9f0();
-    g_AnmManager->FUN_0040ba50();
-    g_AnmManager->FUN_0040ba10();
-    g_AnmManager->FUN_0040b9d0();
-    g_AnmManager->FUN_0040b9b0();
-    g_AnmManager->FUN_0040ba30();
-    g_AnmManager->FUN_0040bb20();
-    g_AnmManager->FUN_0040ba70();
+    g_AnmManager->ClearVertexShader();
+    g_AnmManager->ClearSprite();
+    g_AnmManager->ClearTexture();
+    g_AnmManager->ClearColorOp();
+    g_AnmManager->ClearBlendMode();
+    g_AnmManager->ClearZWriteSetting();
+    g_AnmManager->ResetFrameDebugInfo();
+    g_AnmManager->ClearCameraSettings();
 
     if (!g_Supervisor.IsFogDisabled())
     {
@@ -730,7 +774,7 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
     {
         for (i = 0; i < background->unk0xb30; i++)
         {
-            g_AnmManager->FUN_0040baf0(&background->objectVms[i]);
+            g_AnmManager->Draw2DAndFlush(&background->objectVms[i]);
         }
 
         if (background->unk0x625c != NULL)
@@ -754,7 +798,7 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
 
     if (background->unk0x646c == 0)
     {
-        g_AnmManager->FUN_0040bab0();
+        g_AnmManager->SetMixColorDefault();
     }
 
     background->unk0x646c = 0;
@@ -1012,10 +1056,8 @@ void __fastcall Background::FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3
 
     if (this->unk0x6430[idx] != 7)
     {
-        f32 tmp1[3], tmp2[3], tmp3[3];
-
-        *p1 = *FUN_004090d0(p3, (Float3 *)tmp1, p2);
-        *p1 = *FUN_00409080(FUN_00409120(p1, (Float3 *)tmp3, f, (Float3 *)tmp2, p2));
+        *p1 = *p3 - *p2;
+        *p1 = *p1 * f + *p2;
     }
     else
     {
@@ -1119,22 +1161,22 @@ void __fastcall FUN_00426d10(Float3 *pos)
     }
 }
 
-// STUB: th08 0x4090d0
-Float3 *__fastcall FUN_004090d0(Float3 *self, Float3 *out, Float3 *p2)
+// FUNCTION: th08 0x409080
+Float3 Float3::operator+(const Float3 &other)
 {
-    return NULL;
+    return Float3(this->x + other.x, this->y + other.y, this->z + other.z);
 }
 
-// STUB: th08 0x409120
-Float3 *__fastcall FUN_00409120(Float3 *self, Float3 *tmp3, f32 f, Float3 *tmp2, Float3 *p2)
+// FUNCTION: th08 0x4090d0
+Float3 Float3::operator-(const Float3 &other)
 {
-    return NULL;
+    return Float3(this->x - other.x, this->y - other.y, this->z - other.z);
 }
 
-// STUB: th08 0x409080
-Float3 *__fastcall FUN_00409080(Float3 *self)
+// FUNCTION: th08 0x409120
+Float3 Float3::operator*(f32 scale)
 {
-    return NULL;
+    return Float3(scale * this->x, scale * this->y, scale * this->z);
 }
 
 // FUNCTION: th08 0x408fc0 (cubic interpolation between four samples, t in [0,1])
