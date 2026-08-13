@@ -384,7 +384,9 @@ void SpellcardDataHolder::FreeData()
 DIFFABLE_STATIC(ChainElem *, g_SpellcardChainElem);
 
 // STUB: th08 0x414590
-ZunResult Spellcard::FUN_00414590()
+// Initializes the Spellcard module: memsets the struct, preloads spellcard anm,
+// and loads per-character spellcard data.
+ZunResult Spellcard::Initialize()
 {
     return ZUN_SUCCESS;
 }
@@ -394,41 +396,44 @@ ZunResult Spellcard::RegisterChain()
 {
     Spellcard *obj = &g_Spellcard;
 
-    if (obj->FUN_00414590() != 0)
+    if (obj->Initialize() != 0)
     {
         return ZUN_ERROR;
     }
 
-    obj->unk263c = g_Chain.CreateElem((ChainCallback)0x418010);
-    obj->unk2640 = g_Chain.CreateElem((ChainCallback)0x418030);
+    obj->calcChainElem = g_Chain.CreateElem((ChainCallback)0x418010);
+    obj->drawChainElem = g_Chain.CreateElem((ChainCallback)0x418030);
 
-    obj->unk263c->deletedCallback = (ChainLifetimeCallback)0x418050;
-    obj->unk263c->arg = obj;
-    obj->unk2640->arg = obj;
+    obj->calcChainElem->deletedCallback = (ChainLifetimeCallback)0x418050;
+    obj->calcChainElem->arg = obj;
+    obj->drawChainElem->arg = obj;
 
-    g_Chain.AddToCalcChain(obj->unk263c, 0xc);
-    g_Chain.AddToDrawChain(obj->unk2640, 0xf);
+    g_Chain.AddToCalcChain(obj->calcChainElem, 0xc);
+    g_Chain.AddToDrawChain(obj->drawChainElem, 0xf);
 
     return ZUN_SUCCESS;
 }
 
-i32 Spellcard::spellcard_fun_004178a0()
+// Returns nonzero while a spell-card battle is in progress (bit 0 of flags).
+i32 Spellcard::IsSpellcardActive()
 {
     return this->flags & (1 << SPELLCARD_FLAG_ACTIVE_BIT);
 }
 
-void Spellcard::spellcard_fun_00416b10(i32 arg)
+// Accumulates the spell-card time gauge; capped at maxSpellTime. While below the
+// cap, also feeds the time bonus counter (spellTimeBonus += arg / 120).
+void Spellcard::AddSpellcardTime(i32 arg)
 {
     if (((this->flags >> SPELLCARD_FLAG_LOCKED_SHIFT) & 1) == 0)
     {
-        this->unk0xfc += arg;
-        if (this->unk0xfc >= this->unk0x2638)
+        this->spellTime += arg;
+        if (this->spellTime >= this->maxSpellTime)
         {
-            this->unk0xfc = this->unk0x2638;
+            this->spellTime = this->maxSpellTime;
         }
         else
         {
-            this->unk0x100 += arg / 0x78;
+            this->spellTimeBonus += arg / 0x78;
         }
     }
 }
@@ -442,9 +447,11 @@ void Spellcard::CutChain()
 }
 
 // STUB: th08 0x44d150
-void Spellcard::FUN_0044d150()
+// Resets the active spell-card battle (clears bit-2 flag and the time gauge).
+// Called on player death.
+void Spellcard::ResetSpellcard()
 {
     this->flags &= ~SPELLCARD_FLAG_RESET_MASK;
-    this->unk0xfc = 0;
+    this->spellTime = 0;
 }
 } /* namespace th08 */

@@ -59,10 +59,10 @@ i32 ResultScreen::HandleCategorySelectScreen()
     i32 selected;
     AnmVm *vm;
 
-    switch (this->unk10)
+    switch (this->subState)
     {
     case 0:
-        if (this->unk18 == 0)
+        if (this->subStateTimer == 0)
         {
             vm = this->vms;
 
@@ -76,7 +76,7 @@ i32 ResultScreen::HandleCategorySelectScreen()
                 this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
-                if (i == this->unk1c)
+                if (i == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -87,13 +87,13 @@ i32 ResultScreen::HandleCategorySelectScreen()
             }
         }
 
-        if (this->unk18 < 0x14)
+        if (this->subStateTimer < 0x14)
         {
             break;
         }
 
-        this->unk10++;
-        this->unk18 = 0;
+        this->subState++;
+        this->subStateTimer = 0;
         /* fallthrough */
     case 1:
         i = this->MoveCursor(4);
@@ -102,7 +102,7 @@ i32 ResultScreen::HandleCategorySelectScreen()
         {
             for (i = 0; i <= 3; i++)
             {
-                if (i == this->unk1c)
+                if (i == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -120,17 +120,17 @@ i32 ResultScreen::HandleCategorySelectScreen()
 
         if (WAS_PRESSED(0xa))
         {
-            if (this->unk1c == 3)
+            if (this->cursor == 3)
             {
                 goto case3;
             }
 
-            this->unk1c = 3;
+            this->cursor = 3;
             g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
 
             for (i = 0; i <= 3; i++)
             {
-                if (i == this->unk1c)
+                if (i == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -144,7 +144,7 @@ i32 ResultScreen::HandleCategorySelectScreen()
         if (WAS_PRESSED(0x1001))
         {
             vm = this->vms;
-            selected = this->unk1c;
+            selected = this->cursor;
 
             switch (selected)
             {
@@ -153,7 +153,7 @@ i32 ResultScreen::HandleCategorySelectScreen()
 
                 for (i = 0; i <= 3; i++)
                 {
-                    if (i == this->unk1c)
+                    if (i == this->cursor)
                     {
                         this->vms[i].prefix.pendingInterrupt = 0x17;
                     }
@@ -168,7 +168,7 @@ i32 ResultScreen::HandleCategorySelectScreen()
 
                 for (i = 0; i <= 3; i++)
                 {
-                    if (i == this->unk1c)
+                    if (i == this->cursor)
                     {
                         this->vms[i].prefix.pendingInterrupt = 0x17;
                     }
@@ -181,7 +181,7 @@ i32 ResultScreen::HandleCategorySelectScreen()
             case 2:
                 for (i = 0; i <= 3; i++)
                 {
-                    if (i == this->unk1c)
+                    if (i == this->cursor)
                     {
                         this->vms[i].prefix.pendingInterrupt = 0x17;
                     }
@@ -206,7 +206,7 @@ i32 ResultScreen::HandleCategorySelectScreen()
         break;
     }
 
-    this->unk18++;
+    this->subStateTimer++;
 
     return 0;
 }
@@ -214,13 +214,13 @@ i32 ResultScreen::HandleCategorySelectScreen()
 // FUNCTION: th08 0x4550b7
 void ResultScreen::SetState(ResultScreenState state)
 {
-    this->unk14 = this->screenMode;
+    this->previousScreenMode = this->screenMode;
     this->screenMode = state;
-    this->unk0c = state;
-    this->unk10 = 0;
-    this->unk18 = 0;
-    this->unk4 = 0;
-    this->unk54 = 0;
+    this->stateCopy = state;
+    this->subState = 0;
+    this->subStateTimer = 0;
+    this->screenTimer = 0;
+    this->backPressed = 0;
 }
 
 // FUNCTION: th08 0x4550fc (99% FIXME: moveResult 槽/vmBase 死代码)
@@ -231,19 +231,19 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
     i32 k;
     i32 moveResult;
 
-    switch (this->unk10)
+    switch (this->subState)
     {
     case 0:
-        if (this->unk18 == 0)
+        if (this->subStateTimer == 0)
         {
-            this->unk1c = this->unk44;
+            this->cursor = this->savedDifficultyCursor;
 
             for (i = 4; i <= 8; i++)
             {
                 this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
-                if (i - 4 == this->unk1c)
+                if (i - 4 == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -254,13 +254,13 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
             }
         }
 
-        if (this->unk18 < 6)
+        if (this->subStateTimer < 6)
         {
             break;
         }
 
-        this->unk10++;
-        this->unk18 = 0;
+        this->subState++;
+        this->subStateTimer = 0;
         /* fallthrough */
     case 1:
         moveResult = this->MoveCursor(5);
@@ -269,7 +269,7 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
         {
             for (i = 4; i <= 8; i++)
             {
-                if (i - 4 == this->unk1c)
+                if (i - 4 == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -284,8 +284,8 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
         {
             this->SetState((ResultScreenState)1);
             g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
-            this->unk44 = this->unk1c;
-            this->unk1c = 0;
+            this->savedDifficultyCursor = this->cursor;
+            this->cursor = 0;
             return 1;
         }
 
@@ -293,7 +293,7 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
         {
             for (i = 4; i <= 8; i++)
             {
-                if (i - 4 == this->unk1c)
+                if (i - 4 == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x17;
                 }
@@ -303,9 +303,9 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
                 }
             }
 
-            this->unk44 = this->unk1c;
+            this->savedDifficultyCursor = this->cursor;
             this->SetState((ResultScreenState)4);
-            this->unk1c = 0;
+            this->cursor = 0;
             g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
             return 1;
         }
@@ -314,48 +314,48 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
 
     if (IS_PRESSED(0x4) || IS_PRESSED(0x100))
     {
-        if (this->unk4c < 4)
+        if (this->cheatCodeProgress < 4)
         {
             if (WAS_PRESSED(0x80))
             {
-                this->unk4c++;
+                this->cheatCodeProgress++;
             }
             else if (WAS_PRESSED(0x160b))
             {
-                this->unk4c = 0;
+                this->cheatCodeProgress = 0;
             }
         }
-        else if (this->unk4c < 5)
+        else if (this->cheatCodeProgress < 5)
         {
             if (WAS_PRESSED(0x40))
             {
-                this->unk4c++;
+                this->cheatCodeProgress++;
             }
             else if (WAS_PRESSED(0x160b))
             {
-                this->unk4c = 0;
+                this->cheatCodeProgress = 0;
             }
         }
-        else if (this->unk4c < 7)
+        else if (this->cheatCodeProgress < 7)
         {
             if (WAS_PRESSED(0x2000))
             {
-                this->unk4c++;
+                this->cheatCodeProgress++;
             }
             else if (WAS_PRESSED(0x160b))
             {
-                this->unk4c = 0;
+                this->cheatCodeProgress = 0;
             }
         }
-        else if (this->unk4c < 0xa)
+        else if (this->cheatCodeProgress < 0xa)
         {
             if (WAS_PRESSED(0x200))
             {
-                this->unk4c++;
+                this->cheatCodeProgress++;
             }
             else if (WAS_PRESSED(0x160b))
             {
-                this->unk4c = 0;
+                this->cheatCodeProgress = 0;
             }
         }
         else
@@ -377,16 +377,16 @@ i32 ResultScreen::HandleHighScoreDifficultySelect()
                 }
             }
 
-            this->unk4c = 0;
+            this->cheatCodeProgress = 0;
             g_SoundPlayer.PlaySoundByIdx(SOUND_1UP, 0);
         }
     }
     else
     {
-        this->unk4c = 0;
+        this->cheatCodeProgress = 0;
     }
 
-    this->unk18++;
+    this->subStateTimer++;
 
     return 0;
 }
@@ -396,19 +396,19 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
 {
     i32 i;
 
-    switch (this->unk10)
+    switch (this->subState)
     {
     case 0:
-        if (this->unk18 == 0)
+        if (this->subStateTimer == 0)
         {
-            this->unk1c = this->unk3c;
+            this->cursor = this->savedCharacterCursor;
 
             for (i = 0xf; i <= 0x1a; i++)
             {
                 this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
-                if (i - 0xf == this->unk1c)
+                if (i - 0xf == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -419,13 +419,13 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
             }
         }
 
-        if (this->unk18 < 6)
+        if (this->subStateTimer < 6)
         {
             break;
         }
 
-        this->unk10++;
-        this->unk18 = 0;
+        this->subState++;
+        this->subStateTimer = 0;
         /* fallthrough */
     case 1:
         i = this->MoveCursor(0xc);
@@ -434,7 +434,7 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
         {
             for (i = 0xf; i <= 0x1a; i++)
             {
-                if (i - 0xf == this->unk1c)
+                if (i - 0xf == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -449,7 +449,7 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
         {
             this->SetState((ResultScreenState)3);
             g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
-            this->unk3c = this->unk1c;
+            this->savedCharacterCursor = this->cursor;
 
             for (i = 0xf; i <= 0x1a; i++)
             {
@@ -465,7 +465,7 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
 
             for (i = 0xf; i <= 0x1a; i++)
             {
-                if (i - 0xf == this->unk1c)
+                if (i - 0xf == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x17;
                 }
@@ -476,7 +476,7 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
             }
 
             this->vms[0x28].prefix.pendingInterrupt = 0x3;
-            this->unk3c |= 0xffffffff;
+            this->savedCharacterCursor |= 0xffffffff;
             this->SetState((ResultScreenState)5);
             g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
             return 1;
@@ -484,7 +484,7 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
         break;
     }
 
-    this->unk18++;
+    this->subStateTimer++;
 
     return 0;
 }
@@ -492,36 +492,36 @@ i32 ResultScreen::HandleHighScoreCharacterSelect()
 // FUNCTION: th08 0x455925
 i32 ResultScreen::HandleHighScoreScreen()
 {
-    if (this->unk3c != this->unk1c && this->unk4 == 0xa)
+    if (this->savedCharacterCursor != this->cursor && this->screenTimer == 0xa)
     {
-        this->unk3c = this->unk1c;
+        this->savedCharacterCursor = this->cursor;
     }
 
-    if (this->unk4 < 6)
+    if (this->screenTimer < 6)
     {
         return 0;
     }
 
-    i32 sel = this->unk1c;
+    i32 sel = this->cursor;
 
     if (this->MoveCursorHorizontally(0xc))
     {
-        this->unk4 = 0;
-        this->vms[0x28].prefix.pendingInterrupt = (u16)(this->unk44 + 3);
+        this->screenTimer = 0;
+        this->vms[0x28].prefix.pendingInterrupt = (u16)(this->savedDifficultyCursor + 3);
         this->vms[sel + 0xf].prefix.pendingInterrupt = 0x18;
-        this->vms[this->unk1c + 0xf].prefix.pendingInterrupt = 0x19;
+        this->vms[this->cursor + 0xf].prefix.pendingInterrupt = 0x19;
     }
 
     if (WAS_PRESSED(0xa))
     {
-        this->unk3c = this->unk1c;
+        this->savedCharacterCursor = this->cursor;
         this->SetState((ResultScreenState)4);
         this->vms[0x28].prefix.pendingInterrupt = 1;
         g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
         return 1;
     }
 
-    this->unk18++;
+    this->subStateTimer++;
     return 0;
 }
 
@@ -530,19 +530,19 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
 {
     i32 i;
 
-    switch (this->unk10)
+    switch (this->subState)
     {
     case 0:
-        if (this->unk18 == 0)
+        if (this->subStateTimer == 0)
         {
-            this->unk1c = this->unk48;
+            this->cursor = this->savedSpellDifficultyCursor;
 
             for (i = 0x9; i <= 0xe; i++)
             {
                 this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
-                if (i - 0x9 == this->unk1c)
+                if (i - 0x9 == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -553,13 +553,13 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
             }
         }
 
-        if (this->unk18 < 6)
+        if (this->subStateTimer < 6)
         {
             break;
         }
 
-        this->unk10++;
-        this->unk18 = 0;
+        this->subState++;
+        this->subStateTimer = 0;
         /* fallthrough */
     case 1:
         i = this->MoveCursor(6);
@@ -568,7 +568,7 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
         {
             for (i = 0x9; i <= 0xe; i++)
             {
-                if (i - 0x9 == this->unk1c)
+                if (i - 0x9 == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -583,8 +583,8 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
         {
             this->SetState((ResultScreenState)1);
             g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
-            this->unk48 = this->unk1c;
-            this->unk1c = 1;
+            this->savedSpellDifficultyCursor = this->cursor;
+            this->cursor = 1;
             return 1;
         }
 
@@ -594,7 +594,7 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
 
             for (i = 0x9; i <= 0xe; i++)
             {
-                if (i - 0x9 == this->unk1c)
+                if (i - 0x9 == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x17;
                 }
@@ -604,7 +604,7 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
                 }
             }
 
-            this->unk48 = this->unk1c;
+            this->savedSpellDifficultyCursor = this->cursor;
             this->SetState((ResultScreenState)7);
             g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
             return 1;
@@ -612,7 +612,7 @@ i32 ResultScreen::HandleSpellCardDifficultySelect()
         break;
     }
 
-    this->unk18++;
+    this->subStateTimer++;
 
     return 0;
 }
@@ -622,19 +622,19 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
 {
     i32 i;
 
-    switch (this->unk10)
+    switch (this->subState)
     {
     case 0:
-        if (this->unk18 == 0)
+        if (this->subStateTimer == 0)
         {
-            this->unk1c = this->unk30;
+            this->cursor = this->shotTypeCursor;
 
             for (i = 0x1b; i <= 0x27; i++)
             {
                 this->vms[i].prefix.pendingInterrupt = 0x16;
                 g_AnmManager->ExecuteScript(&this->vms[i]);
 
-                if (i - 0x1b == this->unk1c)
+                if (i - 0x1b == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -645,13 +645,13 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
             }
         }
 
-        if (this->unk18 < 6)
+        if (this->subStateTimer < 6)
         {
             break;
         }
 
-        this->unk10++;
-        this->unk18 = 0;
+        this->subState++;
+        this->subStateTimer = 0;
         /* fallthrough */
     case 1:
         i = this->MoveCursor(0xd);
@@ -660,7 +660,7 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
         {
             for (i = 0x1b; i <= 0x27; i++)
             {
-                if (i - 0x1b == this->unk1c)
+                if (i - 0x1b == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x14;
                 }
@@ -675,7 +675,7 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
         {
             this->SetState((ResultScreenState)6);
             g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
-            this->unk30 = this->unk1c;
+            this->shotTypeCursor = this->cursor;
 
             for (i = 0x1b; i <= 0x27; i++)
             {
@@ -691,7 +691,7 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
 
             for (i = 0x1b; i <= 0x27; i++)
             {
-                if (i - 0x1b == this->unk1c)
+                if (i - 0x1b == this->cursor)
                 {
                     this->vms[i].prefix.pendingInterrupt = 0x17;
                 }
@@ -701,18 +701,18 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
                 }
             }
 
-            this->unk30 = this->unk1c;
+            this->shotTypeCursor = this->cursor;
             this->SetState((ResultScreenState)8);
             g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
             this->vms[0x28].prefix.pendingInterrupt = 0x3;
-            this->unk1c = 0;
-            this->unk40 |= 0xffffffff;
+            this->cursor = 0;
+            this->savedSpellPageCursor |= 0xffffffff;
             return 1;
         }
         break;
     }
 
-    this->unk18++;
+    this->subStateTimer++;
 
     return 0;
 }
@@ -720,77 +720,77 @@ i32 ResultScreen::HandleSpellCardCharacterSelect()
 // FUNCTION: th08 0x455f6b (93% FIXME: esi 缓存除数/or 展开/分支布局)
 i32 ResultScreen::HandleSpellCardScreen()
 {
-    i32 unkC;
-    i32 unk8;
-    i32 unk4;
+    i32 spellcardCount;
+    i32 spellIdx;
+    i32 spellcardEntry;
 
-    if (this->unk54 != 0 && this->unk4 >= 0xa)
+    if (this->backPressed != 0 && this->screenTimer >= 0xa)
     {
         this->SetState((ResultScreenState)7);
     }
 
-    unkC = *(u32 *)(this->unk48 * 4 + 0x4c67e8);
+    spellcardCount = *(u32 *)(this->savedSpellDifficultyCursor * 4 + 0x4c67e8);
 
-    if (this->unk40 != this->unk1c || this->unk34 != this->unk30)
+    if (this->savedSpellPageCursor != this->cursor || this->previousShotTypeCursor != this->shotTypeCursor)
     {
-        if (this->unk4 == 0xa)
+        if (this->screenTimer == 0xa)
         {
-            this->unk40 = this->unk1c;
-            this->unk34 = this->unk30;
+            this->savedSpellPageCursor = this->cursor;
+            this->previousShotTypeCursor = this->shotTypeCursor;
 
-            for (unk8 = this->unk40 * 0xa; unk8 < this->unk40 * 0xa + 0xa; unk8++)
+            for (spellIdx = this->savedSpellPageCursor * 0xa; spellIdx < this->savedSpellPageCursor * 0xa + 0xa; spellIdx++)
             {
-                if (unk8 < unkC)
+                if (spellIdx < spellcardCount)
                 {
-                    unk4 = *(u32 *)(*(u32 *)(this->unk48 * 4 + 0x4c67d0) + unk8 * 4);
+                    spellcardEntry = *(u32 *)(*(u32 *)(this->savedSpellDifficultyCursor * 4 + 0x4c67d0) + spellIdx * 4);
 
-                    if (*(u32 *)(unk4 * 0x22c + 0x160f69c) == 0)
+                    if (*(u32 *)(spellcardEntry * 0x22c + 0x160f69c) == 0)
                     {
-                        g_AnmManager->DrawTextLeft(&this->scoreVms[unk8 % 0xa], 0xffffff, 0, (const char *)0x4b77d8);
+                        g_AnmManager->DrawTextLeft(&this->scoreVms[spellIdx % 0xa], 0xffffff, 0, (const char *)0x4b77d8);
                     }
                     else
                     {
-                        g_AnmManager->DrawTextLeft(&this->scoreVms[unk8 % 0xa], 0xffffff, 0, (const char *)(unk4 * 0x22c + 0x160f558));
+                        g_AnmManager->DrawTextLeft(&this->scoreVms[spellIdx % 0xa], 0xffffff, 0, (const char *)(spellcardEntry * 0x22c + 0x160f558));
                     }
                 }
 
-                this->scoreVms[unk8 % 0xa].prefix.color1.a |= 0xff;
+                this->scoreVms[spellIdx % 0xa].prefix.color1.a |= 0xff;
             }
 
-            /* 0x64 + unk30*4 + unk48*0x34：得分表数组索引。 */
-            g_AnmManager->DrawTextLeft(&this->textVm, 0xffffff, 0, (const char *)0x4b795c, *(u32 *)((u8 *)this + this->unk48 * 0x34 + 0x64 + this->unk30 * 4), unkC);
+            /* 0x64 + shotTypeCursor*4 + savedSpellDifficultyCursor*0x34：得分表数组索引。 */
+            g_AnmManager->DrawTextLeft(&this->textVm, 0xffffff, 0, (const char *)0x4b795c, *(u32 *)((u8 *)this + this->savedSpellDifficultyCursor * 0x34 + 0x64 + this->shotTypeCursor * 4), spellcardCount);
             this->textVm.prefix.color1.a |= 0xff;
         }
     }
 
-    if (this->unk4 < 6)
+    if (this->screenTimer < 6)
     {
         return 0;
     }
 
-    if (this->MoveCursorHorizontally((unkC + 9) / 0xa))
+    if (this->MoveCursorHorizontally((spellcardCount + 9) / 0xa))
     {
-        this->unk4 = 0;
+        this->screenTimer = 0;
         this->vms[0x28].prefix.pendingInterrupt = 0xa;
     }
     else if (this->MoveShotTypeCursor(0xd))
     {
-        this->unk4 = 0;
-        this->unk38 = 1;
-        this->vms[this->unk34 + 0x1b].prefix.pendingInterrupt = 0x18;
-        this->vms[this->unk30 + 0x1b].prefix.pendingInterrupt = 0x19;
+        this->screenTimer = 0;
+        this->shotCursorMoved = 1;
+        this->vms[this->previousShotTypeCursor + 0x1b].prefix.pendingInterrupt = 0x18;
+        this->vms[this->shotTypeCursor + 0x1b].prefix.pendingInterrupt = 0x19;
     }
 
     if (WAS_PRESSED(0xa))
     {
-        this->unk54 = 1;
-        this->unk4 = 0;
+        this->backPressed = 1;
+        this->screenTimer = 0;
         g_SoundPlayer.PlaySoundByIdx(SOUND_BACK, 0);
         this->vms[0x28].prefix.pendingInterrupt = 0x1;
         return 1;
     }
 
-    this->unk18++;
+    this->subStateTimer++;
 
     return 0;
 }
@@ -837,25 +837,25 @@ ZunResult ResultScreen::CheckConfirmButton()
     goto end;
 
 case_f:
-    if (this->unk4 <= 0x1e)
+    if (this->screenTimer <= 0x1e)
     {
         menuTimerField = (u16 *)&this->vms[0x47];
         menuTimerField[0xff] = 0x12;
     }
 
-    if (this->unk4 >= 0x5a && WAS_PRESSED(0x1001))
+    if (this->screenTimer >= 0x5a && WAS_PRESSED(0x1001))
     {
         menuTimerField = (u16 *)&this->vms[0x47];
         menuTimerField[0xff] = 0x2;
-        this->unk4 = 0;
+        this->screenTimer = 0;
         this->screenMode = 0x10;
     }
     goto end;
 
 case_10:
-    if (this->unk4 >= 0x1e)
+    if (this->screenTimer >= 0x1e)
     {
-        this->unk4 = 9;
+        this->screenTimer = 9;
         this->screenMode = 0xa;
     }
 
@@ -943,12 +943,12 @@ ZunResult ResultScreen::AddedCallback(ResultScreen *resultScreen)
 // FUNCTION: th08 0x459fd2
 ZunResult ResultScreen::DeletedCallback(ResultScreen *resultScreen)
 {
-    if (resultScreen->unk0 != NULL)
+    if (resultScreen->scoreData != NULL)
     {
         resultScreen->WriteScore();
-        ScoreDat::ReleaseScore((ScoreDat *)resultScreen->unk0);
+        ScoreDat::ReleaseScore((ScoreDat *)resultScreen->scoreData);
     }
-    resultScreen->unk0 = NULL;
+    resultScreen->scoreData = NULL;
 
     for (i32 i = 0; i < 5; i++)
     {
@@ -978,10 +978,10 @@ i32 ResultScreen::MoveCursor(i32 length)
 {
     if (WAS_PRESSED_SCROLLING(0x10))
     {
-        this->unk1c--;
-        if (this->unk1c < 0)
+        this->cursor--;
+        if (this->cursor < 0)
         {
-            this->unk1c += length;
+            this->cursor += length;
         }
         g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
         return -1;
@@ -989,10 +989,10 @@ i32 ResultScreen::MoveCursor(i32 length)
 
     if (WAS_PRESSED_SCROLLING(0x20))
     {
-        this->unk1c++;
-        if (this->unk1c >= length)
+        this->cursor++;
+        if (this->cursor >= length)
         {
-            this->unk1c -= length;
+            this->cursor -= length;
         }
         g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
         return 1;
@@ -1006,10 +1006,10 @@ i32 ResultScreen::MoveShotTypeCursor(i32 length)
 {
     if (WAS_PRESSED_SCROLLING(0x10))
     {
-        this->unk30--;
-        if (this->unk30 < 0)
+        this->shotTypeCursor--;
+        if (this->shotTypeCursor < 0)
         {
-            this->unk30 += length;
+            this->shotTypeCursor += length;
         }
         g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
         return -1;
@@ -1017,10 +1017,10 @@ i32 ResultScreen::MoveShotTypeCursor(i32 length)
 
     if (WAS_PRESSED_SCROLLING(0x20))
     {
-        this->unk30++;
-        if (this->unk30 >= length)
+        this->shotTypeCursor++;
+        if (this->shotTypeCursor >= length)
         {
-            this->unk30 -= length;
+            this->shotTypeCursor -= length;
         }
         g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
         return 1;
@@ -1034,10 +1034,10 @@ i32 ResultScreen::MoveCursorHorizontally(i32 length)
 {
     if (WAS_PRESSED_SCROLLING(0x40))
     {
-        this->unk1c--;
-        if (this->unk1c < 0)
+        this->cursor--;
+        if (this->cursor < 0)
         {
-            this->unk1c += length;
+            this->cursor += length;
         }
         g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
         return -1;
@@ -1045,10 +1045,10 @@ i32 ResultScreen::MoveCursorHorizontally(i32 length)
 
     if (WAS_PRESSED_SCROLLING(0x80))
     {
-        this->unk1c++;
-        if (this->unk1c >= length)
+        this->cursor++;
+        if (this->cursor >= length)
         {
-            this->unk1c -= length;
+            this->cursor -= length;
         }
         g_SoundPlayer.PlaySoundByIdx(SOUND_MOVE_MENU, 0);
         return 1;

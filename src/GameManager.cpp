@@ -186,7 +186,7 @@ ChainCallbackResult GameManager::OnUpdate(GameManager *gameManager)
                 foundIdx = 0;
                 for (nextIdx = g_Unknown164d2cc + 1; nextIdx < STAGE_PROGRESS_MAX; nextIdx++)
                 {
-                    if (g_ReplayManager->unk8->header.stageReplayData[nextIdx] != NULL)
+                    if (g_ReplayManager->replayData->header.stageReplayData[nextIdx] != NULL)
                     {
                         foundIdx = nextIdx;
                         break;
@@ -253,7 +253,7 @@ ChainCallbackResult GameManager::OnUpdate(GameManager *gameManager)
 stageE2f:
     if (g_GameManagerState < 0)
     {
-        g_Gui.FUN_00438f58();
+        g_Gui.UpdateStageClearText();
     }
 
 stage1:
@@ -386,7 +386,7 @@ skipStageComplete:
     // at a manageable speed depending on the current FPS.
     if ((g_PlayerFlags & PLAYER_FLAG_SWAP_MODE_BIT) && g_PlayerUnknown0bd == 1)
     {
-        if (g_Gui.FUN_004358bb() == 0)
+        if (g_Gui.IsMsgActive() == 0)
         {
             gameManager->unk3de08++;
             if ((g_Supervisor.curFps < 20 && gameManager->unk3de08 % 3 != 0) ||
@@ -1305,7 +1305,7 @@ void GameManager::DecreaseSubrank(int amount)
 
 void GameManager::AddToYoukaiGauge(i32 param_1, i32 param_2)
 {
-    if (g_Player.unkFdc != 0 && param_2 == 0)
+    if (g_Player.shotActive != 0 && param_2 == 0)
     {
         return;
     }
@@ -1426,7 +1426,7 @@ ZunBool GameManager::IsTampered()
 // FUNCTION: th08 0x43c322
 u32 GameManager::FUN_0043c322()
 {
-    return this->flags.isReplay && g_ReplayManager->unk8->isPractice != 0;
+    return this->flags.isReplay && g_ReplayManager->replayData->isPractice != 0;
 }
 
 void GameManager::SetClockTime(u8 clockTime)

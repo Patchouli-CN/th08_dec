@@ -508,11 +508,11 @@ struct AnmManager
     ZunResult AddSpriteToDrawBuffer(VertexTex1DiffuseXyzrhw *vertices);
     void DrawPlayerBullet(AnmVm *vm);
     ZunResult Draw2DNoRound(AnmVm *vm);
-    i32 FUN_004639e0(AnmVm *vm);
+    i32 IsBulletClipped(AnmVm *vm);   // 0x4639e0 (player-bullet quad clip/cull check; returns -1 when off-screen)
     void SetupSpriteStrip(AnmVm *vm, void *a1, i32 a2); // 0x4649a0 (ECL set-AI helper: 依 sprite 尺寸生成拉伸 quad 条)
-    void FUN_00463d60(AnmVm *vm);
-    ZunResult FUN_00463cf0(AnmVm *vm);
-    ZunResult FUN_00464070(AnmVm *vm);
+    void InterpolateBulletScaleRotation(AnmVm *vm); // 0x463d60 (player-bullet scale/rotation interp setup)
+    ZunResult DrawClippedBullet(AnmVm *vm);         // 0x463cf0 (player-bullet draw after clip check)
+    ZunResult DrawScaledBullet(AnmVm *vm);          // 0x464070 (player-bullet draw after scale/rot setup)
     ZunResult DrawNoRotation(AnmVm *vm);
     void TranslateRotation(VertexTex1DiffuseXyzrhw *vertex, float x, float y, float sine, float cosine, float xOffset,
                            float yOffset);
@@ -534,7 +534,7 @@ struct AnmManager
     void ReleaseAnm(i32 anmIdx);
     void ReleaseAnmEntry(AnmEntry *anmEntry);
     void ReplaceSurface(i32 dstIdx, i32 srcIdx);
-    void FUN_00446f0b();
+    void ReleaseQuadVertexBuffer();
 
     void DrawTextInner(IDirect3DTexture8 *outTexture, i32 x, i32 y, i32 width, i32 height, i32 fontWidth,
                        i32 fontHeight, COLORREF textColor, COLORREF outlineColor, const char *buffer,
@@ -566,7 +566,7 @@ struct AnmManager
     void ClearCameraSettings();
     void SetCameraMode(u8 mode);
     void Draw2DAndFlush(AnmVm *vm);
-    void FUN_00462e00();
+    void ResetVertexBuffer();
 
     void ClearZWriteSetting();
 
@@ -575,7 +575,7 @@ struct AnmManager
     {
         this->scriptsExecutedThisFrame = 0;
         this->renderStateChangesThisFrame = 0;
-        this->unk0xc = 0;
+        this->scriptStarts = 0;
         this->flushesThisFrame = 0;
     }
 
@@ -630,15 +630,15 @@ struct AnmManager
     ZunColor color;
     ZunBool useMixColor;
     i32 captureSurfaceIdx;
-    u32 unk0xc;
+    u32 scriptStarts;                   // 0xc  per-frame debug counter: ++ on each SetAndExecuteScript
     u32 scriptsExecutedThisFrame;
     u32 renderStateChangesThisFrame;
     u32 flushesThisFrame;
     Float2 screenShakeOffset;
     AnmLoaded anmFiles[256];
-    Float3 unk0x1c24;
+    Float3 unk0x1c24; // (unused in current code)
     unknown_fields(0x1c30, 0x34);
-    AnmVm unk0x1c64;
+    AnmVm unk0x1c64; // (unused in current code)
     unknown_fields(0x1f08, 0x130);
 
     IDirect3DSurface8 *surfaces[32];
@@ -647,7 +647,7 @@ struct AnmManager
     u32 surfaceDataSizes[32];
     ZunImageInfo surfaceInfo[32];
 
-    i32 unk0x24b8;
+    i32 unk0x24b8; // set to 1 in the ctor alongside the render-state resets (write-only so far)
 
     IDirect3DTexture8 *currentTexture;
     u8 currentBlendMode;

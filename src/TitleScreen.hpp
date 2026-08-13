@@ -169,7 +169,7 @@ struct TitleScreen
     i32 cursor2;
     i32 currentScreenState;
     i32 stateTimer;
-    i32 unk0x14;
+    i32 unk0x14; // never referenced in the current decompilation (write-only / unused)
     u8 padding[80];
 
     TitleCurrentScreen previousScreen;
@@ -179,13 +179,13 @@ struct TitleScreen
     char replayNumbers[TITLE_MAX_REPLAYS][8];
     ReplayData replays[TITLE_MAX_REPLAYS];
     ReplayData *currentReplay;
-    i32 unk0xc284;
+    i32 unk0xc284; // write-only so far: zeroed after the replay list is loaded in the replay menu
     i32 replayCount;
     i32 selectedReplay;
     i32 selectedReplayStage;
     i32 idleFrames;
     i32 currentNumberOfSpellCards;
-    i32 unk0xc29c;
+    i32 unk0xc29c; // spell-card select screen counter: 0 on screen init, 21 when the list is ready (write-only so far)
     float percentageCapturedSpellPracticePerShot;
     float percentageCapturedInGamePerShot;
     float percentageCapturedSpellPractice;

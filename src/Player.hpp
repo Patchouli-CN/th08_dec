@@ -93,10 +93,10 @@ struct PlayerBulletVm
 C_ASSERT(sizeof(PlayerBulletVm) == 0x484);
 
 // A player shot slot. shots[] and the slot sub-range at 0xbb834 both alias this
-// array (FUN_0044de60 starts from &shots[0xc0]).
+// array (SpawnShot starts from &shots[0xc0]).
 struct ShotSlot  // 0x40
 {
-    f32 posX;      // 0x0  spawn position (from FUN_0044de60 spawnPos)
+    f32 posX;      // 0x0  spawn position (from SpawnShot spawnPos)
     f32 posY;      // 0x4
     f32 unk8;      // 0x8
     f32 unkC;      // 0xc
@@ -105,18 +105,18 @@ struct ShotSlot  // 0x40
     f32 unk18;     // 0x18
     f32 unk1C;     // 0x1c
     f32 unk20;     // 0x20  non-zero marks a rotated (not AABB) collision box
-    i32 lifespan;  // 0x24  decremented each frame by FUN_0044c5b0
-    i32 unk28;     // 0x28  hit type reported by FUN_00449ff0
+    i32 lifespan;  // 0x24  decremented each frame by UpdateShots
+    i32 unk28;     // 0x28  hit type reported by CheckShotCollision
     i32 unk2c;     // 0x2c
-    i32 unk30;     // 0x30  hit counter (incremented by FUN_00449ff0)
+    i32 unk30;     // 0x30  hit counter (incremented by CheckShotCollision)
     i32 unk34;     // 0x34
-    i32 unk38;     // 0x38  set to 1 by FUN_0044e370
+    i32 unk38;     // 0x38  set to 1 by ResetShotSlot
     u8 active;     // 0x3c  slot-in-use flag
     unknown_fields(0x3d, 0x3);
 };
 C_ASSERT(sizeof(ShotSlot) == 0x40);
 
-// Speed tables used by FUN_0044aec0's direction->velocity switch. The two
+// Speed tables used by UpdateMovement's direction->velocity switch. The two
 // pointers point at overlapping structures whose speed fields are 4 bytes apart
 // (moveSpeedNormal at +0x24/+0x2c, moveSpeedSpirit at +0x28/+0x30).
 struct PlayerMoveSpeed
@@ -187,8 +187,8 @@ struct Player
     f32 unk404;                  // 0x404
     f32 unk408;                  // 0x408
     PlayerOption options[4];     // 0x40c
-    i32 unkFdc;                  // 0xfdc  shot-in-progress flag
-    i32 unkFe0;                  // 0xfe0  shot type index
+    i32 shotActive;              // 0xfdc  shot-in-progress flag
+    i32 shotType;                // 0xfe0  shot type index
     i32 shotInterval;            // 0xfe4
     i32 unkFe8;                  // 0xfe8
     i32 powerLevel;              // 0xfec
@@ -208,15 +208,15 @@ struct Player
     PlayerMoveSpeedSpirit *moveSpeedSpirit;  // 0xe2a78  spirit/swapped speed table
     i32 shotState;               // 0xe2a7c
     unknown_fields(0xe2a80, 0x10);
-    i32 unkE2a90;                // 0xe2a90
+    i32 lastShotHitType;         // 0xe2a90  hit type stored by CheckShotCollision
     unknown_fields(0xe2a94, 0x4);
     i32 movementDirection;       // 0xe2a98 (PlayerDirection)
     f32 velocityX;               // 0xe2a9c  current x velocity
     f32 velocityY;               // 0xe2aa0  current y velocity
-    Float3 unkE2aa4;             // 0xe2aa4
-    Float3 unkE2ab0;             // 0xe2ab0
+    Float3 boundaryIndicatorLeft;  // 0xe2aa4  left boundary-indicator target (reset to -999)
+    Float3 boundaryIndicatorRight; // 0xe2ab0  right boundary-indicator target
     unknown_fields(0xe2abc, 0x4);
-    i32 unkE2ac0;                // 0xe2ac0
+    i32 boundaryIndicatorTimer;                // 0xe2ac0
     ZunTimer shotTimer2;         // 0xe2ac4
     ZunTimer unkE2ad0;           // 0xe2ad0
     unknown_fields(0xe2adc, 0xc);
@@ -246,25 +246,25 @@ struct Player
     static ZunResult __fastcall LoadShtFile(PlayerRawShtFile **header, const char *path);
     ZunBool CalcItemBoxCollision(Float3 *pos, Float3 *size);
     f32 AngleToPlayer(Float3 *pos);
-    void FUN_004512f0();
-    i32 FUN_00449ff0(Float3 *pos, void *unkD34);
+    void UpdateBulletVms();
+    i32 CheckShotCollision(Float3 *pos, void *unkD34);
     i32 IsHuman();
     i32 IsYoukai();
-    void FUN_0044c5b0();
-    void FUN_0044c650();
-    i32 FUN_0044cbf0();
-    void FUN_0044d180();
-    void FUN_0044d2c0();
-    i32 FUN_0044aec0();
-    void FUN_00451150();
-    i32 FUN_00451500();
-    void FUN_0044d420();
-    u32 FUN_0044de60(Float3 *spawnPos, f32 targetX, f32 targetY, i32 unk28, i32 unk24);
-    void FUN_0044e0f0();
-    void FUN_0044e120();
-    void FUN_0044e350();
-    void FUN_0044e370();
-    void FUN_00451640();
+    void UpdateShots();
+    void UpdateShooting();
+    i32 HandleDeath();
+    void UpdateDeathAnimation();
+    void UpdateInvulnerability();
+    i32 UpdateMovement();
+    void UpdateBullets();
+    i32 UpdateChargeShotTimer();
+    void UpdateBoundaryIndicatorTargets();
+    u32 SpawnShot(Float3 *spawnPos, f32 targetX, f32 targetY, i32 unk28, i32 unk24);
+    void SetAdditiveBlend();
+    void ClearAdditiveBlend();
+    void DeactivateShotSlot();
+    void ResetShotSlot();
+    void ClampChargeShotTimer();
 };
 
 DIFFABLE_EXTERN(Player, g_Player);

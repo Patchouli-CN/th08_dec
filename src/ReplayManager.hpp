@@ -107,27 +107,27 @@ struct ReplayManager
     static void StopRecording();
 
     ReplayManager();
-    void FUN_004522a0();
-    void FUN_00452830();
-    void FUN_00452d60();
+    void UpdateReplay();
+    void StartRecording();
+    void StartReplay();
 
     unknown_fields(0x0, 0x8);
-    ReplayData *unk8;                    // 0x8
-    i32 unkC;                            // 0xc
-    i32 unk10;                           // 0x10  recording mode
-    char *unk14;                         // 0x14  replay path
-    Float3 unk18;                        // 0x18
-    Float3 unk24;                        // 0x24
-    Float3 unk30;                        // 0x30
+    ReplayData *replayData;              // 0x8
+    i32 unkC;                            // 0xc  (set to 0 on start; likely a replay session state flag, never read in current code)
+    i32 replayMode;                      // 0x10  0=recording, 1=playback
+    char *replayPath;                    // 0x14  replay file path (only meaningful for playback)
+    Float3 unk18;                        // 0x18  (only initialized in ctor; recorded player motion?)
+    Float3 unk24;                        // 0x24  (only initialized in ctor)
+    Float3 unk30;                        // 0x30  (only initialized in ctor)
     unknown_fields(0x3c, 0x14);
-    u8 *unk50;
-    u8 *unk54[MAX_STAGES];
+    u8 *replayEventCursor;               // 0x50  write cursor into the replay event buffer
+    u8 *stageReplayDataStart[MAX_STAGES]; // 0x54  per-stage start pointer into the replay event buffer
     unknown_fields(0x78, 0x50);
-    ChainElem *unkC8;                    // 0xc8
+    ChainElem *replayChainElem;          // 0xc8  primary replay calc-chain elem (record or play callback)
     unknown_fields(0xcc, 0x4);
-    ChainElem *unkD0;                    // 0xd0
-    ChainElem *unkD4;                    // 0xd4
-    unknown_fields(0xd8, 0x2);
+    ChainElem *keyInputChainElem;        // 0xd0  chain elem whose callback gates key-input recording
+    ChainElem *replayUpdateChainElem;    // 0xd4  chain elem whose callback is UpdateReplay
+    u16 replayRngValue;                  // 0xd8  replay RNG seed/value snapshot (stored into ReplayData)
     u16 replayEventFlags;                // 0xda
 };
 

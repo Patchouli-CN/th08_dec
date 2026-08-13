@@ -10,7 +10,7 @@ namespace th08
 /* Spellcard::flags 位定义。 */
 #define SPELLCARD_FLAG_ACTIVE_BIT 0      /* bit 0：符卡战斗进行中 */
 #define SPELLCARD_FLAG_LOCKED_SHIFT 0xb  /* bit 11：锁定（不累计时间） */
-#define SPELLCARD_FLAG_RESET_MASK 0x4    /* bit 2：FUN_0044d150 清除 */
+#define SPELLCARD_FLAG_RESET_MASK 0x4    /* bit 2：ResetSpellcard 清除 */
 
 // Naming scheme:
 // SPELLCARD_[STAGE]_[ENEMY]_(LAST SPELL)(NUM)(DIFFICULTY)
@@ -270,21 +270,21 @@ struct Spellcard
     static ZunResult RegisterChain();
     static void CutChain();
 
-    i32 spellcard_fun_004178a0();
-    void spellcard_fun_00416b10(i32 arg);
-    ZunResult FUN_00414590();
-    void FUN_0044d150();
+    i32 IsSpellcardActive();
+    void AddSpellcardTime(i32 arg);
+    ZunResult Initialize();
+    void ResetSpellcard();
 
     u32 flags;
     unknown_fields(0x4, 0xf8);
-    u32 unk0xfc;
-    u32 unk0x100;
+    u32 spellTime;                  // 0xfc  accumulated spell-card elapsed time (capped at maxSpellTime)
+    u32 spellTimeBonus;             // 0x100  bonus counter, += arg/120 while spellTime below cap
     unknown_fields(0x104, 0x2534);
-    u32 unk0x2638;
-    ChainElem *unk263c;             // 0x263c
-    ChainElem *unk2640;             // 0x2640
+    u32 maxSpellTime;               // 0x2638  cap for spellTime
+    ChainElem *calcChainElem;       // 0x263c  calc-chain elem (callback 0x418010)
+    ChainElem *drawChainElem;       // 0x2640  draw-chain elem (callback 0x418030)
     unknown_fields(0x2644, 0x4);
-    SpellcardDataHolder unk2648;
+    SpellcardDataHolder dataHolder; // 0x2648
 };
 
 DIFFABLE_EXTERN_ARRAY(i32 *, 6, g_SpellcardNumbersPerDifficulty);

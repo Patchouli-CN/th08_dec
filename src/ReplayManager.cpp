@@ -20,9 +20,9 @@ void ReplayManager::StopRecording()
 
     if (replayManager != NULL)
     {
-        replayManager->unk50 += 2;
-        *(u16 *)replayManager->unk50 = 0;
-        replayManager->unk54[g_GameManager.currentStage] = replayManager->unk50 + 6;
+        replayManager->replayEventCursor += 2;
+        *(u16 *)replayManager->replayEventCursor = 0;
+        replayManager->stageReplayDataStart[g_GameManager.currentStage] = replayManager->replayEventCursor + 6;
     }
 }
 
@@ -127,17 +127,25 @@ ReplayManager::ReplayManager()
 }
 
 // STUB: th08 0x4522a0
-void ReplayManager::FUN_004522a0()
+// Per-frame replay update (also registered as a calc-chain callback).
+// Clears replayEventFlags, snapshots the replay RNG value into replayRngValue,
+// resets the replay RNG call counter, and promotes the "quit requested" global
+// flag into replayEventFlags bit 0x100 before clearing it.
+void ReplayManager::UpdateReplay()
 {
 }
 
 // STUB: th08 0x452830
-void ReplayManager::FUN_00452830()
+// Starts replay recording: allocates a fresh ReplayData, fills the header from
+// the current game state, and sets up per-stage replay event buffers.
+void ReplayManager::StartRecording()
 {
 }
 
 // STUB: th08 0x452d60
-void ReplayManager::FUN_00452d60()
+// Starts replay playback: loads + LZSS-decodes the replay file at replayPath
+// into replayData (re-allocating per-stage buffers for stage replay).
+void ReplayManager::StartReplay()
 {
 }
 
@@ -160,14 +168,14 @@ ZunResult ReplayManager::RegisterChain(i32 param_1, char *path)
             }
             g_ReplayManager = rm;
             memset(rm, 0, 0xdc);
-            rm->unk8 = NULL;
-            rm->unk10 = param_1;
-            rm->unk14 = path;
+            rm->replayData = NULL;
+            rm->replayMode = param_1;
+            rm->replayPath = path;
             switch (param_1)
             {
             case 0:
                 elem = g_Chain.CreateElem((ChainCallback)0x452310);
-                rm->unkC8 = elem;
+                rm->replayChainElem = elem;
                 elem->addedCallback = (ChainLifetimeCallback)0x452830;
                 elem->deletedCallback = (ChainLifetimeCallback)0x453080;
                 elem->arg = rm;
@@ -175,16 +183,16 @@ ZunResult ReplayManager::RegisterChain(i32 param_1, char *path)
                 {
                     return (ZunResult)-1;
                 }
-                rm->unkD0 = NULL;
+                rm->keyInputChainElem = NULL;
                 elem = g_Chain.CreateElem((ChainCallback)0x4522a0);
-                rm->unkD4 = elem;
+                rm->replayUpdateChainElem = elem;
                 elem->arg = rm;
                 g_Chain.AddToCalcChain(elem, 7);
-                rm->FUN_004522a0();
+                rm->UpdateReplay();
                 break;
             case 1:
                 elem = g_Chain.CreateElem((ChainCallback)0x452550);
-                rm->unkC8 = elem;
+                rm->replayChainElem = elem;
                 elem->addedCallback = (ChainLifetimeCallback)0x452d60;
                 elem->deletedCallback = (ChainLifetimeCallback)0x453080;
                 elem->arg = rm;
@@ -192,22 +200,22 @@ ZunResult ReplayManager::RegisterChain(i32 param_1, char *path)
                 {
                     return (ZunResult)-1;
                 }
-                if (((ReplayDataHeader *)rm->unk8)->unk0x6 != 0)
+                if (((ReplayDataHeader *)rm->replayData)->unk0x6 != 0)
                 {
                     elem->callback = (ChainCallback)0x4526c0;
                 }
                 elem = g_Chain.CreateElem((ChainCallback)0x452490);
-                rm->unkD0 = elem;
+                rm->keyInputChainElem = elem;
                 elem->arg = rm;
                 g_Chain.AddToCalcChain(elem, 0x12);
-                rm->unkD4 = NULL;
-                if (((ReplayDataHeader *)rm->unk8)->unk0x6 != 0)
+                rm->replayUpdateChainElem = NULL;
+                if (((ReplayDataHeader *)rm->replayData)->unk0x6 != 0)
                 {
                     elem = g_Chain.CreateElem((ChainCallback)0x4522a0);
-                    rm->unkD4 = elem;
+                    rm->replayUpdateChainElem = elem;
                     elem->arg = rm;
                     g_Chain.AddToCalcChain(elem, 7);
-                    rm->FUN_004522a0();
+                    rm->UpdateReplay();
                 }
                 break;
             }
@@ -218,10 +226,10 @@ ZunResult ReplayManager::RegisterChain(i32 param_1, char *path)
         switch (param_1)
         {
         case 0:
-            g_ReplayManager->FUN_00452830();
+            g_ReplayManager->StartRecording();
             break;
         case 1:
-            g_ReplayManager->FUN_00452d60();
+            g_ReplayManager->StartReplay();
             break;
         }
     }

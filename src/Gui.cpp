@@ -39,7 +39,7 @@ ChainCallbackResult Gui::OnUpdate(Gui *gui)
     {
         return CHAIN_CALLBACK_RESULT_CONTINUE;
     }
-    gui->FUN_00435900();
+    gui->UpdateBossHud();
     gui->impl->RunMsg();
     if ((g_CurFrameInput & TH_BUTTON_SKIP) != 0)
     {
@@ -48,20 +48,20 @@ ChainCallbackResult Gui::OnUpdate(Gui *gui)
             g_Supervisor.unk174 = 8;
         }
     }
-    gui->unk_0++;
+    gui->frameCounter++;
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
 ChainCallbackResult Gui::OnDraw(Gui *gui)
 {
-    if (gui->impl->msgState.unk1570 != 0)
+    if (gui->impl->msgState.stageClearActive != 0)
     {
-        gui->FUN_0043826b();
+        gui->DrawStageClearHud();
     }
     gui->impl->DrawDialogue();
-    gui->FUN_0043741d();
+    gui->DrawBossHud();
     gui->DrawGameScene();
-    gui->FUN_00438a89();
+    gui->DrawHud();
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
@@ -154,7 +154,7 @@ void Gui::FreeMsgFile(void)
 }
 
 // FUNCTION: th08 0x437d87
-i32 Gui::FUN_00437d87()
+i32 Gui::IsBossPortraitVisible()
 {
     i32 result;
 
@@ -171,7 +171,7 @@ i32 Gui::FUN_00437d87()
 }
 
 // FUNCTION: th08 0x4358bb
-i32 Gui::FUN_004358bb()
+i32 Gui::IsMsgActive()
 {
     i32 result;
 
@@ -524,7 +524,7 @@ ZunResult GuiImpl::RunMsg()
         case 22: // MSG_MUSIC_SELECT confirm
         {
             g_GameManager.flags.isGoingToFinalB = this->msgState.musicSelection;
-            g_Gui.FUN_00439810(this->msgState.musicSelection + 1);
+            g_Gui.InitMsg(this->msgState.musicSelection + 1);
             continue;
         }
         case 4: // MSG_PAUSE
@@ -602,7 +602,7 @@ ZunResult GuiImpl::RunMsg()
             this->resultTimeFrames2 = g_GameManager.GetClockTime() * 30 + 660;
             this->resultTimeFramesCopy = this->resultTimeFrames;
             this->unk22e10 = 0;
-            this->msgState.unk1570 = 1;
+            this->msgState.stageClearActive = 1;
             g_GameManager.flags.unk9 = 1;
             if (g_GameManager.currentStage != 6 && g_GameManager.currentStage != 7 &&
                 g_GameManager.currentStage != 8)
@@ -666,7 +666,7 @@ ZunResult GuiImpl::RunMsg()
             this->msgState.dialogueSkippable = *(u8 *)&this->msgState.curInstr->args;
             break;
         case 18: // dialogue box visibility
-            this->msgState.unk156d = *(u8 *)&this->msgState.curInstr->args;
+            this->msgState.dialogueBoxVisible = *(u8 *)&this->msgState.curInstr->args;
             break;
         default:
             break;
@@ -693,14 +693,14 @@ SKIP_TIME_INCREMENT:
 }
 
 // STUB: th08 0x43396d (msg init, 0x446 bytes - separate task)
-void GuiImpl::FUN_0043396d(i32 arg)
+void GuiImpl::InitMsg(i32 arg)
 {
 }
 
 // FUNCTION: th08 0x439810
-void Gui::FUN_00439810(i32 arg)
+void Gui::InitMsg(i32 arg)
 {
-    this->impl->FUN_0043396d(arg);
+    this->impl->InitMsg(arg);
 }
 
 // 原版这些 boss 状态 setter 属于 /Od 编译单元（纯 dword/byte 直传 + mov/pop epilogue）。
@@ -775,7 +775,7 @@ void GuiImpl::DrawDialogue()
 }
 
 // STUB: th08 0x435900
-void Gui::FUN_00435900()
+void Gui::UpdateBossHud()
 {
 }
 
@@ -898,7 +898,7 @@ void Gui::DrawGameScene()
     }
     if (this->flags.bombDisplayUpdateFrames || this->flags.lifeDisplayUpdateFrames)
     {
-        if (g_GameManager.flags.unk7 == 1 && g_Spellcard.spellcard_fun_004178a0())
+        if (g_GameManager.flags.unk7 == 1 && g_Spellcard.IsSpellcardActive())
         {
             g_AnmManager->DrawNoRotation((AnmVm *)((u8 *)this->impl + 0x5484));
         }
@@ -1031,11 +1031,11 @@ void Gui::DrawGameScene()
 }
 
 // STUB: th08 0x43741d
-void Gui::FUN_0043741d()
+void Gui::DrawBossHud()
 {
 }
 
-void Gui::FUN_00437e5d(i32 arg1, i32 arg2)
+void Gui::ShowPopupB(i32 arg1, i32 arg2)
 {
     this->impl->popupB.position = Float3(416.0f, 168.0f, 0.0f);
     this->impl->popupB.unk0x10 = arg2;
@@ -1045,17 +1045,17 @@ void Gui::FUN_00437e5d(i32 arg1, i32 arg2)
 }
 
 // STUB: th08 0x43826b
-void Gui::FUN_0043826b()
+void Gui::DrawStageClearHud()
 {
 }
 
 // STUB: th08 0x438a89
-void Gui::FUN_00438a89()
+void Gui::DrawHud()
 {
 }
 
 // FUNCTION: th08 0x438f58 (stage-clear text: run script and set the capture region)
-void Gui::FUN_00438f58()
+void Gui::UpdateStageClearText()
 {
     g_GuiStageClearAnmB->SetAndExecuteScriptIdx(&this->impl->vmF, 1);
     g_AnmManager->SetTextureCaptureParams(

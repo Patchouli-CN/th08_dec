@@ -70,7 +70,7 @@ void AnmLoaded::SetAndExecuteScript(AnmVm *vm, AnmRawInstr *beginningOfScript)
         vm->prefix.currentTimeInScript = 0;
         vm->prefix.flags &= ~ANM_FLAG_VISIBLE_MASK;
         g_AnmManager->ExecuteScript(vm);
-        g_AnmManager->unk0xc++;
+        g_AnmManager->scriptStarts++;
     }
 }
 
@@ -957,7 +957,10 @@ void AnmManager::ReleaseSurfaces()
 }
 
 // FUNCTION: th08 0x446f0b
-void AnmManager::FUN_00446f0b()
+// Releases the quad vertex buffer through the COM interface.
+// NOTE: this non-inline copy is not matched by reccmp; the original 0x446f0b is
+// already matched by the header-inline ReleaseVertexBuffer().
+void AnmManager::ReleaseQuadVertexBuffer()
 {
     if (this->quadVertexBuffer != NULL)
     {
@@ -983,7 +986,10 @@ ZunBool AnmManager::SpriteHasTexture(AnmVm *vm)
 }
 
 // STUB: th08 0x462e00
-void AnmManager::FUN_00462e00()
+// Resets the vertex-buffer draw state (spritesToDraw = 0, pointers reset to the
+// buffer start). NOTE: the original 0x462e00 is already matched by the separate
+// ClearVertexBuffer(); this is a leftover duplicate.
+void AnmManager::ResetVertexBuffer()
 {
 }
 
@@ -1238,10 +1244,10 @@ void AnmManager::DrawPlayerBullet(AnmVm *vm)
         this->Draw2DNoRound(vm);
         break;
     case 4:
-        this->FUN_00463cf0(vm);
+        this->DrawClippedBullet(vm);
         break;
     case 5:
-        this->FUN_00464070(vm);
+        this->DrawScaledBullet(vm);
         break;
     }
 }
@@ -1333,7 +1339,9 @@ ZunResult AnmManager::Draw2DNoRound(AnmVm *vm)
 }
 
 // STUB: th08 0x4639e0
-i32 AnmManager::FUN_004639e0(AnmVm *vm)
+// Culls the player-bullet quad against the playfield/clip rect; returns nonzero
+// when the bullet is clipped so the draw can be skipped.
+i32 AnmManager::IsBulletClipped(AnmVm *vm)
 {
     return 0;
 }
@@ -1342,7 +1350,8 @@ void AnmManager::SetupSpriteStrip(AnmVm *vm, void *a1, i32 a2)
 {
 }
 
-ZunResult AnmManager::FUN_00463cf0(AnmVm *vm)
+// Draws a player bullet after a clip/cull check (hit-animation type 4).
+ZunResult AnmManager::DrawClippedBullet(AnmVm *vm)
 {
     if (!vm->IsVisible())
     {
@@ -1359,7 +1368,7 @@ ZunResult AnmManager::FUN_00463cf0(AnmVm *vm)
         return ZUN_ERROR;
     }
 
-    if (this->FUN_004639e0(vm) != 0)
+    if (this->IsBulletClipped(vm) != 0)
     {
         return ZUN_ERROR;
     }
@@ -1368,11 +1377,14 @@ ZunResult AnmManager::FUN_00463cf0(AnmVm *vm)
 }
 
 // STUB: th08 0x463d60
-void AnmManager::FUN_00463d60(AnmVm *vm)
+// Interpolates the player bullet's scale/rotation from its prefix flags
+// (bit 16 skips, bits 2/3 gate the rotation/scale updates).
+void AnmManager::InterpolateBulletScaleRotation(AnmVm *vm)
 {
 }
 
-ZunResult AnmManager::FUN_00464070(AnmVm *vm)
+// Draws a player bullet after scale/rotation interpolation (hit-animation type 5).
+ZunResult AnmManager::DrawScaledBullet(AnmVm *vm)
 {
     if (!vm->IsVisible())
     {
@@ -1389,7 +1401,7 @@ ZunResult AnmManager::FUN_00464070(AnmVm *vm)
         return ZUN_ERROR;
     }
 
-    this->FUN_00463d60(vm);
+    this->InterpolateBulletScaleRotation(vm);
 
     return this->DrawInner(vm, 0);
 }

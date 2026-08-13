@@ -317,7 +317,7 @@ void ItemManager::OnUpdate()
                 if (g_GameManager.GetPower() < 0x80)
                 {
                     g_BulletManager.bulletmanager_fun_00415c60();
-                    g_Gui.FUN_00437e5d(0, 1);
+                    g_Gui.ShowPopupB(0, 1);
                     g_SoundPlayer.PlaySoundByIdx(SOUND_POWERUP, 0);
                     g_AsciiManager.CreateScorePopup(&item->currentPosition, -1, COLOR_SCORE_POPUP);
                     this->ConvertAllPowerItemsToTimeOrbs(item);
@@ -400,11 +400,11 @@ void Item::CollectPowerSmall()
     if (g_GameManager.GetPower() >= 0x80)
     {
         g_GameManager.SetPower(0x80);
-        if (g_Spellcard.spellcard_fun_004178a0() == 0)
+        if (g_Spellcard.IsSpellcardActive() == 0)
         {
             g_BulletManager.bulletmanager_fun_00415c60();
         }
-        g_Gui.FUN_00437e5d(0, 1);
+        g_Gui.ShowPopupB(0, 1);
         g_ItemManager.ConvertAllPowerItemsToTimeOrbs(this);
     }
     g_GameManager.AddScore(0xa);
@@ -531,11 +531,11 @@ void Item::CollectPowerBig()
     if (g_GameManager.GetPower() >= 0x80)
     {
         g_GameManager.SetPower(0x80);
-        if (g_Spellcard.spellcard_fun_004178a0() == 0)
+        if (g_Spellcard.IsSpellcardActive() == 0)
         {
             g_BulletManager.bulletmanager_fun_00415c60();
         }
-        g_Gui.FUN_00437e5d(0, 1);
+        g_Gui.ShowPopupB(0, 1);
         g_ItemManager.ConvertAllPowerItemsToTimeOrbs(this);
     }
     g_Gui.flags.powerDisplayUpdateFrames = 2;
@@ -590,7 +590,7 @@ void Item::CollectTimeOrb()
     g_Gui.flags.timeDisplayUpdateFrames = 2;
     g_GameManager.AddScore(itemScore);
     g_GameManager.AddTimeOrbs(1);
-    g_Spellcard.spellcard_fun_00416b10(0x1f40);
+    g_Spellcard.AddSpellcardTime(0x1f40);
     if (g_ItemAutoCollectTimer == 0)
     {
         itemScore = 0x6f;

@@ -67,7 +67,7 @@ struct AsciiManagerPopup
     f32 scaleY;
     bool inUse;
     BYTE characterCount;
-    u32 unk0x34;
+    u32 unk0x34; // unused in current code
 };
 
 C_ASSERT(sizeof(AsciiManagerPopup) == 0x38);
@@ -153,7 +153,7 @@ struct AsciiManager
     AnmVm youkaiGaugeYoukaiIcon;
     AnmVm youkaiGaugeCursor;
     AnmVm percentageText;
-    AnmVm unk_1520;
+    AnmVm unk_1520; // HUD anm vm (script 9), executed each frame; purpose still unknown
 
     AnmVm bossMarkers[4];
     i32 bossMarkerStates[4];
@@ -169,7 +169,7 @@ struct AsciiManager
 
     i32 gaugeInterrupt;
     i32 spaceWidth;
-    u32 unk_8284;
+    u32 frameCounter; // 0x8284  frame counter for blink timing (mod 8/4/2 in the HUD)
 
     AnmLoaded *asciiAnm;
     AnmLoaded *captureAnm;
@@ -178,7 +178,7 @@ struct AsciiManager
     i32 nextPlayerPointPopupIndex;
     i32 nextTimePopupIndex;
 
-    ZunBool unk0x829c;
+    ZunBool unk0x829c; // zeroed in Reset; write-only so far
 
     PauseMenu pauseMenu;
     RetryMenu retryMenu;
@@ -188,10 +188,10 @@ struct AsciiManager
     AsciiManagerPopup scorePopups[ASCII_MAX_SCORE_POPUPS + ASCII_MAX_PLAYER_POPUPS];
     AsciiManagerPopup timePopups[ASCII_MAX_TIME_POPUPS];
 
-    f32 unk_16f04;
-    i32 unk_16f08;
+    f32 boundaryIndicatorOffset; // 0x16f04  player boundary-indicator bar half-width/offset
+    i32 boundaryIndicatorTimer;  // 0x16f08  >0 while the boundary indicator bars are shown; also the alpha
 
-    AnmVm unk_16f0c;
+    AnmVm boundaryIndicatorVm;   // 0x16f0c  the boundary-indicator bar anm vm (script 0x69)
 };
 
 C_ASSERT(sizeof(AsciiManager) == 0x171b0);

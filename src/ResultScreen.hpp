@@ -58,25 +58,25 @@ struct ResultScreen
     i32 __fastcall MoveShotTypeCursor(i32 length);
     i32 __fastcall MoveCursorHorizontally(i32 length);
 
-    i32 unk0;                      // 0x0
-    i32 unk4;                      // 0x4
-    i32 screenMode;                // 0x8
-    i32 unk0c;                     // 0xc
-    i32 unk10;                     // 0x10
-    i32 unk14;                     // 0x14
-    i32 unk18;                     // 0x18
-    i32 unk1c;                     // 0x1c (cursor position)
+    i32 scoreData;                 // 0x0  ScoreDat handle for the current score table
+    i32 screenTimer;               // 0x4  per-screen frame counter (gates input after 6 frames)
+    i32 screenMode;                // 0x8  current screen state
+    i32 stateCopy;                 // 0xc  copy of the state set by SetState
+    i32 subState;                  // 0x10  per-screen sub-state (switch case in the handlers)
+    i32 previousScreenMode;        // 0x14  previous screen mode (saved by SetState)
+    i32 subStateTimer;             // 0x18  frame timer within the sub-state
+    i32 cursor;                    // 0x1c  menu cursor position
     unknown_fields(0x20, 0x10);    // 0x20
-    i32 unk30;                     // 0x30 (shot type cursor)
-    i32 unk34;                     // 0x34
-    i32 unk38;                     // 0x38
-    i32 unk3c;                     // 0x3c
-    i32 unk40;                     // 0x40
-    i32 unk44;                     // 0x44
-    i32 unk48;                     // 0x48
-    i32 unk4c;                     // 0x4c
+    i32 shotTypeCursor;            // 0x30  shot-type cursor
+    i32 previousShotTypeCursor;    // 0x34  last committed shotTypeCursor
+    i32 shotCursorMoved;           // 0x38  set to 1 when the shot cursor moved
+    i32 savedCharacterCursor;      // 0x3c  saved character selection (high score screen)
+    i32 savedSpellPageCursor;      // 0x40  saved spell-card page cursor
+    i32 savedDifficultyCursor;     // 0x44  saved difficulty selection (high score screen)
+    i32 savedSpellDifficultyCursor; // 0x48  saved spell-card difficulty selection
+    i32 cheatCodeProgress;         // 0x4c  hidden "clear all scores" button-sequence progress
     unknown_fields(0x50, 0x4);
-    i32 unk54;                     // 0x54
+    i32 backPressed;               // 0x54  set while the back button is held
     unknown_fields(0x58, 0x148);
     AnmVm vms[0x48];               // 0x1a0 (0x2a4 each, ends 0xbfc0; vms[0x28]=menu highlight, vms[0x47]=menu timer)
     AnmVm scoreVms[0xa];           // 0xbfc0 前十得分文本 VM

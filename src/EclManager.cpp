@@ -369,9 +369,9 @@ i32 __fastcall GetVarValue(Enemy *enemy, i32 varId)
     case 0x276d:
         return *(i32 *)((u8 *)enemy + 0x2e08);
     case 0x2770:
-        return enemy->FUN_0041f000()
-                   ? enemy->FUN_0041fd40()
-                   : (enemy->FUN_0041fd20() ? enemy->ownerEnemy->FUN_0041fd40() : 0);
+        return enemy->IsSubEnemyChainRoot()
+                   ? enemy->GetSubEnemyChainCount()
+                   : (enemy->HasOwnerEnemy() ? enemy->ownerEnemy->GetSubEnemyChainCount() : 0);
     case 0x2740:
         return (i32)g_Player.AngleToPlayer(&enemy->movePos);
     case 0x2742:
@@ -385,7 +385,7 @@ i32 __fastcall GetVarValue(Enemy *enemy, i32 varId)
                    ? 0
                    : 2;
     case 0x2773:
-        return ((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0()
+        return ((Spellcard *)&g_EclGlobalObj)->IsSpellcardActive()
                    ? ((EclSpellcardVars *)&g_EclGlobalObj)->IsLastWord()
                    : ((EclSpellcardVars *)&g_EclGlobalObj)->IsExtraActive();
     case 0x2774:
@@ -727,16 +727,16 @@ f32 Enemy::GetEclFloatVar(i32 varId)
     case 0x2763:
         return (f32)*(i32 *)((u8 *)this + 0x3354);
     case 0x2770:
-        return (f32)(this->FUN_0041f000()
-                         ? this->FUN_0041fd40()
-                         : (this->FUN_0041fd20() ? this->ownerEnemy->FUN_0041fd40() : 0));
+        return (f32)(this->IsSubEnemyChainRoot()
+                         ? this->GetSubEnemyChainCount()
+                         : (this->HasOwnerEnemy() ? this->ownerEnemy->GetSubEnemyChainCount() : 0));
     case 0x2742:
         ((D3DVectorOps *)&g_EclExitLeftBound)->Sub((Float3 *)&vecX, &this->movePos);
         return ((Float3LenOps *)(Float3 *)&vecX)->Length();
     case 0x2771:
         return (f32)g_Player.IsYoukai();
     case 0x2773:
-        return (f32)(((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0()
+        return (f32)(((Spellcard *)&g_EclGlobalObj)->IsSpellcardActive()
                          ? ((EclSpellcardVars *)&g_EclGlobalObj)->IsLastWord()
                          : ((EclSpellcardVars *)&g_EclGlobalObj)->IsExtraActive());
     default:

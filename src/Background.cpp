@@ -111,76 +111,76 @@ ChainCallbackResult Background::OnUpdate(Background *background)
     // ---- Stage 7 special handling ----
     if (g_GameManager.currentStage == 7)
     {
-        if (background->unk0xae8 == NULL)
+        if (background->stage7Effect == NULL)
         {
             Float3 effectPos = Float3(0.0f, 0.0f, 0.0f);
-            background->unk0xae8 = g_EffectManager.SpawnEffectAtSlot(0x40, &effectPos, 0xc, 1, -1);
-            background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xb);
+            background->stage7Effect = g_EffectManager.SpawnEffectAtSlot(0x40, &effectPos, 0xc, 1, -1);
+            background->stageAnm->SetAndExecuteScriptIdx(background->stage7Effect, 0xb);
         }
-        if (background->unk0x6260 == 1)
+        if (background->seekElementId == 1)
         {
-            background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xb);
+            background->stageAnm->SetAndExecuteScriptIdx(background->stage7Effect, 0xb);
         }
-        if (background->unk0x6260 == 2)
+        if (background->seekElementId == 2)
         {
-            AnmVm vmBackup = *(AnmVm *)background->unk0xae8;
-            background->stageAnm->SetAndExecuteScriptIdx(background->unk0xae8, 0xc);
-            background->unk0xae8->SetInterrupt(2);
-            background->unk0xae8->posFinal = vmBackup.posFinal;
-            background->unk0xae8->posInitial = vmBackup.posInitial;
-            background->unk0xae8->prefix.interpCurrentTimers[0] = vmBackup.prefix.interpCurrentTimers[0];
-            background->unk0xae8->prefix.interpEndTimers[0] = vmBackup.prefix.interpEndTimers[0];
-            background->unk0xae8->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
-            background->unk0xae8->prefix.color1 = vmBackup.prefix.color1;
+            AnmVm vmBackup = *(AnmVm *)background->stage7Effect;
+            background->stageAnm->SetAndExecuteScriptIdx(background->stage7Effect, 0xc);
+            background->stage7Effect->SetInterrupt(2);
+            background->stage7Effect->posFinal = vmBackup.posFinal;
+            background->stage7Effect->posInitial = vmBackup.posInitial;
+            background->stage7Effect->prefix.interpCurrentTimers[0] = vmBackup.prefix.interpCurrentTimers[0];
+            background->stage7Effect->prefix.interpEndTimers[0] = vmBackup.prefix.interpEndTimers[0];
+            background->stage7Effect->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
+            background->stage7Effect->prefix.color1 = vmBackup.prefix.color1;
         }
-        if (background->unk0x6260 == 3)
+        if (background->seekElementId == 3)
         {
-            AnmVm vmBackup = *(AnmVm *)background->unk0xae8;
-            background->unk0xae8->SetInterrupt(3);
-            background->unk0xae8->posFinal = vmBackup.posFinal;
-            background->unk0xae8->posInitial = vmBackup.posInitial;
-            background->unk0xae8->prefix.interpCurrentTimers[0] = vmBackup.prefix.interpCurrentTimers[0];
-            background->unk0xae8->prefix.interpEndTimers[0] = vmBackup.prefix.interpEndTimers[0];
-            background->unk0xae8->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
-            background->unk0xae8->prefix.color1 = vmBackup.prefix.color1;
+            AnmVm vmBackup = *(AnmVm *)background->stage7Effect;
+            background->stage7Effect->SetInterrupt(3);
+            background->stage7Effect->posFinal = vmBackup.posFinal;
+            background->stage7Effect->posInitial = vmBackup.posInitial;
+            background->stage7Effect->prefix.interpCurrentTimers[0] = vmBackup.prefix.interpCurrentTimers[0];
+            background->stage7Effect->prefix.interpEndTimers[0] = vmBackup.prefix.interpEndTimers[0];
+            background->stage7Effect->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
+            background->stage7Effect->prefix.color1 = vmBackup.prefix.color1;
         }
-        if (background->unk0x6260 == 4)
+        if (background->seekElementId == 4)
         {
-            AnmVm vmBackup = *(AnmVm *)background->unk0xae8;
-            background->unk0xae8->SetInterrupt(4);
-            background->unk0xae8->posFinal = vmBackup.posFinal;
-            background->unk0xae8->posInitial = vmBackup.posInitial;
-            background->unk0xae8->prefix.interpCurrentTimers[0] = vmBackup.prefix.interpCurrentTimers[0];
-            background->unk0xae8->prefix.interpEndTimers[0] = vmBackup.prefix.interpEndTimers[0];
-            background->unk0xae8->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
-            background->unk0xae8->prefix.color1 = vmBackup.prefix.color1;
+            AnmVm vmBackup = *(AnmVm *)background->stage7Effect;
+            background->stage7Effect->SetInterrupt(4);
+            background->stage7Effect->posFinal = vmBackup.posFinal;
+            background->stage7Effect->posInitial = vmBackup.posInitial;
+            background->stage7Effect->prefix.interpCurrentTimers[0] = vmBackup.prefix.interpCurrentTimers[0];
+            background->stage7Effect->prefix.interpEndTimers[0] = vmBackup.prefix.interpEndTimers[0];
+            background->stage7Effect->prefix.interpModes[0] = vmBackup.prefix.interpModes[0];
+            background->stage7Effect->prefix.color1 = vmBackup.prefix.color1;
         }
     }
 
     // ---- Scan for current element ----
-    if (background->unk0x6260 != 0)
+    if (background->seekElementId != 0)
     {
         i32 index = 0;
         p = background->beginningOfScript;
-        background->unk0x818 = 0;
+        background->scriptIndex = 0;
 
-        while (!(p->opcode == 0x1f && background->unk0x6260 == p->args.args[0].i) && p->frame != -1)
+        while (!(p->opcode == 0x1f && background->seekElementId == p->args.args[0].i) && p->frame != -1)
         {
             p++;
             index++;
         }
         if (p->frame != -1)
         {
-            background->unk0x818 = index + 1;
+            background->scriptIndex = index + 1;
             background->timer0x80c.SetCurrent(p->frame);
-            background->unk0x6260 = 0;
+            background->seekElementId = 0;
         }
     }
 
     // ---- Dispatch loop ----
     for (;;)
     {
-        p = &background->beginningOfScript[background->unk0x818];
+        p = &background->beginningOfScript[background->scriptIndex];
         if (!(background->timer0x80c >= p->frame) || p->frame == -1)
         {
             break;
@@ -192,11 +192,11 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             if (p->frame == -1)
             {
                 background->unk0x6454 = *p->args.AsVec();
-                background->unk0x824 = background->unk0x6454;
+                background->bgPosition = background->unk0x6454;
             }
             else
             {
-                background->unk0x824 = *p->args.AsVec();
+                background->bgPosition = *p->args.AsVec();
                 background->unk0x6454 = *p->args.AsVec();
                 *(i32 *)&background->unk0x6464 = p->frame;
                 p++;
@@ -212,20 +212,20 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             break;
         case 2: // opcode 2
             background->fogFadeFrom = background->fog;
-            background->unk0xb10 = p->args.args[0].u;
+            background->fogFadeDuration = p->args.args[0].u;
             background->timer0xb14.SetCurrent(0);
             break;
         case 3: // opcode 3
-            if (background->unk0x6260 != 0)
+            if (background->seekElementId != 0)
             {
-                background->unk0x6260 = 0;
+                background->seekElementId = 0;
                 break;
             }
             goto afterDispatchLoop;
         case 4: // opcode 4
-            background->unk0x818 = p->args.args[0].i;
+            background->scriptIndex = p->args.args[0].i;
             background->timer0x80c.SetCurrent(p->args.args[1].i);
-            background->unk0x63e0[0] = 0;
+            background->cameraInterpDurations[0] = 0;
             background->unk0x6464 = 1;
             continue;
         case 5: // opcode 5
@@ -237,57 +237,57 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             }
             background->camera1.pos = background->camera0.pos;
             background->camera0.pos = *p->args.AsVec();
-            if (background->unk0x63e0[0] == 0)
+            if (background->cameraInterpDurations[0] == 0)
             {
                 background->camera4.pos = *p->args.AsVec();
             }
             break;
         case 6: // opcode 6
-            background->unk0x63e0[0] = p->args.args[0].u;
+            background->cameraInterpDurations[0] = p->args.args[0].u;
             background->timers0x63f4[0].SetCurrent(0);
-            background->unk0x6430[0] = p->args.args[1].i;
+            background->cameraInterpModes[0] = p->args.args[1].i;
             break;
         case 7: // opcode 7
             background->camera1.target = background->camera0.target;
             background->camera0.target = *p->args.AsVec();
-            if (background->unk0x63e0[1] == 0)
+            if (background->cameraInterpDurations[1] == 0)
             {
                 background->camera4.target = *p->args.AsVec();
             }
             break;
         case 8: // opcode 8
-            background->unk0x63e0[1] = p->args.args[0].u;
+            background->cameraInterpDurations[1] = p->args.args[0].u;
             background->timers0x63f4[1].SetCurrent(0);
-            background->unk0x6430[1] = p->args.args[1].i;
+            background->cameraInterpModes[1] = p->args.args[1].i;
             break;
         case 9: // opcode 9
             background->camera1.up = background->camera0.up;
             background->camera0.up = *p->args.AsVec();
-            if (background->unk0x63e0[2] == 0)
+            if (background->cameraInterpDurations[2] == 0)
             {
                 background->camera4.up = *p->args.AsVec();
             }
             break;
         case 10: // opcode 10
-            background->unk0x63e0[2] = p->args.args[0].u;
+            background->cameraInterpDurations[2] = p->args.args[0].u;
             background->timers0x63f4[2].SetCurrent(0);
-            background->unk0x6430[2] = p->args.args[1].i;
+            background->cameraInterpModes[2] = p->args.args[1].i;
             break;
         case 11: // opcode 11
             background->camera4.unk0x24.x = background->camera0.fov;
             background->camera0.fov = p->args.args[0].f;
-            if (background->unk0x63e0[3] == 0)
+            if (background->cameraInterpDurations[3] == 0)
             {
                 background->camera4.fov = p->args.args[0].f;
             }
             break;
         case 12: // opcode 12
-            background->unk0x63e0[3] = p->args.args[0].u;
+            background->cameraInterpDurations[3] = p->args.args[0].u;
             background->timers0x63f4[3].SetCurrent(0);
-            background->unk0x6430[3] = p->args.args[1].i;
+            background->cameraInterpModes[3] = p->args.args[1].i;
             break;
         case 13: // opcode 13
-            background->unk0x830 = p->args.args[0].i;
+            background->screenTintColor = p->args.args[0].i;
             break;
         case 14: // opcode 14
             background->camera1.pos = *p->args.AsVec();
@@ -302,9 +302,9 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             background->camera2.pos = *p->args.AsVec();
             break;
         case 18: // opcode 18
-            background->unk0x63e0[0] = p->args.args[0].u;
+            background->cameraInterpDurations[0] = p->args.args[0].u;
             background->timers0x63f4[0].SetCurrent(0);
-            background->unk0x6430[0] = 7;
+            background->cameraInterpModes[0] = 7;
             break;
         case 19: // opcode 19
             background->camera1.target = *p->args.AsVec();
@@ -319,9 +319,9 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             background->camera2.target = *p->args.AsVec();
             break;
         case 23: // opcode 23
-            background->unk0x63e0[1] = p->args.args[0].u;
+            background->cameraInterpDurations[1] = p->args.args[0].u;
             background->timers0x63f4[1].SetCurrent(0);
-            background->unk0x6430[1] = 7;
+            background->cameraInterpModes[1] = 7;
             break;
         case 24: // opcode 24
             background->camera1.up = *p->args.AsVec();
@@ -336,9 +336,9 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             background->camera2.up = *p->args.AsVec();
             break;
         case 28: // opcode 28
-            background->unk0x63e0[2] = p->args.args[0].u;
+            background->cameraInterpDurations[2] = p->args.args[0].u;
             background->timers0x63f4[2].SetCurrent(0);
-            background->unk0x6430[2] = 7;
+            background->cameraInterpModes[2] = 7;
             break;
         case 29: // opcode 29
             if (p->args.args[0].i >= 0)
@@ -375,53 +375,53 @@ ChainCallbackResult Background::OnUpdate(Background *background)
             background->unk0x6474 = p->args.args[0].b[0];
             background->unk0x63f0 = 0;
             background->timers0x63f4[4].SetCurrent(0);
-            background->unk0x6430[4] = 0;
+            background->cameraInterpModes[4] = 0;
             break;
         default:
             break;
         }
 
-        background->unk0x818++;
+        background->scriptIndex++;
     }
 
 afterDispatchLoop:
     // ---- Layer update loop ----
     layerIdx = 0;
-    if (background->unk0x63e0[0])
+    if (background->cameraInterpDurations[0])
     {
-        background->FUN_00408d60(0, &background->camera4.pos, &background->camera1.pos,
+        background->InterpolateCamera(0, &background->camera4.pos, &background->camera1.pos,
                                  &background->camera0.pos, &background->camera3.pos,
                                  &background->camera2.pos);
     }
     layerIdx = 1;
-    if (background->unk0x63e0[1])
+    if (background->cameraInterpDurations[1])
     {
-        background->FUN_00408d60(1, &background->camera4.target, &background->camera1.target,
+        background->InterpolateCamera(1, &background->camera4.target, &background->camera1.target,
                                  &background->camera0.target, &background->camera3.target,
                                  &background->camera2.target);
     }
     layerIdx = 2;
-    if (background->unk0x63e0[2])
+    if (background->cameraInterpDurations[2])
     {
-        background->FUN_00408d60(2, &background->camera4.up, &background->camera1.up,
+        background->InterpolateCamera(2, &background->camera4.up, &background->camera1.up,
                                  &background->camera0.up, &background->camera3.up,
                                  &background->camera2.up);
     }
     layerIdx = 3;
-    if (background->unk0x63e0[3])
+    if (background->cameraInterpDurations[3])
     {
-        if (background->timers0x63f4[3] < (i32)background->unk0x63e0[3])
+        if (background->timers0x63f4[3] < (i32)background->cameraInterpDurations[3])
         {
             background->timers0x63f4[3]++;
-            ratio = (f32)background->timers0x63f4[3] / (f32)background->unk0x63e0[3];
+            ratio = (f32)background->timers0x63f4[3] / (f32)background->cameraInterpDurations[3];
         }
         else
         {
-            background->timers0x63f4[3].SetCurrent(background->unk0x63e0[3]);
+            background->timers0x63f4[3].SetCurrent(background->cameraInterpDurations[3]);
             ratio = 1.0f;
-            background->unk0x63e0[3] = 0;
+            background->cameraInterpDurations[3] = 0;
         }
-        switch (background->unk0x6430[3] - 1)
+        switch (background->cameraInterpModes[3] - 1)
         {
         case 0:
             ratio = 1.0f - (1.0f - ratio) * (1.0f - ratio);
@@ -484,10 +484,10 @@ afterDispatchLoop:
     }
 
     // ---- Fog fade ----
-    if (background->unk0xb10)
+    if (background->fogFadeDuration)
     {
         background->timer0xb14++;
-        t = (f32)background->timer0xb14 / (f32)background->unk0xb10;
+        t = (f32)background->timer0xb14 / (f32)background->fogFadeDuration;
         if (t >= 1.0f)
         {
             t = 1.0f;
@@ -500,9 +500,9 @@ afterDispatchLoop:
         }
         background->fog.nearPlane = background->fogFadeFrom.nearPlane + (background->fogFadeTo.nearPlane - background->fogFadeFrom.nearPlane) * t;
         background->fog.farPlane = background->fogFadeFrom.farPlane + (background->fogFadeTo.farPlane - background->fogFadeFrom.farPlane) * t;
-        if (background->timer0xb14 >= (i32)background->unk0xb10)
+        if (background->timer0xb14 >= (i32)background->fogFadeDuration)
         {
-            background->unk0xb10 = 0;
+            background->fogFadeDuration = 0;
         }
     }
 
@@ -510,16 +510,16 @@ afterDispatchLoop:
     {
         background->timer0x80c++;
     }
-    background->FUN_00409f40();
+    background->UpdateStageTint();
 
-    if (background->unk0xb24 >= 1)
+    if (background->bgPhase >= 1)
     {
-        if (background->unk0xb28 == 60)
+        if (background->bgPhaseTimer == 60)
         {
-            background->unk0xb24++;
+            background->bgPhase++;
         }
-        background->unk0xb28++;
-        for (i = 0; i < background->unk0xb30; i++)
+        background->bgPhaseTimer++;
+        for (i = 0; i < background->objectVmCount; i++)
         {
             g_AnmManager->ExecuteScript(&background->objectVms[i]);
         }
@@ -536,31 +536,31 @@ afterDispatchLoop:
     if (background->unk0x54c.activeSpriteIndex > 0)
     {
         g_AnmManager->ExecuteScript(&background->unk0x54c);
-        background->unk0x830 = background->unk0x54c.prefix.color1.d3dColor;
+        background->screenTintColor = background->unk0x54c.prefix.color1.d3dColor;
     }
 
-    if (background->unk81c % 3 == 0)
+    if (background->frameCounter % 3 == 0)
     {
-        if (background->unk81c >= 700 || g_GameManager.flags.unk10)
+        if (background->frameCounter >= 700 || g_GameManager.flags.unk10)
         {
-            if (background->unk0xb24 < 2)
+            if (background->bgPhase < 2)
             {
                 for (i = 0; i < 12; i++)
                 {
-                    sprite = (u8 *)g_EffectManager.SpawnEffect(0x3e, &background->unk0x6480[i], 1, 0x20ffffff);
+                    sprite = (u8 *)g_EffectManager.SpawnEffect(0x3e, &background->effectPositions[i], 1, 0x20ffffff);
                     sprite[0x354] = 4;
                 }
             }
         }
     }
 
-    background->unk0x647c = 1;
-    if (background->unk0xb24 >= 2)
+    background->needsRedraw = 1;
+    if (background->bgPhase >= 2)
     {
         background->unk0x6478 = 0;
     }
-    background->unk81c++;
-    if (background->unk81c % 500 == 250 && g_GameManager.IsTampered())
+    background->frameCounter++;
+    if (background->frameCounter % 500 == 250 && g_GameManager.IsTampered())
     {
         return CHAIN_CALLBACK_RESULT_EXIT_GAME_SUCCESS;
     }
@@ -577,7 +577,7 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
 
     for (i = 0; i < 0x10; i++)
     {
-        background->unk0x6480[i] = Float3(0.0f, 0.0f, 0.0f);
+        background->effectPositions[i] = Float3(0.0f, 0.0f, 0.0f);
     }
 
     /* 把固定视口 (32,16)-(416,464) 写入 D3D 设备内部视图结构。 */
@@ -586,7 +586,7 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
     *(i32 *)(D3D_DEVICE_VIEWPORT + 8) = 0x180;
     *(i32 *)(D3D_DEVICE_VIEWPORT + 0xc) = 0x1c0;
 
-    g_AnmManager->FUN_00462e00();
+    g_AnmManager->ResetVertexBuffer();
     g_AnmManager->ClearVertexShader();
     g_AnmManager->ClearSprite();
     g_AnmManager->ClearTexture();
@@ -637,9 +637,9 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
     background->skyColor.g = 0x80;
     background->skyColor.b = 0x80;
 
-    if ((i32)background->unk0xb24 <= 1)
+    if ((i32)background->bgPhase <= 1)
     {
-        if (g_Gui.FUN_00437d87() == 0)
+        if (g_Gui.IsBossPortraitVisible() == 0)
         {
             if (background->unk0x4.activeSpriteIndex > 0)
             {
@@ -651,36 +651,36 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
                 ((void(__fastcall *)(AnmManager *, AnmVm *))0x40baf0)(g_AnmManager, &background->unk0x2a8);
             }
 
-            if (background->unk0xae8 != NULL)
+            if (background->stage7Effect != NULL)
             {
-                void *p = background->unk0xae8;
+                void *p = background->stage7Effect;
                 /* 0x34c：粒子对象偏移处的每帧更新回调。 */
                 ((void(__fastcall *)(void *)) *(u32 *)((u8 *)p + 0x34c))(p);
             }
         }
     }
 
-    if ((background->unk0x830 & 0xff000000) == 0xff000000)
+    if ((background->screenTintColor & 0xff000000) == 0xff000000)
     {
         /* D3D virtual call @ vtbl+0x90 (Clear) */
         ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0x90 / 4])(
-            *(void **)D3D_DEVICE_OBJ, 0, 0, 3, background->unk0x830, 0x3f800000, 0);
+            *(void **)D3D_DEVICE_OBJ, 0, 0, 3, background->screenTintColor, 0x3f800000, 0);
     }
-    else if (background->unk0x830 != 0)
+    else if (background->screenTintColor != 0)
     {
         ZunRect rect = {32.0f, 16.0f, 416.0f, 464.0f};
 
-        ScreenEffect::DrawSquare(&rect, background->unk0x830);
+        ScreenEffect::DrawSquare(&rect, background->screenTintColor);
 
         /* D3D virtual call @ vtbl+0x90 (Clear) */
         ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0x90 / 4])(
-            *(void **)D3D_DEVICE_OBJ, 0, 0, 2, background->unk0x830, 0x3f800000, 0);
+            *(void **)D3D_DEVICE_OBJ, 0, 0, 2, background->screenTintColor, 0x3f800000, 0);
     }
     else
     {
         /* D3D virtual call @ vtbl+0x90 (Clear) */
         ((void(__stdcall *)(void *, void *, void *, u32, u32, f32, u32))(*(void ***) * (void **)D3D_DEVICE_OBJ)[0x90 / 4])(
-            *(void **)D3D_DEVICE_OBJ, 0, 0, 2, background->unk0x830, 0x3f800000, 0);
+            *(void **)D3D_DEVICE_OBJ, 0, 0, 2, background->screenTintColor, 0x3f800000, 0);
     }
 
     g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x17, 4);
@@ -713,9 +713,9 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
         g_Supervisor.EnableFog();
     }
 
-    if ((i32)background->unk0xb24 <= 1)
+    if ((i32)background->bgPhase <= 1)
     {
-        if (g_Gui.FUN_00437d87() == 0)
+        if (g_Gui.IsBossPortraitVisible() == 0)
         {
             background->RenderObjects(0);
             background->RenderObjects(1);
@@ -730,9 +730,9 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
 {
     i32 i;
 
-    if ((i32)background->unk0xb24 <= 1)
+    if ((i32)background->bgPhase <= 1)
     {
-        if (g_Gui.FUN_00437d87() == 0)
+        if (g_Gui.IsBossPortraitVisible() == 0)
         {
             background->RenderObjects(2);
             background->RenderObjects(3);
@@ -744,10 +744,10 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
 
             g_EffectManager.DrawParticles();
 
-            if (background->unk0xb24 == 1)
+            if (background->bgPhase == 1)
             {
                 ZunRect rect = {32.0f, 16.0f, 416.0f, 464.0f};
-                i32 alpha = (background->unk0xb28 * 0xff) / 0x3c;
+                i32 alpha = (background->bgPhaseTimer * 0xff) / 0x3c;
 
                 g_AnmManager->FlushVertexBuffer();
                 g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x17, 8);
@@ -770,16 +770,16 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
         g_Supervisor.DisableFog();
     }
 
-    if ((i32)background->unk0xb24 >= 1)
+    if ((i32)background->bgPhase >= 1)
     {
-        for (i = 0; i < background->unk0xb30; i++)
+        for (i = 0; i < background->objectVmCount; i++)
         {
             g_AnmManager->Draw2DAndFlush(&background->objectVms[i]);
         }
 
-        if (background->unk0x625c != NULL)
+        if (background->drawCallback != NULL)
         {
-            background->unk0x625c(background);
+            background->drawCallback(background);
         }
     }
 
@@ -796,13 +796,13 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
     g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x24, 0x447a0000);
     g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x25, 0x44fa0000);
 
-    if (background->unk0x646c == 0)
+    if (background->mixColorSet == 0)
     {
         g_AnmManager->SetMixColorDefault();
     }
 
-    background->unk0x646c = 0;
-    background->unk0x647c = 0;
+    background->mixColorSet = 0;
+    background->needsRedraw = 0;
 
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
@@ -848,12 +848,12 @@ void Background::SetCamera1()
 ZunResult Background::AddedCallback(Background *background)
 {
     background->timer0x80c = 0;
-    *(u32 *)&background->unk0x818 = 0;
-    background->unk0x824.x = 0.0f;
-    background->unk0x824.y = 0.0f;
-    background->unk0x824.z = 0.0f;
-    background->unk0xb24 = 0;
-    background->unk0xb10 = 0;
+    *(u32 *)&background->scriptIndex = 0;
+    background->bgPosition.x = 0.0f;
+    background->bgPosition.y = 0.0f;
+    background->bgPosition.z = 0.0f;
+    background->bgPhase = 0;
+    background->fogFadeDuration = 0;
 
     if (!IsDisableResourceReload())
     {
@@ -900,11 +900,11 @@ ZunResult Background::AddedCallback(Background *background)
 
     for (i32 i = 0; i < 4; i++)
     {
-        background->unk0x63e0[i] = 0;
+        background->cameraInterpDurations[i] = 0;
         background->timers0x63f4[i] = 0;
     }
 
-    background->unk0x6260 = 0;
+    background->seekElementId = 0;
     *(u32 *)&background->unk0x6470 = 0x49a17020;
 
     if (g_GameManager.currentStage == 5)
@@ -933,7 +933,7 @@ ZunResult Background::RegisterChain(i32 stage)
     {
         background->stdData = savedStdData;
     }
-    background->unk81c = 0;
+    background->frameCounter = 0;
     background->currentStage = stage;
     g_BackgroundCalcChain.SetCallback((ChainCallback)OnUpdate);
     g_BackgroundCalcChain.addedCallback = (ChainLifetimeCallback)AddedCallback;
@@ -1040,23 +1040,23 @@ ZunResult Background::LoadStageData(char *stdPath)
 
 
 // FUNCTION: th08 0x408d60 (89.67% FIXME: *p1=*r 拷贝寄存器 ecx/edx)
-void __fastcall Background::FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3 *p3, Float3 *p4, Float3 *p5)
+void __fastcall Background::InterpolateCamera(i32 idx, Float3 *p1, Float3 *p2, Float3 *p3, Float3 *p4, Float3 *p5)
 {
     f32 f;
 
-    if (this->timers0x63f4[idx] < (i32)this->unk0x63e0[idx])
+    if (this->timers0x63f4[idx] < (i32)this->cameraInterpDurations[idx])
     {
         this->timers0x63f4[idx].Tick();
-        f = (f32)this->timers0x63f4[idx] / (i32)this->unk0x63e0[idx];
+        f = (f32)this->timers0x63f4[idx] / (i32)this->cameraInterpDurations[idx];
     }
     else
     {
-        this->timers0x63f4[idx].SetCurrent(this->unk0x63e0[idx]);
+        this->timers0x63f4[idx].SetCurrent(this->cameraInterpDurations[idx]);
         f = 1.0f;
-        this->unk0x63e0[idx] = 0;
+        this->cameraInterpDurations[idx] = 0;
     }
 
-    switch (this->unk0x6430[idx])
+    switch (this->cameraInterpModes[idx])
     {
     case 1:
         f = 1.0f - f;
@@ -1081,7 +1081,7 @@ void __fastcall Background::FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3
         break;
     }
 
-    if (this->unk0x6430[idx] != 7)
+    if (this->cameraInterpModes[idx] != 7)
     {
         *p1 = *p3 - *p2;
         *p1 = *p1 * f + *p2;
@@ -1095,7 +1095,7 @@ void __fastcall Background::FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3
 }
 
 // FUNCTION: th08 0x409f40 (65% FIXME: 寄存器/寻址 lea vs add)
-void Background::FUN_00409f40()
+void Background::UpdateStageTint()
 {
     i32 i;
 

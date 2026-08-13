@@ -30,10 +30,10 @@ struct GuiMsgState
     u8 portraitVisible;    // 0x156a
     u8 currentDialogueLine; // 0x156b
     u8 currentPortrait;    // 0x156c
-    u8 unk156d;            // 0x156d
+    u8 dialogueBoxVisible; // 0x156d  (set by msg opcode 18)
     u8 musicSelection;     // 0x156e
-    u8 unk156f;            // 0x156f
-    i32 unk1570;           // 0x1570
+    u8 unk156f;            // 0x156f  (write-only so far)
+    i32 stageClearActive;  // 0x1570  (set when the stage-clear result sequence runs)
     unknown_fields(0x1574, 0x4);
 };
 C_ASSERT(sizeof(GuiMsgState) == 0x1578);
@@ -41,8 +41,8 @@ C_ASSERT(sizeof(GuiMsgState) == 0x1578);
 struct GuiPopup
 {
     Float3 position;
-    i32 unk0xc;
-    i32 unk0x10;
+    i32 unk0xc;  // popup param (ShowPopupB arg1; write-only so far)
+    i32 unk0x10; // popup param (ShowPopupB arg2; write-only so far)
     ZunTimer timer;
 };
 C_ASSERT(sizeof(GuiPopup) == 0x20);
@@ -99,11 +99,11 @@ struct MsgRawInstr
 struct GuiImpl
 {
     ZunResult RunMsg();
-    void FUN_0043396d(i32 arg);
+    void InitMsg(i32 arg);
     void DrawDialogue();
 
     AnmVm vmsA[16];
-    u32 unk2a40;
+    u32 unk2a40; // (unused in current code)
     AnmVm vmsB[4];
     AnmVm vmC;
     AnmVm vmD;
@@ -114,7 +114,7 @@ struct GuiImpl
     AnmVm vmsI[168];
     AnmVm vmJ;
     AnmVm vmK;
-    u32 unk21810;
+    u32 unk21810; // (unused in current code)
     GuiMsgState msgState;
     GuiPopup popupA;
     GuiPopup popupB;
@@ -128,7 +128,7 @@ struct GuiImpl
     i32 resultTimeFrames;       /* 0x22e04 时钟帧数*30+660 */
     i32 resultTimeFrames2;      /* 0x22e08 */
     i32 resultTimeFramesCopy;   /* 0x22e0c 0x22e04 的副本 */
-    i32 unk22e10;               /* 0x22e10 */
+    i32 unk22e10;               /* 0x22e10 (zeroed with the result fields) */
     AnmVm vmL;
 };
 C_ASSERT(sizeof(GuiImpl) == 0x230b8);
@@ -147,7 +147,7 @@ struct GuiFlags
 
 struct Gui
 {
-    void FUN_00439810(i32 arg);
+    void InitMsg(i32 arg);
     void SetEclLives(i32 a0);          // 0x423130 (ECL 设定剩余命数)
     void SetBossLifeBarSegment(i32 a0, f32 a1, f32 a2); // 0x4230e0 (boss 血条段 start/stop)
     void SetBossLifeSegmentColor(i32 a0, i32 a1);       // 0x423110 (boss 血条段颜色)
@@ -170,17 +170,17 @@ struct Gui
     ZunResult LoadMsg(const char *path);
     void FreeMsgFile();
     i32 MsgWait();
-    i32 FUN_00437d87();
-    i32 FUN_004358bb();
-    void FUN_00435900();
+    i32 IsBossPortraitVisible();      // 0x437d87 (boss portrait vmD active & animating)
+    i32 IsMsgActive();                // 0x4358bb (message currently displayed)
+    void UpdateBossHud();             // 0x435900 (per-frame boss life-bar/spell timer update)
     void DrawGameScene();
-    void FUN_0043741d();
-    void FUN_00437e5d(i32, i32);
-    void FUN_0043826b();
-    void FUN_00438a89();
-    void FUN_00438f58();
+    void DrawBossHud();               // 0x43741d (boss life bar, portrait and related vms)
+    void ShowPopupB(i32, i32);        // 0x437e5d (popupB at (416,168), g_Supervisor.unk174 = 2)
+    void DrawStageClearHud();         // 0x43826b (stage-clear result text)
+    void DrawHud();                   // 0x438a89 (state-based HUD/gauge display)
+    void UpdateStageClearText();      // 0x438f58 (stage-clear text script + capture region)
 
-    u32 unk_0;
+    u32 frameCounter;
     GuiFlags flags;
     GuiImpl *impl;
     AnmLoaded *frontAnm;

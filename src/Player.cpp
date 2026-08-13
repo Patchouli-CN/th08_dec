@@ -83,10 +83,10 @@ i32 __fastcall FUN_0040d3d0(ZunTimer *timer)
 
 // FUNCTION: th08 0x451d50
 /* 当前是否处于第 4 号射击（妖形态特殊射击）进行中的状态。
-   非 0 时禁止再发动新射击（FUN_00451500 检查）。 */
+   非 0 时禁止再发动新射击（UpdateChargeShotTimer 检查）。 */
 i32 __fastcall IsSpecialShotActive(Player *player)
 {
-    return (player->unkFdc != 0 && player->unkFe0 == 4) ? 1 : 0;
+    return (player->shotActive != 0 && player->shotType == 4) ? 1 : 0;
 }
 
 // STUB: th08 0x450f60
@@ -116,7 +116,7 @@ void __fastcall FUN_0044cba0(void *p)
 }
 
 // STUB: th08 0x451640
-void Player::FUN_00451640()
+void Player::ClampChargeShotTimer()
 {
 }
 
@@ -173,7 +173,7 @@ ZunResult Player::RegisterChain(u32 param)
         savedSpeedNormal = (u32)player->moveSpeedNormal;
         savedSpeedSpirit = (u32)player->moveSpeedSpirit;
     }
-    memset(player, 0, offsetof(Player, unkE2ab0));
+    memset(player, 0, offsetof(Player, boundaryIndicatorRight));
     if (IsUnk164Clear())
     {
         player->moveSpeedNormal = (PlayerMoveSpeed *)savedSpeedNormal;
@@ -227,27 +227,27 @@ ChainCallbackResult Player::OnUpdate(Player *player)
         player->barrierParticle->flags &= ~0x80000;
     }
 
-    player->FUN_0044c5b0();
-    player->FUN_0044c650();
+    player->UpdateShots();
+    player->UpdateShooting();
 
-    if ((player->playerState == 2 && player->FUN_0044cbf0() != 0) || player->playerState == 1)
+    if ((player->playerState == 2 && player->HandleDeath() != 0) || player->playerState == 1)
     {
-        player->FUN_0044d180();
+        player->UpdateDeathAnimation();
     }
 
-    player->FUN_0044d2c0();
+    player->UpdateInvulnerability();
 
     if (player->playerState != 2 && player->playerState != 1)
     {
-        player->FUN_0044aec0();
+        player->UpdateMovement();
     }
 
     g_AnmManager->ExecuteScript((AnmVm *)player->unk_10);
-    player->FUN_00451150();
-    player->FUN_00451500();
-    player->FUN_0044d420();
+    player->UpdateBullets();
+    player->UpdateChargeShotTimer();
+    player->UpdateBoundaryIndicatorTargets();
 
-    if (g_Gui.FUN_004358bb() == 0)
+    if (g_Gui.IsMsgActive() == 0)
     {
         g_GaugeStats[0] += 1;
         g_GaugeStats[1] += 1;
@@ -270,7 +270,7 @@ ChainCallbackResult Player::OnUpdate(Player *player)
 }
 
 // FUNCTION: th08 0x4512f0 (97% FIXME: if 下沉布局 + unk478 冗余 edx)
-void Player::FUN_004512f0()
+void Player::UpdateBulletVms()
 {
     PlayerBulletVm *p = this->bullets;
 
@@ -306,7 +306,7 @@ void Player::FUN_004512f0()
 }
 
 // FUNCTION: th08 0x449ff0 (bullet collision: circle / rotated rect / AABB against pos)
-i32 Player::FUN_00449ff0(Float3 *pos, void *unkD34)
+i32 Player::CheckShotCollision(Float3 *pos, void *unkD34)
 {
     ShotSlot *slot;
     i32 i;
@@ -368,7 +368,7 @@ i32 Player::FUN_00449ff0(Float3 *pos, void *unkD34)
     }
     return 0;
 hit:
-    this->unkE2a90 = slot->unk28;
+    this->lastShotHitType = slot->unk28;
     slot->unk30++;
     return 2;
 }
@@ -386,13 +386,13 @@ i32 Player::IsYoukai()
 }
 
 // FUNCTION: th08 0x44e350 (this is actually a ShotSlot*)
-void Player::FUN_0044e350()
+void Player::DeactivateShotSlot()
 {
     ((ShotSlot *)this)->active = 0;
 }
 
 // FUNCTION: th08 0x44c5b0
-void Player::FUN_0044c5b0()
+void Player::UpdateShots()
 {
     i32 i;
     ShotSlot *slot = this->shots;
@@ -409,13 +409,13 @@ void Player::FUN_0044c5b0()
         slot->targetY += slot->unk1C;
         if (slot->lifespan <= 0)
         {
-            ((Player *)slot)->FUN_0044e350();
+            ((Player *)slot)->DeactivateShotSlot();
         }
     }
 }
 
 // FUNCTION: th08 0x44c650 (70% FIXME: 射击状态机，多处寄存器/跳板布局不可修)
-void Player::FUN_0044c650()
+void Player::UpdateShooting()
 {
     i32 flag = 0;
     i32 i;
@@ -432,7 +432,7 @@ void Player::FUN_0044c650()
         this->shotCooldown -= 1;
     }
 
-    if (this->unkFdc != 0)
+    if (this->shotActive != 0)
     {
         /* 射击进行中：到期则清场/结束，未到期则推进当前射击并涨妖气槽。 */
         if (FUN_0040d3d0(&this->shotTimer) != 0)
@@ -443,11 +443,11 @@ void Player::FUN_0044c650()
         if (this->shotTimer.operator>=(this->shotInterval))
         {
             FUN_00416130(&g_Spellcard);
-            this->unkFdc = 0;
+            this->shotActive = 0;
             this->unk408 = 1.0f;
             this->unk404 = 1.0f;
 
-            if (this->unkFe0 == 4)
+            if (this->shotType == 4)
             {
                 /* 切换回人类射击形态，清掉"射击形态"标志位。 */
                 g_PlayerFlags &= ~PLAYER_FLAG_SHOT_MODE_MASK;
@@ -466,13 +466,13 @@ void Player::FUN_0044c650()
         }
         else
         {
-            (this->*this->shotFuncs[this->unkFe0])();
+            (this->*this->shotFuncs[this->shotType])();
             this->shotTimer.Tick(0);
         }
 
-        if (this->unkFe0 < 4)
+        if (this->shotType < 4)
         {
-            if (this->unkFe0 & 1)
+            if (this->shotType & 1)
             {
                 g_GameManager.AddToYoukaiGauge(0x6590 / this->shotInterval, 1);
             }
@@ -486,7 +486,7 @@ void Player::FUN_0044c650()
 
     /* 未射击：检测"按了决死结界键且满足条件"则切换射击。 */
     if (g_KeyInput & TH_BUTTON_BOMB && !g_GameManager.IsTampered() &&
-        !g_Gui.FUN_004358bb() && this->shotIndex != 0 &&
+        !g_Gui.IsMsgActive() && this->shotIndex != 0 &&
         g_GameManager.GetBombsRemaining() > 0 && this->shotCooldown == 0)
     {
         if (((g_PlayerFlags >> PLAYER_FLAG_SHOT_MODE_SHIFT) & 3) == 0)
@@ -514,7 +514,7 @@ switch_shot:
 
     if (g_PlayerFlags >> PLAYER_FLAG_SHOT_MODE_SHIFT & 3)
     {
-        this->unkFe0 = 4;
+        this->shotType = 4;
     }
     else
     {
@@ -527,15 +527,15 @@ switch_shot:
         g_PlayerFlags &= ~PLAYER_FLAG_ANIM_PAUSE_MASK;
         g_AnmManager->SetMixColorDefault();
 
-        this->unkFe0 = this->isYoukaiMode;
+        this->shotType = this->isYoukaiMode;
         if (this->unk4 != 0)
         {
-            this->unkFe0 = 1 - this->unkFe0;
+            this->shotType = 1 - this->shotType;
         }
 
         if (this->unk4 != 0)
         {
-            this->unkFe0 += 2;
+            this->shotType += 2;
             if (flag)
             {
                 this->powerLevel = g_GameManager.GetBombsRemaining();
@@ -565,11 +565,11 @@ switch_shot:
 
     this->unk4 = 0;
     g_GuiDisplayState = (g_GuiDisplayState & ~0xc) | 8;
-    this->unkFdc = 1;
+    this->shotActive = 1;
     this->shotState = 1;
     this->shotTimer.SetCurrent(0);
     this->shotInterval = 0x3e7;
-    (this->*this->shotFuncs[this->unkFe0])();
+    (this->*this->shotFuncs[this->shotType])();
     this->shotTimer.Tick(0);
     g_GameManager.DecreaseSubrank(0xc8);
     FUN_0044cba0(&g_Spellcard);
@@ -582,7 +582,7 @@ switch_shot:
 
 // FUNCTION: th08 0x44cbf0 (death: bomb out -> item drops; respawn: invulnerability
 // flash -> reposition at the target point)
-i32 Player::FUN_0044cbf0()
+i32 Player::HandleDeath()
 {
     i32 timeOrbPenalty;
     f32 invulnRatio;
@@ -611,7 +611,7 @@ i32 Player::FUN_0044cbf0()
             g_ReplayManager->replayEventFlags |= 4;
             g_PlayerUnknown0b0 = 0;
             this->unk4 = 0;
-            g_Spellcard.FUN_0044d150();
+            g_Spellcard.ResetSpellcard();
             g_GameManager.AddToDeaths(1);
             g_GuiDisplayState = (g_GuiDisplayState & ~0xC00) | 0x800;
             if (g_GameManager.globals->currentTimeOrbs > 0x1388)
@@ -663,7 +663,7 @@ i32 Player::FUN_0044cbf0()
     ((AnmVm *)this->unk_10)->prefix.scale.x = 1.0f - 1.0f * invulnRatio;
     ((AnmVm *)this->unk_10)->prefix.color1.d3dColor =
         (u32)((i32)(255.0f - this->invulnerabilityTimer.AsFramesFloat() * 255.0f / 120.0f) << 24) | 0xffffff;
-    ((Player *)this->unk_10)->FUN_0044e0f0();
+    ((Player *)this->unk_10)->SetAdditiveBlend();
     this->velocityX = 0;
     this->velocityY = 0;
     if (this->invulnerabilityTimer.AsFrames() < 0x1e)
@@ -705,19 +705,19 @@ ret0:
 }
 
 // FUNCTION: th08 0x44e0f0
-void Player::FUN_0044e0f0()
+void Player::SetAdditiveBlend()
 {
     ((AnmVm *)this)->prefix.flags = (((AnmVm *)this)->prefix.flags & ~0x30) | 0x10;
 }
 
 // FUNCTION: th08 0x44e120
-void Player::FUN_0044e120()
+void Player::ClearAdditiveBlend()
 {
     ((AnmVm *)this)->prefix.flags &= ~0x30;
 }
 
 // FUNCTION: th08 0x44d180
-void Player::FUN_0044d180()
+void Player::UpdateDeathAnimation()
 {
     this->unkE2a70 = 0x3c;
 
@@ -725,7 +725,7 @@ void Player::FUN_0044d180()
     ((AnmVm *)this->unk_10)->prefix.scale.y = 2.0f * temp + 1.0f;
     ((AnmVm *)this->unk_10)->prefix.scale.x = 1.0f - 1.0f * temp;
 
-    ((Player *)this->unk_10)->FUN_0044e0f0();
+    ((Player *)this->unk_10)->SetAdditiveBlend();
 
     this->unk408 = 1.0f;
     this->unk404 = 1.0f;
@@ -741,7 +741,7 @@ void Player::FUN_0044d180()
         ((AnmVm *)this->unk_10)->prefix.scale.x = 1.0f;
         ((AnmVm *)this->unk_10)->prefix.scale.y = 1.0f;
         ((AnmVm *)this->unk_10)->prefix.color1.d3dColor = 0xffffffff;
-        ((Player *)this->unk_10)->FUN_0044e120();
+        ((Player *)this->unk_10)->ClearAdditiveBlend();
 
         if (!(g_PlayerFlags >> PLAYER_FLAG_EXTRA_SHIFT & 1))
         {
@@ -752,7 +752,7 @@ void Player::FUN_0044d180()
 }
 
 // FUNCTION: th08 0x44de60 (97% FIXME: 找空槽循环的 jne/je 布局镜像不可修)
-u32 Player::FUN_0044de60(Float3 *spawnPos, f32 targetX, f32 targetY, i32 unk28, i32 unk24)
+u32 Player::SpawnShot(Float3 *spawnPos, f32 targetX, f32 targetY, i32 unk28, i32 unk24)
 {
     ShotSlot *slot = &this->shots[0xc0]; // 0xbb834, sub-range of shots[]
     i32 i = 0;
@@ -766,7 +766,7 @@ check:
         goto loop;
     goto exit;
 exit:
-    ((Player *)slot)->FUN_0044e370();
+    ((Player *)slot)->ResetShotSlot();
     slot->active = 1;
     slot->posX = spawnPos->x;
     slot->posY = spawnPos->y;
@@ -778,12 +778,12 @@ exit:
 }
 
 // FUNCTION: th08 0x44d2c0
-void Player::FUN_0044d2c0()
+void Player::UpdateInvulnerability()
 {
     if (this->unkE2a70 != 0)
     {
         this->unkE2a70 -= 1;
-        this->FUN_0044de60(&this->positionCenter, 768.0f, 896.0f, -1, 0);
+        this->SpawnShot(&this->positionCenter, 768.0f, 896.0f, -1, 0);
     }
 
     if (this->playerState == 3)
@@ -838,7 +838,7 @@ void Player::FUN_0044d2c0()
 // FUNCTION: th08 0x44aec0 (Player main update: direction input, shot swap,
 // movement with per-form speeds, shot direction vectors, option update,
 // youkai-gauge logic and the afterimage trail)
-i32 Player::FUN_0044aec0()
+i32 Player::UpdateMovement()
 {
     i32 oldDirection;
     i32 swapInput;
@@ -877,7 +877,7 @@ i32 Player::FUN_0044aec0()
 
     /* Shot-swap input: while a shot is active the held shot type decides, else the
      * Swap key (input bit 2). */
-    swapInput = (this->unkFdc != 0) ? (this->unkFe0 & 1) : (g_KeyInput & 0x4);
+    swapInput = (this->shotActive != 0) ? (this->shotType & 1) : (g_KeyInput & 0x4);
 
     if (swapInput != 0)
     {
@@ -1101,12 +1101,12 @@ i32 Player::FUN_0044aec0()
     }
 
     /* Firing: grant the invulnerability border while the gauge is charging. */
-    if ((g_KeyInput & 0x1) != 0 && g_Gui.FUN_004358bb() == 0 && g_GameManager.IsTampered() == 0)
+    if ((g_KeyInput & 0x1) != 0 && g_Gui.IsMsgActive() == 0 && g_GameManager.IsTampered() == 0)
     {
-        this->FUN_00451640();
+        this->ClampChargeShotTimer();
     }
 
-    if (g_Gui.FUN_004358bb() == 0 && this->unk8 >= 0x1e && this->unkFdc == 0)
+    if (g_Gui.IsMsgActive() == 0 && this->unk8 >= 0x1e && this->shotActive == 0)
     {
         youkaiDelta = 0;
         if (this->shotTimer2.operator>=(0))
@@ -1201,7 +1201,7 @@ done:
 #undef SET_MOVE_ANIM
 
 // FUNCTION: th08 0x451150 (68% FIXME: 寄存器分配差异)
-void Player::FUN_00451150()
+void Player::UpdateBullets()
 {
     i32 i;
     PlayerBulletVm *b;
@@ -1257,7 +1257,7 @@ void Player::FUN_00451150()
 }
 
 // FUNCTION: th08 0x451500
-i32 Player::FUN_00451500()
+i32 Player::UpdateChargeShotTimer()
 {
     if (g_Unknown164d2c8 < 0x14)
     {
@@ -1297,7 +1297,7 @@ i32 Player::FUN_00451500()
     {
         if (this->shotTimer2.AsFrames() < 0)
         {
-            if (g_Gui.FUN_004358bb() == 0)
+            if (g_Gui.IsMsgActive() == 0)
             {
                 this->shotTimer2.SetCurrent(0);
             }
@@ -1313,11 +1313,11 @@ i32 Player::FUN_00451500()
 }
 
 // FUNCTION: th08 0x44d420
-void Player::FUN_0044d420()
+void Player::UpdateBoundaryIndicatorTargets()
 {
-    this->unkE2aa4 = Float3(-999.0f, -999.0f, 0.0f);
-    this->unkE2ab0 = Float3(-999.0f, -999.0f, 0.0f);
-    this->unkE2ac0 = 0;
+    this->boundaryIndicatorLeft = Float3(-999.0f, -999.0f, 0.0f);
+    this->boundaryIndicatorRight = Float3(-999.0f, -999.0f, 0.0f);
+    this->boundaryIndicatorTimer = 0;
 
     if (this->positionCenter.y >= 400.0f)
     {
@@ -1348,7 +1348,7 @@ void Player::FUN_0044d420()
 }
 
 // FUNCTION: th08 0x44e370 (this is actually a ShotSlot*)
-void Player::FUN_0044e370()
+void Player::ResetShotSlot()
 {
     memset((ShotSlot *)this, 0, 0x40);
     ((ShotSlot *)this)->unk38 = 1;
@@ -1357,11 +1357,11 @@ void Player::FUN_0044e370()
 // FUNCTION: th08 0x44d530
 ChainCallbackResult Player::OnDrawHighPrio(Player *player)
 {
-    player->FUN_004512f0();
+    player->UpdateBulletVms();
 
-    if (player->unkFdc != 0)
+    if (player->shotActive != 0)
     {
-        (player->*player->unk_1014[player->unkFe0])();
+        (player->*player->unk_1014[player->shotType])();
     }
 
     if (g_PlayerUnknown0bb == 0)
@@ -1467,7 +1467,7 @@ ZunResult Player::AddedCallback(Player *player)
 
     for (i = 0; i < 0x180u; i++)
     {
-        ((Player *)&player->shots[i])->FUN_0044e370();
+        ((Player *)&player->shots[i])->ResetShotSlot();
     }
 
     /* .sht 文件 0xc/0x10/0x18 处为三档射击速度，除以 2.0f 得帧速度。 */
@@ -1503,7 +1503,7 @@ ZunResult Player::AddedCallback(Player *player)
     memcpy((u8 *)player->shotFuncs, (void *)(0x4c7ad0 + (g_PlayerCharacter * 2) * 0x14), 0x14);
     memcpy((u8 *)player->unk_1014, (void *)(0x4c7ad0 + (g_PlayerCharacter * 2 + 1) * 0x14), 0x14);
 
-    player->unkFdc = 0;
+    player->shotActive = 0;
     player->unkE2b0c = -1.57f;
     player->unk408 = 1.0f;
     player->unk404 = 1.0f;

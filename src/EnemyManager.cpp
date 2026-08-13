@@ -287,7 +287,7 @@ ZunResult EnemyManager::DeletedCallback(EnemyManager *enemyManager)
     }
     if (!IsDisableResourceReload())
     {
-        g_Spellcard.unk2648.FreeData();
+        g_Spellcard.dataHolder.FreeData();
     }
     Float3 markerPos(-9999.0f, -9999.0f, -9999.0f);
     g_AsciiManager.SetBossMarkerPosition(0, &markerPos);
@@ -514,19 +514,23 @@ void EffectManager::CutChain()
 
 // 子敌人链 helper (GetVarValue/GetEclFloatVar varId 0x2770 调用; call 目标归一化为 T)
 // FUNCTION: th08 0x41f000
-i32 Enemy::FUN_0041f000()
+// True when this enemy is the root of a sub-enemy chain
+// (ownerEnemy == 0 && nextSubEnemy != 0).
+i32 Enemy::IsSubEnemyChainRoot()
 {
     return 0;
 }
 
 // FUNCTION: th08 0x41fd20
-i32 Enemy::FUN_0041fd20()
+// True when this enemy belongs to an owner (ownerEnemy != 0).
+i32 Enemy::HasOwnerEnemy()
 {
     return 0;
 }
 
 // FUNCTION: th08 0x41fd40
-i32 Enemy::FUN_0041fd40()
+// Returns the number of enemies in this enemy's sub-enemy chain.
+i32 Enemy::GetSubEnemyChainCount()
 {
     return 0;
 }

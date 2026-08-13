@@ -72,9 +72,9 @@ void BulletManager::RemoveAllBullets(i32 param)
             continue;
         }
 
-        r1 = g_Player.FUN_00449ff0(&pool->pos, &pool->collisionSize);
+        r1 = g_Player.CheckShotCollision(&pool->pos, &pool->collisionSize);
 
-        if (g_Player.FUN_00449ff0(&pool->pos, &pool->collisionSize) == 2)
+        if (g_Player.CheckShotCollision(&pool->pos, &pool->collisionSize) == 2)
         {
             g_ItemManager.SpawnItem(&pool->pos, (ItemType) * (i32 *)0x18b8988, 1);
             memset(pool, 0, sizeof(EnemyBullet));

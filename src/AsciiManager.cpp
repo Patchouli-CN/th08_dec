@@ -88,7 +88,7 @@ ChainCallbackResult AsciiManager::OnUpdate(AsciiManager *ascii)
     {
         ascii->demoIcon.scriptIndex = 0;
     }
-    ascii->unk_8284++;
+    ascii->frameCounter++;
 
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
@@ -455,7 +455,7 @@ void AsciiManager::OnDrawLowPrioImpl()
                 this->bossMarkers[i].prefix.color1.b = 64;
                 break;
             case 2:
-                if (this->unk_8284 % 8 == 0)
+                if (this->frameCounter % 8 == 0)
                 {
                     this->bossMarkers[i].loadedSprite = this->asciiAnm->GetSprite(158);
                     this->bossMarkers[i].prefix.color1.a = 255;
@@ -469,7 +469,7 @@ void AsciiManager::OnDrawLowPrioImpl()
                 }
                 break;
             case 3:
-                if (this->unk_8284 % 4 == 0)
+                if (this->frameCounter % 4 == 0)
                 {
                     this->bossMarkers[i].loadedSprite = this->asciiAnm->GetSprite(158);
                     this->bossMarkers[i].prefix.color1.a = 255;
@@ -483,7 +483,7 @@ void AsciiManager::OnDrawLowPrioImpl()
                 }
                 break;
             case 4:
-                if (this->unk_8284 % 2 == 0)
+                if (this->frameCounter % 2 == 0)
                 {
                     this->bossMarkers[i].loadedSprite = this->asciiAnm->GetSprite(158);
                     this->bossMarkers[i].prefix.color1.a = 255;
@@ -895,24 +895,24 @@ void AsciiManager::OnDrawHighPrioImpl()
         }
     }
 
-    /* ---- unk_16f08 时显示玩家两侧的指示条 ---- */
-    if (this->unk_16f08 > 0)
+    /* ---- boundaryIndicatorTimer 时显示玩家两侧的指示条 ---- */
+    if (this->boundaryIndicatorTimer > 0)
     {
-        color.a = (u8)this->unk_16f08;
+        color.a = (u8)this->boundaryIndicatorTimer;
         color.r = 0;
         color.g = 0;
         color.b = 0;
 
         rect.left = 32.0f;
         rect.top = 16.0f;
-        rect.right = g_EclExitLeftBound + 32.0f - this->unk_16f04 + g_AnmManager->screenShakeOffset.y;
+        rect.right = g_EclExitLeftBound + 32.0f - this->boundaryIndicatorOffset + g_AnmManager->screenShakeOffset.y;
         rect.bottom = 464.0f;
         if (rect.right > rect.left)
         {
             ScreenEffect::DrawSquare(&rect, color.d3dColor);
         }
 
-        rect.left = g_EclExitLeftBound + 32.0f + this->unk_16f04 + g_AnmManager->screenShakeOffset.y;
+        rect.left = g_EclExitLeftBound + 32.0f + this->boundaryIndicatorOffset + g_AnmManager->screenShakeOffset.y;
         rect.top = 16.0f;
         rect.right = 416.0f;
         rect.bottom = 464.0f;
@@ -921,47 +921,47 @@ void AsciiManager::OnDrawHighPrioImpl()
             ScreenEffect::DrawSquare(&rect, color.d3dColor);
         }
 
-        rect.left = g_EclExitLeftBound + 32.0f - this->unk_16f04 + g_AnmManager->screenShakeOffset.y;
+        rect.left = g_EclExitLeftBound + 32.0f - this->boundaryIndicatorOffset + g_AnmManager->screenShakeOffset.y;
         if (rect.left < 32.0f)
         {
             rect.left = 32.0f;
         }
 
         rect.top = 16.0f;
-        rect.right = g_EclExitLeftBound + 32.0f + this->unk_16f04 + g_AnmManager->screenShakeOffset.y;
+        rect.right = g_EclExitLeftBound + 32.0f + this->boundaryIndicatorOffset + g_AnmManager->screenShakeOffset.y;
         if (rect.right > 416.0f)
         {
             rect.right = 416.0f;
         }
 
-        rect.bottom = g_17d61b0 + 16.0f - this->unk_16f04 + *(f32 *)((u8 *)g_AnmManager + 0x20);
+        rect.bottom = g_17d61b0 + 16.0f - this->boundaryIndicatorOffset + *(f32 *)((u8 *)g_AnmManager + 0x20);
         if (rect.bottom > rect.top)
         {
             ScreenEffect::DrawSquare(&rect, color.d3dColor);
         }
 
-        rect.top = g_17d61b0 + 16.0f + this->unk_16f04 + *(f32 *)((u8 *)g_AnmManager + 0x20);
+        rect.top = g_17d61b0 + 16.0f + this->boundaryIndicatorOffset + *(f32 *)((u8 *)g_AnmManager + 0x20);
         rect.bottom = 464.0f;
         if (rect.bottom > rect.top)
         {
             ScreenEffect::DrawSquare(&rect, color.d3dColor);
         }
 
-        /* 0x577eb4：全局 AnmLoaded 指针（未命名），给 unk_16f0c VM 设脚本 0x69。 */
+        /* 0x577eb4：全局 AnmLoaded 指针（未命名），给 boundaryIndicatorVm VM 设脚本 0x69。 */
         {
             AnmLoaded *anm = *(AnmLoaded **)0x577eb4;
-            anm->SetAndExecuteScriptIdx(&this->unk_16f0c, 0x69);
+            anm->SetAndExecuteScriptIdx(&this->boundaryIndicatorVm, 0x69);
         }
 
-        this->unk_16f0c.prefix.scale.y = this->unk_16f04 / 63.0f;
-        this->unk_16f0c.prefix.scale.x = this->unk_16f0c.prefix.scale.y;
-        this->unk_16f0c.pos.x = g_EclExitLeftBound;
-        this->unk_16f0c.pos.y = g_17d61b0;
-        this->unk_16f0c.pos.z = g_17d61b4;
-        this->unk_16f0c.pos.x += 32.0f;
-        this->unk_16f0c.pos.y += 16.0f;
-        this->unk_16f0c.prefix.color1.a = (u8)this->unk_16f08;
-        g_AnmManager->DrawNoRotation(&this->unk_16f0c);
+        this->boundaryIndicatorVm.prefix.scale.y = this->boundaryIndicatorOffset / 63.0f;
+        this->boundaryIndicatorVm.prefix.scale.x = this->boundaryIndicatorVm.prefix.scale.y;
+        this->boundaryIndicatorVm.pos.x = g_EclExitLeftBound;
+        this->boundaryIndicatorVm.pos.y = g_17d61b0;
+        this->boundaryIndicatorVm.pos.z = g_17d61b4;
+        this->boundaryIndicatorVm.pos.x += 32.0f;
+        this->boundaryIndicatorVm.pos.y += 16.0f;
+        this->boundaryIndicatorVm.prefix.color1.a = (u8)this->boundaryIndicatorTimer;
+        g_AnmManager->DrawNoRotation(&this->boundaryIndicatorVm);
     }
 
     /* ---- 时间弹字（timePopups[0..127]） ---- */

@@ -81,9 +81,9 @@ struct Enemy
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
     // 子敌人链 helper (GetVarValue/GetEclFloatVar varId 0x2770 调用, call 目标归一化为 T)
-    i32 FUN_0041f000(); // 0x41f000 (ownerEnemy==0 && nextSubEnemy!=0 链根判断)
-    i32 FUN_0041fd20(); // 0x41fd20 (ownerEnemy != 0 判断)
-    i32 FUN_0041fd40(); // 0x41fd40 (子敌人链计数)
+    i32 IsSubEnemyChainRoot();  // 0x41f000 (ownerEnemy==0 && nextSubEnemy!=0 链根判断)
+    i32 HasOwnerEnemy();        // 0x41fd20 (ownerEnemy != 0 判断)
+    i32 GetSubEnemyChainCount(); // 0x41fd40 (子敌人链计数)
 
     unknown_fields(0x0, 0x4);
     i32 prevSubEnemy;                  // 0x4   (prev in the sub-enemy chain)
