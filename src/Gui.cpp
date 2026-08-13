@@ -1,8 +1,11 @@
 #include "th_pch.h"
 
 #include "Gui.hpp"
+#include "BulletManager.hpp"
+#include "EnemyManager.hpp"
 #include "ItemManager.hpp"
 #include "Player.hpp"
+#include "ReplayManager.hpp"
 #include "ScreenEffect.hpp"
 
 namespace th08
@@ -21,6 +24,14 @@ DIFFABLE_STATIC_ARRAY(AnmLoaded *, 4, g_GuiPortraitAnms);
 DIFFABLE_STATIC(AnmLoaded *, g_GuiStageClearAnmA); // 0x4d50a8
 DIFFABLE_STATIC(AnmLoaded *, g_GuiStageClearAnmB); // 0x4d50ac
 DIFFABLE_STATIC(u8 *, g_GuiBgmPathBase); // 0x4e4824
+
+DIFFABLE_EXTERN(i32, g_SpellcardBgmOverride); // 0x4e4b64 (defined in GameManager.cpp)
+DIFFABLE_EXTERN(f32, g_EclExitLeftBound);     // 0x17d61ac (defined in EclManager.cpp)
+DIFFABLE_EXTERN(f32, g_17d61b0);              // 0x17d61b0 (defined in EclManager.cpp)
+
+void __fastcall FUN_00437f5c(i32 param);      // 0x437f5c (defined in GameManager.cpp, spellcard collect screen)
+
+#define GAME_STATE_EVENT_5 5
 
 // FUNCTION: th08 0x4353ec — XOR-0x77-obfuscated message text, copied from src to dst.
 static void DecryptMsgText(char *dst, const char *src)
@@ -692,9 +703,127 @@ SKIP_TIME_INCREMENT:
     return ZUN_SUCCESS;
 }
 
-// STUB: th08 0x43396d (msg init, 0x446 bytes - separate task)
+// FUNCTION: th08 0x43396d — start a message (select msg entry `arg`), loading the per-character text colors.
+#pragma var_order(savedMsgFile, swapTmp7, swapTmp8)
 void GuiImpl::InitMsg(i32 arg)
 {
+    u8 *savedMsgFile;
+    i32 swapTmp7;
+    i32 swapTmp8;
+
+    utils::GuiDebugPrint("msg start %d\n\r", arg);
+    savedMsgFile = this->msgState.msgFileData;
+    memset(&this->msgState, 0, 0x1570);
+    this->msgState.msgFileData = savedMsgFile;
+
+    if (arg == 0)
+    {
+        switch (g_Unknown164d2cc)
+        {
+        case GAME_STATE_EVENT_5:
+            FUN_00437f5c(0x16);
+            break;
+        case GAME_STATE_EVENT_6:
+            g_SpellcardBgmOverride = 2;
+            break;
+        case GAME_STATE_EVENT_7:
+            swapTmp7 = *(i32 *)0x4ecc9c;
+            *(i32 *)0x4ecc9c = *(i32 *)0x4ecca0;
+            *(i32 *)0x4ecca0 = swapTmp7;
+            g_SpellcardBgmOverride = 2;
+            FUN_00437f5c(0x18);
+            break;
+        case GAME_STATE_EVENT_8:
+            swapTmp8 = *(i32 *)0x4ecc9c;
+            *(i32 *)0x4ecc9c = *(i32 *)0x4ecca0;
+            *(i32 *)0x4ecca0 = swapTmp8;
+            g_SpellcardBgmOverride = 2;
+            FUN_00437f5c(0x19);
+            break;
+        }
+    }
+    else if (arg == 0xa)
+    {
+        if (g_Unknown164d2cc == GAME_STATE_EVENT_5)
+        {
+            if (g_GameManager.globals->numRetries > 0)
+            {
+                arg = 1;
+                this->msgState.musicSelection = 0;
+            }
+            else if (g_GameManager.IsReplay())
+            {
+                switch ((i8)g_ReplayManager->replayData->clearState)
+                {
+                case 2:
+                    arg = 3;
+                    this->msgState.musicSelection = 1;
+                    break;
+                case 1:
+                    arg = 2;
+                    this->msgState.musicSelection = 1;
+                    break;
+                default:
+                    arg = 1;
+                    this->msgState.musicSelection = 0;
+                    break;
+                }
+            }
+            else if (g_GameManager.IsStageClearedWithoutRetries(7, g_PlayerCharacter, 0) ||
+                     g_GameManager.IsStageClearedWithoutRetries(7, g_PlayerCharacter, 1) ||
+                     g_GameManager.IsStageClearedWithoutRetries(7, g_PlayerCharacter, 2) ||
+                     g_GameManager.IsStageClearedWithoutRetries(7, g_PlayerCharacter, 3))
+            {
+                arg = 3;
+                this->msgState.musicSelection = 1;
+            }
+            else if (g_GameManager.IsStageClearedWithRetries(6, g_PlayerCharacter, 0) ||
+                     g_GameManager.IsStageClearedWithRetries(6, g_PlayerCharacter, 1) ||
+                     g_GameManager.IsStageClearedWithRetries(6, g_PlayerCharacter, 2) ||
+                     g_GameManager.IsStageClearedWithRetries(6, g_PlayerCharacter, 3))
+            {
+                arg = 2;
+                this->msgState.musicSelection = 1;
+            }
+            else
+            {
+                arg = 1;
+                this->msgState.musicSelection = 0;
+            }
+            g_PlayerFlags = (g_PlayerFlags & ~0x1800) | ((this->msgState.musicSelection & 3) << 0xb);
+        }
+    }
+    else if (arg >= 6)
+    {
+        if (g_Unknown164d2cc == GAME_STATE_EVENT_7 && g_GameManager.GetClockTime() >= 0xc)
+        {
+            arg = 5;
+        }
+    }
+
+    this->msgState.currentMsgIdx = arg;
+    this->msgState.curInstr = (MsgRawInstr *)((GuiMsgData *)this->msgState.msgFileData)->offsets[arg];
+    this->msgState.vms2[0].scriptIndex |= 0xffff;
+    this->msgState.vms2[1].scriptIndex |= 0xffff;
+    this->msgState.dialogueBoxVisible = 1;
+    *(u32 *)&this->msgState.fontSize = 0xf;
+    this->msgState.textColorsA[0] = *(i32 *)(0x4c7180 + g_PlayerCharacter * 16);
+    this->msgState.textColorsA[1] = *(i32 *)(0x4c7180 + g_PlayerCharacter * 16 + 4);
+    this->msgState.textColorsA[2] = *(i32 *)(0x4c7180 + g_PlayerCharacter * 16 + 8);
+    this->msgState.textColorsA[3] = *(i32 *)(0x4c7180 + g_PlayerCharacter * 16 + 12);
+    this->msgState.textColorsB[0] = 0;
+    this->msgState.textColorsB[1] = 0;
+    this->msgState.textColorsB[2] = 0;
+    this->msgState.textColorsB[3] = 0;
+    this->msgState.dialogueSkippable = 1;
+    this->msgState.pauseLimit = 6;
+    this->msgState.currentFace = 0;
+    this->msgState.portraitVisible = 1;
+    this->msgState.currentDialogueLine = 0;
+    this->msgState.currentPortrait |= 0xff;
+    g_BulletManager.bulletmanager_fun_00415c60();
+    g_EnemyManager.RemoveEnemiesByScore(0, 0);
+    g_ItemManager.AutoCollectAllItems();
 }
 
 // FUNCTION: th08 0x439810
@@ -769,14 +898,353 @@ ZunResult Gui::ResetClock()
     return ZUN_SUCCESS;
 }
 
-// STUB: th08 0x43542b
-void GuiImpl::DrawDialogue()
+// FUNCTION: th08 0x43542b — draw the dialogue box + the two portrait pairs (painter's order) + text VMs.
+ZunResult GuiImpl::DrawDialogue()
 {
+    f32 alpha;
+
+    if (this->msgState.currentMsgIdx < 0)
+    {
+        return ZUN_ERROR;
+    }
+    if (this->msgState.timer < 0x3c)
+    {
+        alpha = this->msgState.timer.AsFramesFloat() * 48.0f / 60.0f;
+    }
+    else
+    {
+        alpha = 48.0f;
+    }
+    VertexDiffuseXyzrhw verts[4];
+    verts[0].pos = Float3(g_PlayerPos.x + 16.0f, 384.0f, 0.0f);
+    verts[1].pos = Float3(g_PlayerPos.x + 384.0f - 16.0f, 384.0f, 0.0f);
+    verts[2].pos = Float3(g_PlayerPos.x + 16.0f, 384.0f + alpha, 0.0f);
+    verts[3].pos = Float3(g_PlayerPos.x + 384.0f - 16.0f, 384.0f + alpha, 0.0f);
+    verts[0].diffuse = verts[1].diffuse = 0xd0000000;
+    verts[2].diffuse = verts[3].diffuse = 0x90000000;
+    verts[0].w = verts[1].w = verts[2].w = verts[3].w = 1.0f;
+
+    if (this->msgState.vms[0].pos.z >= this->msgState.vms[1].pos.z)
+    {
+        g_AnmManager->DrawNoRotation(&this->msgState.vms[0]);
+        g_AnmManager->DrawNoRotation(&this->msgState.vms[1]);
+    }
+    else
+    {
+        g_AnmManager->DrawNoRotation(&this->msgState.vms[1]);
+        g_AnmManager->DrawNoRotation(&this->msgState.vms[0]);
+    }
+    if (this->msgState.vms[2].pos.z >= this->msgState.vms[3].pos.z)
+    {
+        g_AnmManager->DrawNoRotation(&this->msgState.vms[2]);
+        g_AnmManager->DrawNoRotation(&this->msgState.vms[3]);
+    }
+    else
+    {
+        g_AnmManager->DrawNoRotation(&this->msgState.vms[3]);
+        g_AnmManager->DrawNoRotation(&this->msgState.vms[2]);
+    }
+    g_AnmManager->FlushVertexBuffer();
+
+    if (this->msgState.dialogueBoxVisible != 0)
+    {
+        if (!g_Supervisor.IsColorCompositingDisabled())
+        {
+            g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+            g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+        }
+        g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
+        g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+        if (!g_Supervisor.IsDepthTestDisabled())
+        {
+            g_Supervisor.SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+        }
+        g_Supervisor.d3dDevice->SetVertexShader(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+        g_Supervisor.d3dDevice->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, &verts, sizeof(VertexDiffuseXyzrhw));
+        g_AnmManager->ClearVertexShader();
+        g_AnmManager->ClearColorOp();
+        g_AnmManager->ClearBlendMode();
+        g_AnmManager->ClearZWriteSetting();
+        if (!g_Supervisor.IsColorCompositingDisabled())
+        {
+            g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+            g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+        }
+        g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        g_Supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    }
+
+    g_AnmManager->DrawNoRotation(&this->msgState.vms2[0]);
+    g_AnmManager->DrawNoRotation(&this->msgState.vms2[1]);
+    g_AnmManager->DrawNoRotation(&this->msgState.vms3[0]);
+    g_AnmManager->DrawNoRotation(&this->msgState.vms3[1]);
+    return ZUN_SUCCESS;
 }
 
-// STUB: th08 0x435900
+// FUNCTION: th08 0x435900 — boss HUD fade in/out + script exec for the HUD VMs + stage-clear score calc + time count-up.
+#pragma var_order(i, inactiveCounter, j, result, k)
 void Gui::UpdateBossHud()
 {
+    GuiImpl *impl;
+    i32 i;
+    i32 inactiveCounter;
+    i32 j;
+    i32 result;
+    i32 k;
+
+    impl = this->impl;
+    if (impl->msgState.currentMsgIdx < 0)
+    {
+        if (this->bossPresent != 0)
+        {
+            if (impl->bossHudState == 0)
+            {
+                impl->vmsA[12].SetInterrupt(1);
+                impl->bossHudState = 1;
+                this->bossUIOpacity = 0;
+            }
+            else
+            {
+                if (FUN_004396f8(&impl->vmsA[12]) != 0)
+                {
+                    impl->bossHudState = 2;
+                }
+                if (this->bossUIOpacity < 0xfc)
+                {
+                    this->bossUIOpacity += 4;
+                }
+                else
+                {
+                    this->bossUIOpacity = 0xff;
+                }
+            }
+        }
+        else
+        {
+            if (impl->bossHudState != 0)
+            {
+                if (impl->bossHudState <= 2)
+                {
+                    impl->vmsA[12].SetInterrupt(2);
+                    impl->bossHudState = 3;
+                }
+                if (this->bossUIOpacity > 0)
+                {
+                    this->bossUIOpacity -= 4;
+                }
+                else
+                {
+                    this->bossUIOpacity = 0;
+                }
+                if (FUN_004396f8(&impl->vmsA[12]) != 0)
+                {
+                    impl->bossHudState = 0;
+                    this->bossLifeBarSize = 0.0f;
+                    this->bossUIOpacity = 0;
+                }
+            }
+        }
+    }
+    if (impl->bossHudState >= 2)
+    {
+        if (this->bossLifeBarMaxSize > this->bossLifeBarSize)
+        {
+            this->bossLifeBarSize += 0.01f;
+            if (this->bossLifeBarMaxSize < this->bossLifeBarSize)
+            {
+                this->bossLifeBarSize = this->bossLifeBarMaxSize;
+            }
+        }
+        else
+        {
+            this->bossLifeBarSize -= 0.02f;
+            if (this->bossLifeBarMaxSize > this->bossLifeBarSize)
+            {
+                this->bossLifeBarSize = this->bossLifeBarMaxSize;
+            }
+        }
+    }
+
+    g_AnmManager->ExecuteScriptArray(&impl->vmsA[0], 0x10);
+    g_AnmManager->ExecuteScriptArray(&impl->vmsB[0], 4);
+    if (!((g_PlayerFlags >> 0xe) & 1))
+    {
+        if (impl->vmsB[0].prefix.color1.a != 0)
+        {
+            g_AnmManager->ExecuteScriptArray(&impl->vmC, 1);
+        }
+    }
+    g_AnmManager->ExecuteScript(&impl->vmJ);
+    g_AnmManager->ExecuteScript(&impl->vmK);
+    if (impl->vmK.prefix.color1.a != 0)
+    {
+        if (g_EclExitLeftBound >= 64.0f && g_17d61b0 <= 128.0f)
+        {
+            if (impl->vmK.prefix.color1.a > 0x40)
+            {
+                impl->vmK.prefix.color1.a -= 4;
+            }
+        }
+        else
+        {
+            if (impl->vmK.prefix.color1.a < 0xff)
+            {
+                if (impl->vmK.prefix.color1.a > 0xfb)
+                {
+                    impl->vmK.prefix.color1.a |= 0xff;
+                }
+                else
+                {
+                    impl->vmK.prefix.color1.a += 4;
+                }
+            }
+        }
+    }
+    g_AnmManager->ExecuteScript(&impl->vmH);
+    g_AnmManager->ExecuteScript(&impl->vmL);
+    if (impl->vmD.activeSpriteIndex >= 0)
+    {
+        if (g_AnmManager->ExecuteScript(&impl->vmD) != 0)
+        {
+            impl->vmD.activeSpriteIndex = -1;
+        }
+        if (g_AnmManager->ExecuteScript(&impl->vmF) != 0)
+        {
+            impl->vmF.activeSpriteIndex = -1;
+        }
+    }
+    for (i = 0; i < 8; i++)
+    {
+        g_AnmManager->ExecuteScript(&impl->vmsG[i]);
+    }
+    if (impl->popupA.unk0x10 != 0)
+    {
+        if (impl->popupA.timer < 0x1e)
+        {
+            impl->popupA.position.y = impl->popupA.timer.AsFramesFloat() * -312.0f / 30.0f + 416.0f;
+        }
+        else
+        {
+            impl->popupA.position.y = 104.0f;
+        }
+        if (impl->popupA.timer >= 0xfa)
+        {
+            impl->popupA.unk0x10 = 0;
+        }
+        impl->popupA.timer.Tick(0);
+    }
+    if (impl->popupB.unk0x10 != 0)
+    {
+        if (impl->popupB.timer < 0x1e)
+        {
+            impl->popupB.position.y = impl->popupB.timer.AsFramesFloat() * -312.0f / 30.0f + 416.0f;
+        }
+        else
+        {
+            impl->popupB.position.y = 104.0f;
+        }
+        if (impl->popupB.timer >= 0xb4)
+        {
+            impl->popupB.unk0x10 = 0;
+        }
+        impl->popupB.timer.Tick(0);
+    }
+    if (impl->popupC.unk0x10 != 0)
+    {
+        if (impl->popupC.timer >= 0x118)
+        {
+            impl->popupC.unk0x10 = 0;
+        }
+        impl->popupC.timer.Tick(0);
+    }
+    if (impl->msgState.stageClearActive == 1)
+    {
+        result = impl->resultStage;
+        result += impl->resultGraze * 0x32;
+        result += impl->resultPointItems * 0x1388;
+        result += impl->resultTimeOrbs * 0x64;
+        if (g_Unknown164d2cc >= 6)
+        {
+            if (!g_GameManager.IsPracticeMode())
+            {
+                result += g_GameManager.GetLives() * 0x2625a0;
+                result += g_GameManager.GetBombsRemaining() * 0x7a120;
+            }
+        }
+        if (g_Unknown164d2cc == 7)
+        {
+            result += (0xc - g_GameManager.GetClockTime()) * 0x1e8480;
+        }
+        switch (g_GameManager.difficulty)
+        {
+        case 0:
+            result /= 2;
+            break;
+        case 2:
+            result = result * 0xc / 0xa;
+            break;
+        case 3:
+            result = result * 0xf / 0xa;
+            break;
+        case 4:
+            result *= 2;
+            break;
+        }
+        switch (*(u8 *)((u8 *)g_GameManager.cfg + 0x1c))
+        {
+        case 3:
+            result = result * 5 / 10;
+            break;
+        case 4:
+            result = result * 2 / 10;
+            break;
+        case 5:
+            result = result / 10;
+            break;
+        case 6:
+            result = result / 0x14;
+            break;
+        }
+        impl->msgState.stageClearScore = result;
+        for (k = 0; k < 0xa; k++)
+        {
+            g_GameManager.AddScore(result);
+        }
+        impl->msgState.stageClearActive++;
+    }
+    if (g_Unknown164d2cc < 6)
+    {
+        if (impl->resultTimeFramesCopy != 0 && impl->resultTimeFramesCopy >= impl->resultTimeFrames2)
+        {
+            if (((g_PlayerFlags >> 5) & 3) == 0)
+            {
+                g_PlayerFlags = (g_PlayerFlags & ~0x60) | 0x40;
+            }
+        }
+    }
+    if (impl->resultTimeFramesCopy != 0 && impl->resultTimeFramesCopy != impl->resultTimeFrames2)
+    {
+        if (impl->unk22e10 < 0x3c)
+        {
+            impl->unk22e10++;
+        }
+        else if (impl->resultTimeFramesCopy < impl->resultTimeFrames2)
+        {
+            impl->resultTimeFramesCopy++;
+            if ((g_KeyInput & 1) || (g_KeyInput & 0x100))
+            {
+                impl->resultTimeFramesCopy += 3;
+            }
+            if (impl->resultTimeFramesCopy > impl->resultTimeFrames2)
+            {
+                impl->resultTimeFramesCopy = impl->resultTimeFrames2;
+            }
+        }
+        else
+        {
+            impl->unk22e10++;
+        }
+    }
 }
 
 // FUNCTION: th08 0x43625d

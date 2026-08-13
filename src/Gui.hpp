@@ -34,7 +34,7 @@ struct GuiMsgState
     u8 musicSelection;     // 0x156e
     u8 unk156f;            // 0x156f  (write-only so far)
     i32 stageClearActive;  // 0x1570  (set when the stage-clear result sequence runs)
-    unknown_fields(0x1574, 0x4);
+    i32 stageClearScore;   // 0x1574  (computed by UpdateBossHud, drawn by DrawStageClearHud)
 };
 C_ASSERT(sizeof(GuiMsgState) == 0x1578);
 
@@ -100,10 +100,10 @@ struct GuiImpl
 {
     ZunResult RunMsg();
     void InitMsg(i32 arg);
-    void DrawDialogue();
+    ZunResult DrawDialogue();
 
     AnmVm vmsA[16];
-    u32 unk2a40; // (unused in current code)
+    u8 bossHudState; // 0x2a40 (boss HUD anim state: 0=hidden, 1=fade in, 2=shown, 3=fade out)
     AnmVm vmsB[4];
     AnmVm vmC;
     AnmVm vmD;
@@ -114,7 +114,7 @@ struct GuiImpl
     AnmVm vmsI[168];
     AnmVm vmJ;
     AnmVm vmK;
-    u32 unk21810; // (unused in current code)
+    i32 inactiveVmsICount; // 0x21810 (168 minus the number of vmsI that finished their script)
     GuiMsgState msgState;
     GuiPopup popupA;
     GuiPopup popupB;
@@ -167,6 +167,7 @@ struct Gui
     static void CutChain();
 
     ZunResult ActualAddedCallback();
+    void FUN_004396b8();              // 0x4396b8 (reset boss portrait vmsD/E/F + inactiveVmsICount)
     ZunResult LoadMsg(const char *path);
     void FreeMsgFile();
     i32 MsgWait();
