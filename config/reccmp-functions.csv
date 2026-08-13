@@ -479,7 +479,7 @@ th08::Gui::MsgWait,0x43587e,function
 th08::Gui::IsDialogPresent,0x4358bb,function
 th08::Gui::FUN_00435900,0x435900,function
 th08::Gui::DrawGameScene,0x43625d,function
-th08::Gui::FUN_0043741d,0x43741d,function
+th08::Gui::DrawBossHud,0x43741d,function
 th08::Gui::AddedCallback,0x437a2f,function
 th08::Gui::DeletedCallback,0x437a40,function
 th08::Gui::RegisterChain,0x437ad0,function
@@ -967,7 +967,7 @@ th08::AnmManager::DrawNoRotationNoRound,0x463800,function
 th08::AnmManager::FUN_004639e0,0x4639e0,function
 th08::AnmManager::FUN_00463cf0,0x463cf0,function
 th08::AnmManager::TransformVerticesWorld,0x463d60,function
-th08::AnmManager::FUN_00464070,0x464070,function
+th08::AnmManager::DrawScaledBullet,0x464070,function
 th08::AnmManager::TransformVerticesWorld,0x4640e0,function
 th08::AnmManager::DrawWithCallback,0x464400,function
 th08::AnmManager::Draw3D,0x464470,function

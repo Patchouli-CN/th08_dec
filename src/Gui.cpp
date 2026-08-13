@@ -31,6 +31,40 @@ DIFFABLE_EXTERN(f32, g_17d61b0);              // 0x17d61b0 (defined in EclManage
 
 void __fastcall FUN_00437f5c(i32 param);      // 0x437f5c (defined in GameManager.cpp, spellcard collect screen)
 
+/* 0x438fe9 / 0x438ffd：读取 D3D 设备对象标志区的两个 u32（原版为独立小函数，Gui 链回调使用）。 */
+u32 FUN_00438fe9(); // 0x438fe9
+u32 FUN_00438ffd(); // 0x438ffd
+
+// FUNCTION: th08 0x438fe9
+u32 FUN_00438fe9()
+{
+    return *(u32 *)0x17ce8bc;
+}
+
+// FUNCTION: th08 0x438ffd
+u32 FUN_00438ffd()
+{
+    return *(u32 *)0x17ce8c4;
+}
+
+/* AsciiManager::CreatePopup4 (0x403600) 尚未在 AsciiManager.hpp 声明；用 stub thiscall 类生成同构调用。 */
+class StubThiscallAsciiManagerCreatePopup4
+{
+  public:
+    void CreatePopup4(Float3 *position, i32 number, i32 param3, u32 color);
+};
+
+void StubThiscallAsciiManagerCreatePopup4::CreatePopup4(Float3 *position, i32 number, i32 param3, u32 color)
+{
+}
+
+/* ScreenEffect::DrawSquareShaded 在头文件里声明为 static(__cdecl)，而原版是 __fastcall；
+ * 用 __fastcall 函数指针直调 0x45b490 以匹配原版寄存器传参。 */
+typedef void(__fastcall *GuiDrawSquareShadedProc)(ZunRect *, D3DCOLOR, D3DCOLOR, D3DCOLOR, D3DCOLOR);
+
+#define DRAW_SQUARE_SHADED(rect_, topLeft_, topRight_, bottomLeft_, bottomRight_)                              \
+    ((GuiDrawSquareShadedProc)0x45b490)((rect_), (topLeft_), (topRight_), (bottomLeft_), (bottomRight_))
+
 #define GAME_STATE_EVENT_5 5
 
 // FUNCTION: th08 0x4353ec — XOR-0x77-obfuscated message text, copied from src to dst.
@@ -129,10 +163,153 @@ void Gui::CutChain()
     g_Chain.Cut(&g_GuiDrawChain);
 }
 
-// STUB: th08 0x4390ee
+// FUNCTION: th08 0x4390ee — Gui chain added-callback: load front/times/loading ANMs, init boss vms,
+// preload the per-stage msg .dat and stage text ANM, reset the clock, and set HUD flags.
 ZunResult Gui::ActualAddedCallback()
 {
+    i32 i;
+    i32 j;
+
+    if (FUN_00438fe9() != 0)
+    {
+        memset(this->impl, 0, 0x8c2e);
+        this->frontAnm = g_AnmManager->PreloadAnm(0xa, "front.anm");
+        if (this->frontAnm == NULL)
+        {
+            return ZUN_ERROR;
+        }
+        this->FUN_004396b8();
+        this->timesAnm = g_AnmManager->PreloadAnm(0xe, "times.anm");
+        if (this->timesAnm == NULL)
+        {
+            return ZUN_ERROR;
+        }
+        /* 0x4c72c4：按 g_PlayerCharacter 索引的 loading 立绘 ANM 名表。 */
+        this->loadingPortraitAnm = g_AnmManager->PreloadAnm(0xc, *(const char **)(0x4c72c4 + g_PlayerCharacter * 4));
+        if (this->loadingPortraitAnm == NULL)
+        {
+            return ZUN_ERROR;
+        }
+        g_GuiStageClearAnmA->SetAndExecuteScriptIdx(&this->impl->vmH, 0x1a);
+        g_GuiStageClearAnmA->SetAndExecuteScriptIdx(&this->impl->vmL, 0x19);
+        if (g_GameManager.GetFlag14() != 0)
+        {
+            if (g_CurrentSpellcardNumber >= 0xcd)
+            {
+                g_GuiStageClearAnmA->SetSprite(&this->impl->vmL, 0x120);
+            }
+            else
+            {
+                /* 0x160f538：进行中的符卡/流程计数。 */
+                g_GuiStageClearAnmA->SetSprite(&this->impl->vmL, *(i32 *)0x160f538 + 0x11b);
+            }
+        }
+    }
+    else
+    {
+        this->FUN_004396b8();
+        g_GuiStageClearAnmB->SetAndExecuteScriptIdx(&this->impl->vmF, 1);
+        /* vmE 尾部 2 字节（未知字段）。 */
+        *(u16 *)((u8 *)this->impl + 0x3ebe) = 1;
+        for (i = 0; i < 0xe; i++)
+        {
+            for (j = 0; j < 0xc; j++)
+            {
+                g_GuiStageClearAnmB->SetAndExecuteScriptIdx(&this->impl->vmsI[i * 0xc + j], ((i + j) & 1) + 3);
+                this->impl->vmsI[i * 0xc + j].prefix.counterVar0 = i + j * 2;
+                this->impl->vmsI[i * 0xc + j].pos.x = (f32)j * 32.0f - 0.5f + 16.0f;
+                this->impl->vmsI[i * 0xc + j].pos.y = (f32)i * 32.0f - 0.5f + 16.0f;
+                this->impl->vmsI[i * 0xc + j].pos.z = 0.0f;
+                this->impl->vmsI[i * 0xc + j].prefix.uvScrollPos.x = (f32)j * 32.0f / 512.0f;
+                this->impl->vmsI[i * 0xc + j].prefix.uvScrollPos.y = (f32)i * 32.0f / 512.0f;
+            }
+        }
+        this->impl->inactiveVmsICount = 0xa8;
+    }
+
+    g_Gui.ResetClock();
+    this->timesAnm->ExecuteAnmIdx(&this->impl->vmC, 0);
+    this->timesAnm->SetSprite(&this->impl->vmC, (i32)g_GameManager.GetClockTime());
+    if (g_GameManager.GetFlag14() == 0)
+    {
+        /* 0x4c74c0：[关卡][角色] 二维 msg .dat 文件名表。 */
+        if (this->LoadMsg((const char *)*(i32 *)(0x4c74c0 + g_Unknown164d2cc * 0x30 + g_PlayerCharacter * 4)) !=
+            ZUN_SUCCESS)
+        {
+            return ZUN_ERROR;
+        }
+    }
+    if (FUN_00438ffd() == 0)
+    {
+        if (((g_PlayerFlags >> 0xe) & 1) != 0 && g_CurrentSpellcardNumber >= 0xcd)
+        {
+            /* 0x4c747c：stg8txt.anm（Lunatic 最后一张符卡文本）。 */
+            this->stageTextAnm = g_AnmManager->PreloadAnm(0xd, *(const char **)0x4c747c);
+            if (this->stageTextAnm == NULL)
+            {
+                return ZUN_ERROR;
+            }
+        }
+        else
+        {
+            /* 0x4c745c：按 g_Unknown164d2cc 索引的 stage 文本 ANM 名表。 */
+            this->stageTextAnm = g_AnmManager->PreloadAnm(0xd, *(const char **)(0x4c745c + g_Unknown164d2cc * 4));
+            if (this->stageTextAnm == NULL)
+            {
+                return ZUN_ERROR;
+            }
+        }
+    }
+    if (FUN_00438fe9() != 0)
+    {
+        for (i = 0; i < 0x10; i++)
+        {
+            this->frontAnm->SetAndExecuteScriptIdx(&this->impl->vmsA[i], i);
+        }
+    }
+    this->frameCounter = 0;
+    this->bossPresent = false;
+    this->impl->bossHudState = 0;
+    this->bossLifeBarMaxSize = 0.0f;
+    this->bossLifeBarSize = 0.0f;
+    if (((g_PlayerFlags >> 0xe) & 1) == 0)
+    {
+        this->timesAnm->ExecuteAnmIdxArray(&this->impl->vmsB[0], 0, 4);
+    }
+    else
+    {
+        /* 符卡 BGM 是否"last word"检查（0x439916 原版经 ecx 传参，忽略实参值）。 */
+        if (FUN_00438ffd() == 0 || ((i32(__fastcall *)(i32))0x439916)(g_CurrentSpellcardNumber) != 0)
+        {
+            this->timesAnm->ExecuteAnmIdxArray(&this->impl->vmsB[0], 3, 1);
+            this->timesAnm->SetSprite(&this->impl->vmsB[0],
+                                      ((i32(__fastcall *)(i32))0x439961)(g_CurrentSpellcardNumber) + 3);
+        }
+    }
+    this->impl->msgState.currentMsgIdx = -1;
+    this->impl->msgState.vms[2].pos.x = 0.0f;
+    this->impl->msgState.vms[2].currentInstruction = NULL;
+    this->impl->msgState.vms[2].posFinal.x = 0.0f;
+    this->impl->msgState.vms[2].rotateFinal.z = 0.0f;
+    this->flags.lifeDisplayUpdateFrames = 2;
+    this->flags.bombDisplayUpdateFrames = 2;
+    this->flags.grazeDisplayUpdateFrames = 2;
+    this->flags.pointDisplayUpdateFrames = 2;
+    this->flags.powerDisplayUpdateFrames = 2;
+    this->flags.timeDisplayUpdateFrames = 2;
+    g_GuiStageClearAnmA->SetAndExecuteScriptIdx(&this->impl->vmJ, 3);
+    *(i32 *)0x17ce8cc = 0x10;
+    this->impl->resultTimeFramesCopy = 0;
     return ZUN_SUCCESS;
+}
+
+// FUNCTION: th08 0x4396b8 — reset boss portrait vmsD/E/F (activeSpriteIndex = -1) and inactiveVmsICount.
+void Gui::FUN_004396b8()
+{
+    this->impl->vmD.activeSpriteIndex = -1;
+    this->impl->vmE.activeSpriteIndex = -1;
+    this->impl->vmF.activeSpriteIndex = -1;
+    this->impl->inactiveVmsICount = 0;
 }
 
 ZunResult Gui::LoadMsg(const char *path)
@@ -1498,9 +1675,162 @@ void Gui::DrawGameScene()
     }
 }
 
-// STUB: th08 0x43741d
+// FUNCTION: th08 0x43741d — draw boss HUD: life bar (white bar + colored segments + spellcard countdown ticks),
+// boss portrait vms (vmD/E/F, vmsG, vmsI) and the spellcard countdown text (AsciiManager).
+#pragma var_order(i, color2, color1, rect, count, j, v, colWidth)
 void Gui::DrawBossHud()
 {
+    i32 i;
+    i32 j;
+    f32 v;
+    ZunRect rect;
+    i32 color1;
+    i32 color2;
+    i32 count;
+    i32 colWidth;
+
+    for (i = 0; i < 4; i++)
+    {
+        g_AnmManager->Draw2D(&this->impl->vmsB[i]);
+    }
+    g_AnmManager->Draw2D(&this->impl->vmC);
+    g_AnmManager->Draw2D(&this->impl->vmK);
+
+    if (this->impl->vmD.activeSpriteIndex >= 0)
+    {
+        g_AnmManager->DrawNoRotation(&this->impl->vmD);
+        g_AnmManager->DrawScaledBullet(&this->impl->vmF);
+        for (i = 0; i < 8; i++)
+        {
+            g_AnmManager->DrawScaledBullet(&this->impl->vmsG[i]);
+        }
+        if (this->impl->vmE.activeSpriteIndex >= 0)
+        {
+            this->impl->vmE.pos = Float3(304.0f, 448.0f, 0.0f);
+            g_AnmManager->DrawNoRotation(&this->impl->vmE);
+        }
+    }
+    if (this->impl->inactiveVmsICount != 0)
+    {
+        for (i = 0; i < 0xa8; i++)
+        {
+            g_AnmManager->DrawScaledBullet(&this->impl->vmsI[i]);
+            g_AnmManager->ClearSprite();
+        }
+    }
+    if (this->impl->msgState.currentMsgIdx >= 0)
+    {
+        return;
+    }
+    if ((i32)this->bossPresent + this->impl->bossHudState <= 0)
+    {
+        return;
+    }
+
+    /* boss 血条主体（白色部分 + 半透明灰边）。 */
+    rect.left = 64.0f;
+    rect.top = 19.0f;
+    rect.right = this->bossLifeBarSize * 320.0f + 64.0f;
+    rect.bottom = 23.0f;
+    color1 = (this->bossUIOpacity << 24) | 0xffffff;
+    color2 = (this->bossUIOpacity << 24) | 0x202060;
+    DRAW_SQUARE_SHADED(&rect, color1, color1, color2, color2);
+
+    /* 血条彩色分段（segmentStart > 0 且 segmentStop != 当前血量时绘制）。 */
+    for (j = 0; j < 8; j++)
+    {
+        if (this->bossLifeBarSegmentStart[j] != 0.0f &&
+            this->bossLifeBarSegmentStop[j] != this->bossLifeBarSize)
+        {
+            v = this->bossLifeBarSegmentStart[j];
+            if (this->bossLifeBarSize < v)
+            {
+                v = this->bossLifeBarSize;
+            }
+            rect.left = this->bossLifeBarSegmentStop[j] * 320.0f + 64.0f;
+            rect.top = 19.0f;
+            rect.right = v * 320.0f + 64.0f;
+            rect.bottom = 23.0f;
+            color1 = (this->bossUIOpacity << 24) | (this->bossLifeBarSegmentColor[j] & 0xffffff);
+            color2 = (this->bossUIOpacity << 24) | ((this->bossLifeBarSegmentColor[j] >> 2) & 0x3f3f3f);
+            DRAW_SQUARE_SHADED(&rect, color1, color1, color2, color2);
+        }
+    }
+
+    g_AnmManager->DrawNoRotation(&this->impl->vmsA[12]);
+
+    /* 符卡倒计时秒格（spellcardSecondsRemaining 个 tick，剩余 ≤5 秒时格宽 +1）。 */
+    rect.left = 33.0f;
+    rect.top = 19.0f;
+    rect.right = rect.left + 3.0f;
+    rect.bottom = rect.top + 4.0f;
+    count = this->spellcardSecondsRemaining;
+    colWidth = (count <= 5) ? 2 : 1;
+    for (j = 0; j < count; j++)
+    {
+        rect.left = (f32)j * 26.0f / count + 35.0f;
+        rect.right = (f32)(j + 1) * 26.0f / count + 35.0f - colWidth;
+        color1 = (this->bossUIOpacity << 24) | (0xffffff - j * 0xff / 9);
+        color2 = (this->bossUIOpacity << 24) | 0x202020;
+        DRAW_SQUARE_SHADED(&rect, color1, color1, color2, color2);
+    }
+
+    /* 符卡倒计时数字（颜色随剩余秒数变化）。 */
+    {
+        Float3 textPos = Float3(384.0f, 16.0f, 0.0f);
+        i32 color;
+
+        if (this->spellcardSecondsRemaining >= 0x14)
+        {
+            color = *(i32 *)0x4c72ac;
+        }
+        else if (this->spellcardSecondsRemaining >= 0xa)
+        {
+            color = *(i32 *)0x4c72b0;
+        }
+        else if (this->spellcardSecondsRemaining >= 0x5)
+        {
+            color = *(i32 *)0x4c72b4;
+        }
+        else
+        {
+            color = *(i32 *)0x4c72b8;
+        }
+        g_AsciiManager.SetColor((this->bossUIOpacity << 24) | color);
+
+        i32 seconds = this->spellcardSecondsRemaining;
+        if (seconds > 0x63)
+        {
+            seconds = 0x63;
+        }
+        if (this->previousSpellcardSecondsRemaining != this->spellcardSecondsRemaining)
+        {
+            if (seconds < 3)
+            {
+                g_SoundPlayer.PlaySoundByIdx(SOUND_TIMEOUT_2, 0);
+            }
+            else if (seconds < 10)
+            {
+                g_SoundPlayer.PlaySoundByIdx(SOUND_TIMEOUT, 0);
+            }
+        }
+        g_AsciiManager.AddFormatText(&textPos, "%.2d", seconds);
+        g_AsciiManager.SetColor(0xffffffff);
+        this->previousSpellcardSecondsRemaining = this->spellcardSecondsRemaining;
+
+        /* 暂停/重试菜单不显示，且当前有子弹对象时，弹出连击数。 */
+        if (*(u8 *)0x164d0ba == 0 && *(u8 *)0x164d0bb == 0 && ((g_PlayerFlags >> 0xa) & 1) == 0 &&
+            g_BulletObjects[0] != 0)
+        {
+            textPos = Float3(2.0f, 29.0f, 0.0f);
+            g_AsciiManager.SetScale(1.0f, 1.0f);
+            ((StubThiscallAsciiManagerCreatePopup4 *)&g_AsciiManager)
+                ->CreatePopup4(&textPos, ((Enemy *)g_BulletObjects[0])->GetSubEnemyChainCount(),
+                               *(i32 *)((u8 *)g_BulletObjects[0] + 0x3380), 0xfff0f00f);
+        }
+    }
+
+    g_AnmManager->DrawNoRotation(&this->impl->vmJ);
 }
 
 void Gui::ShowPopupB(i32 arg1, i32 arg2)
