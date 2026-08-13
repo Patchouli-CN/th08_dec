@@ -5,7 +5,7 @@
   <img alt="Decomp Progress" src="resources/progress.svg">
 </picture>
 
-> **当前 RunEcl (0x4184b0) 字节匹配进度：71.89%** — 184/184 opcode 全部实现，帧布局对齐至 /Od 匿名临时下限（帧 0x600 vs 原版 0x5c4，余 15 槽为编译器匿名临时无法绑定）。ECL 变量系统 4 getter 99%+，EclLerp/ComputeSinCos 100%。
+> **当前 RunEcl (0x4184b0) 字节匹配进度：72.08%** — 184/184 opcode 全部实现，帧布局对齐至 /Od 匿名临时下限（帧 0x600 vs 原版 0x5c4，余 15 槽为编译器匿名临时无法绑定）。ECL 变量系统 4 getter 99%+（GetVarValue 99.81%、GetIntPtr/GetFloatPtr 100%），EclLerp/ComputeSinCos/OnDrawLowPrioImpl 等 100%。reccmp：Implemented 45.29% (942/2080)、Accuracy 91.93%。
 
 [![Discord][discord-badge]][discord] <- click here to join discord server.
 
