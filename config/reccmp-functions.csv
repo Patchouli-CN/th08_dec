@@ -17,7 +17,7 @@ th08::AsciiManager::AddString,0x402920,function
 th08::AsciiManager::AddFormatText,0x402a30,function
 th08::AsciiManager::AddFormatText2,0x402a80,function
 th08::AsciiManager::OnDrawLowPrioImpl,0x402b20,function
-fabs,0x4031e0,function
+fabsf,0x4031e0,function
 th08::AsciiManager::CreateScorePopup,0x403200,function
 th08::AsciiManager::CreatePlayerPointPopup,0x403330,function
 th08::AsciiManager::CreateTimePopup,0x403460,function

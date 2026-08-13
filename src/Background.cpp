@@ -717,8 +717,8 @@ ChainCallbackResult Background::OnDrawHighPrio(Background *background)
     {
         if (g_Gui.FUN_00437d87() == 0)
         {
-            background->FUN_0040a1b0(0);
-            background->FUN_0040a1b0(1);
+            background->RenderObjects(0);
+            background->RenderObjects(1);
         }
     }
 
@@ -734,8 +734,8 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
     {
         if (g_Gui.FUN_00437d87() == 0)
         {
-            background->FUN_0040a1b0(2);
-            background->FUN_0040a1b0(3);
+            background->RenderObjects(2);
+            background->RenderObjects(3);
 
             if (!g_Supervisor.IsFogDisabled())
             {
@@ -808,7 +808,9 @@ ChainCallbackResult Background::OnDrawLowPrio(Background *background)
 }
 
 // STUB: th08 0x40a1b0
-void Background::FUN_0040a1b0(u32 param)
+// TODO(complex): 4746 字节的大函数 —— 遍历 objects/quads 做 3D 投影渲染（D3DX 矩阵 0x476e9f/0x477178 +
+// 大量 Float3 计算、视口裁剪、type0/type1 两种 quad 渲染）。依赖大量未逆向子系统，先跳过。
+void Background::RenderObjects(u32 param)
 {
 }
 

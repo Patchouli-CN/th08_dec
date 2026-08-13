@@ -114,7 +114,7 @@ struct Background
 
     void __fastcall FUN_00408d60(i32 idx, Float3 *p1, Float3 *p2, Float3 *p3, Float3 *p4, Float3 *p5);
     void FUN_00409f40();
-    void FUN_0040a1b0(u32 param);
+    void RenderObjects(u32 param);
 
     void *fileData;
     AnmVm unk0x4;

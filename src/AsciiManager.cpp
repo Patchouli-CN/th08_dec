@@ -1,5 +1,7 @@
 #include "th_pch.h"
 
+#include "ScreenEffect.hpp"
+
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -10,6 +12,12 @@ DIFFABLE_STATIC(ChainElem, g_AsciiManagerDrawChainLowPrio);
 DIFFABLE_STATIC(AsciiManager, g_AsciiManager);
 DIFFABLE_STATIC(ChainElem, g_AsciiManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_AsciiManagerDrawChainHighPrio);
+DIFFABLE_EXTERN(f32, g_EclExitLeftBound); /* EclManager.cpp 定义，OnDrawLowPrioImpl 用 */
+DIFFABLE_EXTERN(Float2, g_PlayerPos);      /* Player.cpp 定义，OnDrawLowPrioImpl 视口用 */
+DIFFABLE_EXTERN(f32, g_PlayerTargetX);
+DIFFABLE_EXTERN(f32, g_PlayerTargetY);
+DIFFABLE_EXTERN(f32, g_17d61b0);           /* Player.cpp 定义，OnDrawHighPrioImpl 用（玩家 Y） */
+DIFFABLE_EXTERN(f32, g_17d61b4);           /* Player.cpp 定义，OnDrawHighPrioImpl 用（玩家 Z） */
 
 // FUNCTION: th08 0x402200
 ChainCallbackResult AsciiManager::OnUpdate(AsciiManager *ascii)
@@ -87,7 +95,7 @@ ChainCallbackResult AsciiManager::OnUpdate(AsciiManager *ascii)
 
 ChainCallbackResult AsciiManager::OnDrawLowPrio(AsciiManager *ascii)
 {
-    ascii->DrawStrings();
+    ascii->OnDrawLowPrioImpl();
     ascii->ResetStringsCount();
     ascii->pauseMenu.OnDrawPauseMenu();
     ascii->retryMenu.OnDrawRetryMenu();
@@ -127,11 +135,6 @@ void AsciiManager::SetIsGuiMode(u32 isGuiMode)
 void AsciiManager::SetBossMarkerState(i32 idx, u32 state)
 {
     this->bossMarkerStates[idx] = state;
-}
-
-// STUB: th08 0x402b20
-void AsciiManager::DrawStrings()
-{
 }
 
 // FUNCTION: th08 0x407160
@@ -329,6 +332,7 @@ int AsciiManager::AddFormatText2(Float3 *position, const char *fmt, ...)
     return strlen(buf);
 }
 
+// FUNCTION: th08 0x402b20
 #pragma var_order(spaceWidth, i, curString, text, isGui, vector)
 void AsciiManager::OnDrawLowPrioImpl()
 {
@@ -360,10 +364,11 @@ void AsciiManager::OnDrawLowPrioImpl()
 
             if (isGui)
             {
-                g_Supervisor.viewport.X = g_GameManager.arcadeRegionTopLeftPos.x;
-                g_Supervisor.viewport.Y = g_GameManager.arcadeRegionTopLeftPos.y;
-                g_Supervisor.viewport.Width = g_GameManager.arcadeRegionSize.x;
-                g_Supervisor.viewport.Height = g_GameManager.arcadeRegionSize.y;
+                /* 原版直接引用 g_PlayerPos/g_PlayerTarget*（与 arcadeRegion* 同址） */
+                g_Supervisor.viewport.X = g_PlayerPos.x;
+                g_Supervisor.viewport.Y = g_PlayerPos.y;
+                g_Supervisor.viewport.Width = g_PlayerTargetX;
+                g_Supervisor.viewport.Height = g_PlayerTargetY;
                 g_Supervisor.d3dDevice->SetViewport(&g_Supervisor.viewport);
             }
             else
@@ -422,8 +427,7 @@ void AsciiManager::OnDrawLowPrioImpl()
     {
         if (this->bossMarkers[i].pos.x >= 56.0f && this->bossMarkers[i].pos.x <= 392.0f)
         {
-            // TODO: This line is not done! The player position is needed in this calculation
-            spaceWidth = fabsf(this->bossMarkers[i].pos.x - 32.0f);
+            spaceWidth = fabsf(this->bossMarkers[i].pos.x - 32.0f - g_EclExitLeftBound);
 
             this->bossMarkers[i].loadedSprite = this->asciiAnm->GetSprite(157);
 
@@ -444,6 +448,7 @@ void AsciiManager::OnDrawLowPrioImpl()
                 }
                 break;
             case 1:
+                /* ZunColor 内存字节序为 b,g,r,a：原版写 r=0xff,g=0x40,b=0x40,a=0x80。 */
                 this->bossMarkers[i].prefix.color1.a = 128;
                 this->bossMarkers[i].prefix.color1.r = 255;
                 this->bossMarkers[i].prefix.color1.g = 64;
@@ -806,9 +811,280 @@ void RetryMenu::OnDrawRetryMenu()
     }
 }
 
-// STUB: th08 0x405420
+// FUNCTION: th08 0x405420 (68.98% FIXME: 原版 this@EBP-0x44 在局部变量中间，var_order 只能把 this 放栈底 -0x58)
+#pragma var_order(popup, alpha, dy, dx, digitCount, loopIdx, text, vector, rect, color, divisor, charCount4, timeCharCount, gauge1, gauge2)
 void AsciiManager::OnDrawHighPrioImpl()
 {
+    AsciiManagerPopup *popup;
+    i32 alpha;
+    f32 dy;
+    f32 dx;
+    i32 digitCount;
+    i32 loopIdx;
+    u8 *text;
+    Float3 vector;
+    ZunRect rect;
+    ZunColor color;
+    i32 divisor;
+    i32 charCount4;
+    i32 timeCharCount;
+    i32 gauge1;
+    i32 gauge2;
+
+    if (!g_Supervisor.IsFogDisabled())
+    {
+        g_Supervisor.DisableFog();
+    }
+    g_Supervisor.SetRenderState((D3DRENDERSTATETYPE)0x17, 8);
+
+    /* ---- 得分弹字（scorePopups[0..722]） ---- */
+    popup = &this->scorePopups[0];
+    for (loopIdx = 0; loopIdx < ASCII_MAX_SCORE_POPUPS + ASCII_MAX_PLAYER_POPUPS; loopIdx++, popup++)
+    {
+        if (!popup->inUse)
+        {
+            continue;
+        }
+
+        charCount4 = popup->characterCount << 2;
+        this->smallScoreText.pos.x = popup->position.x - (f32)charCount4;
+        this->smallScoreText.pos.y = popup->position.y;
+        this->smallScoreText.prefix.color1.d3dColor = popup->color;
+
+        /* 距玩家（g_EclExitLeftBound 即玩家 x）越远 alpha 越高。 */
+        dx = g_EclExitLeftBound - popup->position.x;
+        dy = g_17d61b0 - popup->position.y;
+        alpha = (i32)(dx * dx + dy * dy);
+        if (alpha > 0x1000)
+        {
+            alpha = 0xd0;
+        }
+        else if (alpha > 0x400)
+        {
+            alpha = ((alpha - 0x400) * 128) / 0xc00 + 0x50;
+        }
+        else
+        {
+            alpha = 0x50;
+        }
+
+        this->smallScoreText.prefix.scale.x = this->scaleX;
+        this->smallScoreText.prefix.scale.y = this->scaleY;
+
+        text = (u8 *)&popup->text[popup->characterCount - 1];
+        for (digitCount = popup->characterCount; digitCount > 0; digitCount--)
+        {
+            if (popup->timer < 0x34)
+            {
+                this->smallScoreText.loadedSprite = this->asciiAnm->GetSprite(*text);
+            }
+            else if (popup->timer < 0x38)
+            {
+                this->smallScoreText.loadedSprite = this->asciiAnm->GetSprite(*text + 11);
+            }
+            else
+            {
+                this->smallScoreText.loadedSprite = this->asciiAnm->GetSprite(*text + 21);
+            }
+
+            this->smallScoreText.prefix.color1.a = (u8)alpha;
+            this->smallScoreText.prefix.spriteSize.x = this->smallScoreText.loadedSprite->widthPx;
+            g_AnmManager->DrawNoRotation(&this->smallScoreText);
+            this->smallScoreText.pos.x += 8.0f;
+            text--;
+        }
+    }
+
+    /* ---- unk_16f08 时显示玩家两侧的指示条 ---- */
+    if (this->unk_16f08 > 0)
+    {
+        color.a = (u8)this->unk_16f08;
+        color.r = 0;
+        color.g = 0;
+        color.b = 0;
+
+        rect.left = 32.0f;
+        rect.top = 16.0f;
+        rect.right = g_EclExitLeftBound + 32.0f - this->unk_16f04 + g_AnmManager->screenShakeOffset.y;
+        rect.bottom = 464.0f;
+        if (rect.right > rect.left)
+        {
+            ScreenEffect::DrawSquare(&rect, color.d3dColor);
+        }
+
+        rect.left = g_EclExitLeftBound + 32.0f + this->unk_16f04 + g_AnmManager->screenShakeOffset.y;
+        rect.top = 16.0f;
+        rect.right = 416.0f;
+        rect.bottom = 464.0f;
+        if (rect.right > rect.left)
+        {
+            ScreenEffect::DrawSquare(&rect, color.d3dColor);
+        }
+
+        rect.left = g_EclExitLeftBound + 32.0f - this->unk_16f04 + g_AnmManager->screenShakeOffset.y;
+        if (rect.left < 32.0f)
+        {
+            rect.left = 32.0f;
+        }
+
+        rect.top = 16.0f;
+        rect.right = g_EclExitLeftBound + 32.0f + this->unk_16f04 + g_AnmManager->screenShakeOffset.y;
+        if (rect.right > 416.0f)
+        {
+            rect.right = 416.0f;
+        }
+
+        rect.bottom = g_17d61b0 + 16.0f - this->unk_16f04 + *(f32 *)((u8 *)g_AnmManager + 0x20);
+        if (rect.bottom > rect.top)
+        {
+            ScreenEffect::DrawSquare(&rect, color.d3dColor);
+        }
+
+        rect.top = g_17d61b0 + 16.0f + this->unk_16f04 + *(f32 *)((u8 *)g_AnmManager + 0x20);
+        rect.bottom = 464.0f;
+        if (rect.bottom > rect.top)
+        {
+            ScreenEffect::DrawSquare(&rect, color.d3dColor);
+        }
+
+        /* 0x577eb4：全局 AnmLoaded 指针（未命名），给 unk_16f0c VM 设脚本 0x69。 */
+        {
+            AnmLoaded *anm = *(AnmLoaded **)0x577eb4;
+            anm->SetAndExecuteScriptIdx(&this->unk_16f0c, 0x69);
+        }
+
+        this->unk_16f0c.prefix.scale.y = this->unk_16f04 / 63.0f;
+        this->unk_16f0c.prefix.scale.x = this->unk_16f0c.prefix.scale.y;
+        this->unk_16f0c.pos.x = g_EclExitLeftBound;
+        this->unk_16f0c.pos.y = g_17d61b0;
+        this->unk_16f0c.pos.z = g_17d61b4;
+        this->unk_16f0c.pos.x += 32.0f;
+        this->unk_16f0c.pos.y += 16.0f;
+        this->unk_16f0c.prefix.color1.a = (u8)this->unk_16f08;
+        g_AnmManager->DrawNoRotation(&this->unk_16f0c);
+    }
+
+    /* ---- 时间弹字（timePopups[0..127]） ---- */
+    popup = &this->timePopups[0];
+    for (loopIdx = 0; loopIdx < ASCII_MAX_TIME_POPUPS; loopIdx++, popup++)
+    {
+        if (!popup->inUse)
+        {
+            continue;
+        }
+
+        timeCharCount = popup->characterCount;
+        this->popupText.pos.x = popup->position.x - (f32)timeCharCount * 3.5f;
+        this->popupText.pos.y = popup->position.y;
+        this->popupText.prefix.color1.d3dColor = popup->color;
+
+        dx = g_EclExitLeftBound - popup->position.x;
+        dy = g_17d61b0 - popup->position.y;
+        alpha = (i32)(dx * dx + dy * dy);
+        if (alpha > 0x1000)
+        {
+            alpha = 0xd0;
+        }
+        else if (alpha > 0x400)
+        {
+            alpha = ((alpha - 0x400) * 128) / 0xc00 + 0x50;
+        }
+        else
+        {
+            alpha = 0x50;
+        }
+
+        this->popupText.prefix.scale.x = popup->scaleX;
+        this->popupText.prefix.scale.y = popup->scaleY;
+
+        text = (u8 *)&popup->text[popup->characterCount - 1];
+        for (digitCount = popup->characterCount; digitCount > 0; digitCount--)
+        {
+            this->popupText.loadedSprite = this->asciiAnm->GetSprite(*text + 0x88);
+            this->popupText.prefix.color1.a = (u8)alpha;
+            this->popupText.prefix.spriteSize.x = this->popupText.loadedSprite->widthPx;
+            g_AnmManager->DrawNoRotation(&this->popupText);
+            this->popupText.pos.x += 7.0f * popup->scaleX;
+            text--;
+        }
+    }
+
+    /* ---- 妖率槽 ---- */
+    *(i32 *)((u8 *)g_AnmManager + 0x20) = 0;
+    g_AnmManager->screenShakeOffset.y = 0.0f;
+
+    if (this->youkaiGauge.IsVisible())
+    {
+        gauge1 = g_GameManager.GetYoukaiGauge();
+        this->youkaiGaugeCursor.pos.x =
+            (f32)gauge1 * 112.0f / 2.0f / 10000.0f + this->youkaiGauge.pos.x + 64.0f;
+        g_AnmManager->Draw2DNoRound(&this->youkaiGaugeCursor);
+
+        gauge2 = g_GameManager.GetYoukaiGauge();
+        this->percentageText.pos.x =
+            (f32)gauge2 * 80.0f / 2.0f / 10000.0f + this->youkaiGauge.pos.x + 64.0f;
+        this->percentageText.pos.y = this->youkaiGaugeCursor.pos.y - 7.0f;
+        this->percentageText.pos.z = this->youkaiGaugeCursor.pos.z;
+        this->percentageText.prefix.color1.a = this->youkaiGauge.prefix.color1.a;
+
+        if (g_GameManager.GaugeIsExtremelyHuman())
+        {
+            this->percentageText.prefix.color1.r = 0x70;
+            this->percentageText.prefix.color1.g = 0x70;
+            this->percentageText.prefix.color1.b = 0xff;
+        }
+        else if (g_GameManager.GaugeIsModeratelyHuman())
+        {
+            this->percentageText.prefix.color1.r = 0xb0;
+            this->percentageText.prefix.color1.g = 0xb0;
+            this->percentageText.prefix.color1.b = 0xff;
+        }
+        else if (g_GameManager.GaugeIsExtremelyYoukai())
+        {
+            this->percentageText.prefix.color1.r = 0xff;
+            this->percentageText.prefix.color1.g = 0x70;
+            this->percentageText.prefix.color1.b = 0x70;
+        }
+        else if (g_GameManager.GaugeIsModeratelyYoukai())
+        {
+            this->percentageText.prefix.color1.r = 0xff;
+            this->percentageText.prefix.color1.g = 0xb0;
+            this->percentageText.prefix.color1.b = 0xb0;
+        }
+        else
+        {
+            this->percentageText.prefix.color1.r = 0xff;
+            this->percentageText.prefix.color1.g = 0xff;
+            this->percentageText.prefix.color1.b = 0xff;
+        }
+
+        this->youkaiGauge.prefix.color1 = this->percentageText.prefix.color1;
+        g_AnmManager->DrawNoRotation(&this->youkaiGauge);
+        g_AnmManager->DrawNoRotation(&this->youkaiGaugeHumanIcon);
+        g_AnmManager->DrawNoRotation(&this->youkaiGaugeYoukaiIcon);
+
+        this->DrawPercentage(&this->percentageText.pos, g_GameManager.GetYoukaiGauge(),
+                             this->percentageText.prefix.color1.d3dColor);
+
+        /* ---- 顶部得分 8 位数字 ---- */
+        divisor = 10000000;
+        digitCount = *(i32 *)(*(i32 *)0x160f510 + 0x24);
+        alpha = 0;
+        this->percentageText.pos.x = this->youkaiGauge.pos.x + 62.0f - 14.0f;
+        this->percentageText.pos.y = this->youkaiGauge.pos.y + 3.0f + 8.0f;
+        for (loopIdx = 0; loopIdx < 8; loopIdx++)
+        {
+            alpha += digitCount / divisor;
+            if (alpha != 0)
+            {
+                this->asciiAnm->SetSprite(&this->percentageText, digitCount / divisor + 0x88);
+                g_AnmManager->DrawNoRotation(&this->percentageText);
+                this->percentageText.pos.x += 7.0f;
+            }
+            digitCount %= divisor;
+            divisor /= 10;
+        }
+    }
 }
 
 // FUNCTION: th08 0x405e10
