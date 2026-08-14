@@ -13,6 +13,11 @@
 #include "Spellcard.hpp"
 #include "Supervisor.hpp"
 
+// 0x42eb10: standalone angle-interpolation helper (a→b by factor c, wrapping).
+// Declared/defined at global scope (outside namespace th08) so its PDB symbol
+// matches the CSV name "FUN_0042eb10" and OnDrawImpl's call target normalizes.
+f32 FUN_0042eb10(f32 a, f32 b, f32 c);
+
 namespace th08
 {
 
@@ -183,6 +188,18 @@ void *OnUpdateHelpers::FUN_00430aa0(i32, i32)
 i32 OnUpdateHelpers::FUN_0040d410(i32)
 {
     return 0;
+}
+
+// OnDrawImpl 调用的 AnmManager::DrawVertices (0x464c60) 跨类 thiscall 帮手。
+// 接收器是 g_AnmManager (ecx); 内部未逆向, 保持 stub (OnUpdateHelpers 同款模式)。
+struct EnemyDrawHelpers
+{
+    ZunResult DrawVertices(AnmVm *vm, void *vertices, i32 count); // 0x464c60
+};
+
+ZunResult EnemyDrawHelpers::DrawVertices(AnmVm *, void *, i32)
+{
+    return ZUN_SUCCESS;
 }
 
 // OnUpdate 遍历阶段调用的 Enemy 辅助 stub (thiscall 视图; 内部未逆向, 保持 stub)。
@@ -873,9 +890,236 @@ ChainCallbackResult EnemyManager::OnDrawHighPrio(EnemyManager *enemyManager)
     return OnDrawImpl(enemyManager, 0, 2);
 }
 
-// STUB: th08 0x42e140
+// FUNCTION: th08 0x42e140
+// OnDrawImpl 绘制敌人。OnDrawHighPrio 遍历敌机类型链表 0..1 (arg1=0,arg2=2),
+// OnDrawLowPrio 遍历 2..3 (arg1=2,arg2=4)。链表头数组在 enemyManager+0x9dcedc,
+// 每节点 next 指针在 Enemy+0x0 (OnUpdate 建立)。
+// 每个敌人: 先画两个 vms (ec 指针跨两段循环共享, /Od 不重置), 再设置 primaryVm
+// 并进入 aiFlags 路径 (单点痕迹 PathA 或 带状激光 PathB), 最后补画 primaryVm 与 vms[1]。
 ChainCallbackResult EnemyManager::OnDrawImpl(EnemyManager *enemyManager, i32 arg1, i32 arg2)
 {
+    f32 savedScaleY;   // -0x4  (aiFlags 块保存 primaryVm.prefix.scale.y)
+    f32 savedScaleX;   // -0x8  (aiFlags 块保存 primaryVm.prefix.scale.x)
+    i32 i;             // -0xc
+    i32 saved1fc;      // -0x10 (aiFlags 块保存 enemy+0x1fc)
+    AnmVm *ec;         // -0x14
+    i32 j;             // -0x18 (vm 下标 / PathA idx / PathB idx 共用)
+    Enemy *enemy;      // -0x1c
+    f32 var2;          // -0x20 (PathB)
+    f32 var;           // -0x24 (PathB)
+    i32 count;         // -0x28 (PathB 顶点计数)
+    f32 angle2;        // -0x2c (PathB; sinA 复用)
+    f32 acc;           // -0x30 (PathB)
+    f32 prevAngle;     // -0x34 (PathB)
+    u8 *ptr;           // -0x38 (PathB)
+    f32 step;          // -0x3c (PathB)
+    f32 angle;         // -0x40 (PathB)
+    f32 cosA;          // -0x44 (PathB)
+    f32 span;          // -0x48 (PathB)
+
+    for (i = arg1; i < arg2; i++)
+    {
+        enemy = *(Enemy **)((u8 *)enemyManager + 0x9dcedc + i * 4);
+
+        while (enemy != NULL)
+        {
+            ec = &enemy->vms[0];
+
+            for (j = 0; j < 1; j++, ec++)
+            {
+                if (ec->scriptIndex >= 0)
+                {
+                    if (*(i16 *)((u8 *)ec + 0x1fc) != 0)
+                        ec->SetZRotation(enemy->moveAngle);
+                    if (((enemy->anmFlags >> 8) & 1) == 0)
+                        ec->pos = enemy->movePos + ec->pos2;
+                    else
+                        ec->pos = enemy->movePos + *(Float3 *)((u8 *)enemy + 0x294);
+                    ec->pos.z = 0.3f;
+                    ec->pos.x += g_PlayerPos.x;
+                    ec->pos.y += g_PlayerPos.y;
+                    g_AnmManager->Draw2D(ec);
+                }
+            }
+
+            if ((enemy->flags >> 0x19) & 1)
+            {
+                enemy->primaryVm.SetZRotation(enemy->moveAngle);
+            }
+
+            enemy->primaryVm.pos = enemy->movePos + *(Float3 *)((u8 *)enemy + 0x294);
+            enemy->primaryVm.pos.x += g_PlayerPos.x;
+            enemy->primaryVm.pos.y += g_PlayerPos.y;
+            enemy->primaryVm.pos.z = 0.25f;
+
+            if (enemy->aiFlags != 0)
+            {
+                savedScaleX = enemy->primaryVm.prefix.scale.x;
+                savedScaleY = enemy->primaryVm.prefix.scale.y;
+                saved1fc = *(i32 *)((u8 *)enemy + 0x1fc);
+
+                if ((enemy->aiFlags & 8) == 0)
+                {
+                    // PathA: 沿 aiParam0-1 递减 aiParam2 的单点痕迹绘制 (跳过哨兵 -990)。
+                    for (j = (i16)enemy->aiParam0 - 1; j > 0; j -= (i16)enemy->aiParam2)
+                    {
+                        if (*(f32 *)((u8 *)enemy + 0x3394 + j * 0x1c) >= -990.0f)
+                        {
+                            if ((enemy->flags >> 0x19) & 1)
+                            {
+                                enemy->primaryVm.SetZRotation(*(f32 *)((u8 *)enemy + 0x33ac + j * 0x1c));
+                            }
+                            if (enemy->aiFlags & 2)
+                            {
+                                enemy->primaryVm.prefix.scale.x =
+                                    savedScaleX - (f32)j * savedScaleX / (f32)(i16)enemy->aiParam0;
+                            }
+                            if (enemy->aiFlags & 4)
+                            {
+                                u8 alpha = *(u8 *)((u8 *)&saved1fc + 3);
+                                *(u8 *)((u8 *)enemy + 0x1ff) =
+                                    (u8)((i32)alpha - (i32)alpha * j / (i32)(i16)enemy->aiParam0);
+                            }
+                            enemy->primaryVm.pos =
+                                *(Float3 *)((u8 *)enemy + 0x3394 + j * 0x1c) +
+                                *(Float3 *)((u8 *)enemy + 0x294);
+                            enemy->primaryVm.pos.z = 0.3f;
+                            enemy->primaryVm.pos.x += g_PlayerPos.x;
+                            enemy->primaryVm.pos.y += g_PlayerPos.y;
+                            g_AnmManager->Draw2D(&enemy->primaryVm);
+                        }
+                    }
+                }
+                else
+                {
+                    // PathB: 累积 trail 点, 按角度线性/共线剔除后生成带状顶点 (0x1c 步进) 提交 DrawVertices。
+                    f32 sinA;
+                    i32 *dataPtr = *(i32 **)((u8 *)enemy + 0x230);
+
+                    count = 0;
+                    for (j = 0; j < (i16)enemy->aiParam0; j += (i16)enemy->aiParam2)
+                    {
+                        if (*(f32 *)((u8 *)enemy + 0x3394 + j * 0x1c) < -990.0f)
+                            break;
+                        count += 2;
+                    }
+
+                    if (count > 2)
+                    {
+                        span = *(f32 *)((u8 *)dataPtr + 0x28) - *(f32 *)((u8 *)dataPtr + 0x20);
+                        step = span / (f32)((count + 1) / 2 - 1);
+                        acc = *(f32 *)((u8 *)dataPtr + 0x28) + enemy->primaryVm.prefix.uvScrollPos.x;
+                        ptr = (u8 *)enemy + 0x3e14;
+
+                        for (j = 0; j < (i16)enemy->aiParam0 &&
+                                     *(f32 *)((u8 *)enemy + 0x3394 + j * 0x1c) >= -990.0f;
+                             j += (i16)enemy->aiParam2, acc -= step)
+                        {
+                            if (j == 0)
+                            {
+                                angle = *(f32 *)((u8 *)enemy + 0x33ac);
+                            }
+                            else
+                            {
+                                angle = FUN_0042eb10(*(f32 *)((u8 *)enemy + 0x33ac + (j - 1) * 0x1c),
+                                                     *(f32 *)((u8 *)enemy + 0x33ac + j * 0x1c), 0.5f);
+                            }
+
+                            if ((enemy->aiFlags & 2) && j > 0 &&
+                                j + (i16)enemy->aiParam2 < (i16)enemy->aiParam0)
+                            {
+                                angle2 = FUN_0042eb10(*(f32 *)((u8 *)enemy + 0x33ac +
+                                                               (j + (i16)enemy->aiParam2 - 1) * 0x1c),
+                                                      *(f32 *)((u8 *)enemy + 0x33ac +
+                                                               (j + (i16)enemy->aiParam2) * 0x1c),
+                                                      0.5f);
+                                if (fabsf(prevAngle - angle) < 1.0e-5f && fabsf(angle - angle2) < 1.0e-5f)
+                                {
+                                    count -= 2;
+                                    continue;
+                                }
+                            }
+                            prevAngle = angle;
+
+                            cosA = cosf(angle);
+                            var = 0.0f;
+                            var2 = savedScaleY * *(f32 *)((u8 *)dataPtr + 0x30) / 2.0f;
+
+                            if (enemy->aiFlags & 2)
+                            {
+                                f32 fade = 1.0f - (f32)j / (f32)(i16)enemy->aiParam0;
+                                var *= fade;
+                                var2 *= fade;
+                            }
+
+                            *(i32 *)(ptr + 0x2c) = *(i32 *)((u8 *)enemy + 0x1fc);
+                            *(i32 *)(ptr + 0x10) = *(i32 *)(ptr + 0x2c);
+                            if (enemy->aiFlags & 4)
+                            {
+                                u8 b = (u8)((i32)*(u8 *)((u8 *)&saved1fc + 3) -
+                                            (i32)*(u8 *)((u8 *)&saved1fc + 3) * j /
+                                                (i32)(i16)enemy->aiParam0);
+                                *(u8 *)(ptr + 0x2f) = b;
+                                *(u8 *)(ptr + 0x13) = b;
+                            }
+
+                            sinA = sinf(angle);
+                            *(Float3 *)ptr = *(Float3 *)((u8 *)enemy + 0x3394 + j * 0x1c);
+                            *(f32 *)(ptr + 0x0) += cosA * var - sinA * var2 + 32.0f;
+                            *(f32 *)(ptr + 0x4) += sinA * var + cosA * var2 + 16.0f;
+                            *(f32 *)(ptr + 0x14) = acc;
+                            *(f32 *)(ptr + 0x18) =
+                                *(f32 *)((u8 *)dataPtr + 0x24) + enemy->primaryVm.prefix.uvScrollPos.y;
+                            ptr += 0x1c;
+
+                            *(Float3 *)ptr = *(Float3 *)((u8 *)enemy + 0x3394 + j * 0x1c);
+                            *(f32 *)(ptr + 0x0) += cosA * var + sinA * var2 + 32.0f;
+                            *(f32 *)(ptr + 0x4) += sinA * var - cosA * var2 + 16.0f;
+                            *(f32 *)(ptr + 0x14) = acc;
+                            *(f32 *)(ptr + 0x18) =
+                                *(f32 *)((u8 *)dataPtr + 0x2c) + enemy->primaryVm.prefix.uvScrollPos.y;
+                            ptr += 0x1c;
+                        }
+
+                        if (count > 2)
+                        {
+                            ((EnemyDrawHelpers *)g_AnmManager)
+                                ->DrawVertices(&enemy->primaryVm, (void *)((u8 *)enemy + 0x3e14), count);
+                        }
+                    }
+                }
+
+                enemy->primaryVm.prefix.scale.x = savedScaleX;
+                enemy->primaryVm.prefix.scale.y = savedScaleY;
+                *(i32 *)((u8 *)enemy + 0x1fc) = saved1fc;
+            }
+
+            if (!(enemy->aiFlags & 0x10) && !((enemy->flags >> 5) & 1))
+            {
+                g_AnmManager->Draw2D(&enemy->primaryVm);
+            }
+
+            for (j = 1; j < 2; j++, ec++)
+            {
+                if (ec->scriptIndex >= 0)
+                {
+                    if (*(i16 *)((u8 *)ec + 0x1fc) != 0)
+                        ec->SetZRotation(-enemy->moveAngle);
+                    if (((enemy->anmFlags >> 8) & 1) == 0)
+                        ec->pos = enemy->movePos + ec->pos2;
+                    else
+                        ec->pos = enemy->movePos + *(Float3 *)((u8 *)enemy + 0x294);
+                    ec->pos.z = 0.3f;
+                    ec->pos.x += g_PlayerPos.x;
+                    ec->pos.y += g_PlayerPos.y;
+                    g_AnmManager->Draw2D(ec);
+                }
+            }
+
+            enemy = *(Enemy **)enemy;
+        }
+    }
+
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
@@ -1272,3 +1516,13 @@ i32 Enemy::GetSubEnemyChainCount()
 }
 
 } /* namespace th08 */
+
+// STUB: th08 0x42eb10
+// 角度插值: 在 a→b 间按 c 线性插值 (处理角度环绕)。OnDrawImpl PathB 使用。
+f32 FUN_0042eb10(f32 a, f32 b, f32 c)
+{
+    (void)a;
+    (void)b;
+    (void)c;
+    return 0.0f;
+}
