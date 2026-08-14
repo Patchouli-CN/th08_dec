@@ -119,7 +119,8 @@ struct ReplayManager
     Float3 unk18;                        // 0x18  (only initialized in ctor; recorded player motion?)
     Float3 unk24;                        // 0x24  (only initialized in ctor)
     Float3 unk30;                        // 0x30  (only initialized in ctor)
-    unknown_fields(0x3c, 0x14);
+    Float3 unk3c;                        // 0x3c  (only initialized in ctor)
+    unknown_fields(0x48, 0x8);
     u8 *replayEventCursor;               // 0x50  write cursor into the replay event buffer
     u8 *stageReplayDataStart[MAX_STAGES]; // 0x54  per-stage start pointer into the replay event buffer
     unknown_fields(0x78, 0x50);
