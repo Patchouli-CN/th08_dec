@@ -4,7 +4,11 @@
 
 #include <string.h>
 #include "AsciiManager.hpp"
+#include "BulletManager.hpp"
 #include "EffectManager.hpp"
+#include "Gui.hpp"
+#include "ItemManager.hpp"
+#include "Player.hpp"
 #include "ReplayManager.hpp"
 #include "Spellcard.hpp"
 #include "Supervisor.hpp"
@@ -127,9 +131,740 @@ ZunResult EnemyManager::RegisterChain()
     return ZUN_SUCCESS;
 }
 
-// STUB: th08 0x42c660
-ChainCallbackResult EnemyManager::OnUpdate()
+// EclTimeline is not defined elsewhere in the project; declare a minimal local shape so the
+// OnUpdate timeline-loop call site (thiscall on this+0x9dcdd0 + i*0x10) gets a direct call to 0x42a8a0.
+struct EclTimeline
 {
+    void FUN_0042a8a0(); // 0x42a8a0
+};
+
+void EclTimeline::FUN_0042a8a0()
+{
+}
+
+// Cross-class thiscall helpers used by OnUpdate that are not yet defined in their owning class.
+// Dummy receiver type: only the this-pointer (ecx) and the stack args matter for the call shape;
+// the callee bodies stay stubs (kept as-is per the handoff, call targets normalize by CSV name).
+struct OnUpdateHelpers
+{
+    i32 FUN_00451670(Float3 *a, Float3 *b, void *c, i32 *d); // Player::FUN_00451670 0x451670
+    i32 FUN_004178a0();                                      // 0x4178a0 (on g_EclGlobalObj)
+    i32 FUN_0042dff0();                                      // 0x42dff0 (on g_EclGlobalObj)
+    i32 GetTimelineCount();                                  // 0x42dfb0 (on g_EclInterruptTable)
+    void *GetTimeline(i32 idx);                              // 0x42dfd0
+    void *FUN_00430aa0(i32 a, i32 b);                        // BulletManager 0x430aa0 (on g_BulletManager)
+    i32 FUN_0040d410(i32 divisor);                           // 0x40d410 ZunTimer modulo (on frame timer)
+};
+
+i32 OnUpdateHelpers::FUN_00451670(Float3 *, Float3 *, void *, i32 *)
+{
+    return 0;
+}
+i32 OnUpdateHelpers::FUN_004178a0()
+{
+    return 0;
+}
+i32 OnUpdateHelpers::FUN_0042dff0()
+{
+    return 0;
+}
+i32 OnUpdateHelpers::GetTimelineCount()
+{
+    return 0;
+}
+void *OnUpdateHelpers::GetTimeline(i32)
+{
+    return NULL;
+}
+void *OnUpdateHelpers::FUN_00430aa0(i32, i32)
+{
+    return NULL;
+}
+i32 OnUpdateHelpers::FUN_0040d410(i32)
+{
+    return 0;
+}
+
+// OnUpdate 遍历阶段调用的 Enemy 辅助 stub (thiscall 视图; 内部未逆向, 保持 stub)。
+void Enemy::enemy_fun_00415c80()
+{
+}
+void Enemy::FUN_0042c420()
+{
+}
+void Enemy::FUN_0042bcf0()
+{
+}
+i32 Enemy::FUN_0042b490()
+{
+    return 0;
+}
+i32 Enemy::FUN_0042b930()
+{
+    return 0;
+}
+void Enemy::FUN_0042deb0()
+{
+}
+void Enemy::FUN_0042c290(Float3 *, Float3 *)
+{
+}
+void Enemy::FUN_0042b370(i32)
+{
+}
+void Enemy::FUN_0042adb0(i32)
+{
+}
+void Enemy::FUN_0042bea0(i32)
+{
+}
+void Enemy::FUN_0042e010()
+{
+}
+void EnemyManager::FUN_0042c3b0()
+{
+}
+
+// FUNCTION: th08 0x42c660
+ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
+{
+    Float3 movePosL;    // -0xc
+    i32 difficulty = 0xa; // -0x10
+    i32 var14 = 0;      // -0x14
+    i32 var18;          // -0x18
+    i32 i;              // -0x1c
+    Float3 hitbox;      // -0x28
+    i32 var2c;          // -0x2c
+    i32 j;              // -0x30
+    i32 damaged;        // -0x34
+    Enemy *enemy;       // -0x38
+    i32 scoreGain;      // -0x3c
+    Float3 bossDelta;   // -0x48
+    Enemy *newEnemy;    // -0x74
+
+    if (g_Gui.IsMsgActive() == 0)
+    {
+        g_164d30c++;
+        if (((ZunTimer *)((u8 *)self + 0x9dced0))->AsFrames() >= 0x10)
+        {
+            (*(i32 *)0x164d0ac)++;
+            if (*(u8 *)0x17d5efb == 0)
+            {
+                (*(i32 *)0x164d0a8)++;
+            }
+        }
+    }
+
+    if ((*(i32 *)0x164d0b4 >> 0xa) & 1)
+    {
+        return CHAIN_CALLBACK_RESULT_CONTINUE;
+    }
+
+    if ((((*(i32 *)0x164d0b4 >> 0xd) & 1) != 0) && (*(i32 *)((u8 *)self + 0x9dcda0) != 0))
+    {
+        Float3 damageBox0 = Float3(384.0f, 448.0f, 0.0f);
+        Float3 damageBox1 = Float3(192.0f, 224.0f, 0.0f);
+        ((OnUpdateHelpers *)&g_Player)->FUN_00451670(&damageBox1, &damageBox0,
+                                                     (void *)(*(i32 *)((u8 *)self + 0x9dcda0) + 0x2e10),
+                                                     &var14);
+    }
+
+    self->FUN_0042c3b0();
+
+    *(i32 *)((u8 *)self + 0x9dcee8) = 0;
+    *(i32 *)((u8 *)self + 0x9dcee4) = 0;
+    *(i32 *)((u8 *)self + 0x9dcee0) = 0;
+    *(i32 *)((u8 *)self + 0x9dcedc) = 0;
+
+    for (i = 0; i < ((OnUpdateHelpers *)&g_EclInterruptTable)->GetTimelineCount(); i++)
+    {
+        if (*(i32 *)((u8 *)self + 0x9dcddc + i * 0x10) == 0)
+        {
+            *(i32 *)((u8 *)self + 0x9dcddc + i * 0x10) =
+                (i32)((OnUpdateHelpers *)&g_EclInterruptTable)->GetTimeline(i);
+        }
+        ((EclTimeline *)((u8 *)self + 0x9dcdd0 + i * 0x10))->FUN_0042a8a0();
+    }
+
+    enemy = &self->enemies[0];
+    *(i32 *)((u8 *)self + 0x9dcdc4) = 0;
+    for (i = 0; i < 0x1e0; i++, enemy++)
+    {
+        if ((enemy->flags & 1) == 0)
+        {
+            if ((Enemy *)0x18b89b4 == enemy)
+            {
+                *(i32 *)0x18b89b4 = 0;
+            }
+            continue;
+        }
+
+        damaged = 0;
+
+        if ((enemy->flags >> 0xa) & 1)
+        {
+            enemy->movePos = enemy->pos + enemy->moveVec;
+            *(i32 *)((u8 *)enemy + 0x2d90) = 0;
+            goto laser_or_move;
+        }
+
+        (*(i32 *)((u8 *)self + 0x9dcdc4))++;
+
+        if ((((enemy->flags >> 0x1e) & 1) != 0 && *(i32 *)0x17d6ed4 == 0 &&
+             (i8) * (u8 *)0x17d5ef8 == 0) ||
+            ((enemy->anmFlags >> 7) & 1))
+        {
+            enemy->eclTimer--;
+            goto after_bullet;
+        }
+
+        if ((enemy->flags >> 8) & 1)
+        {
+            enemy->FUN_0042c420();
+        }
+
+    run_ecl:
+        if (((EclManager *)&g_EclInterruptTable)->RunEcl(enemy) == -1)
+        {
+            enemy->flags &= ~1u;
+            enemy->FUN_0042bcf0();
+            continue;
+        }
+
+        if ((enemy->flags >> 0x1d) & 1)
+        {
+            enemy->movePos = enemy->pos + enemy->moveVec;
+            *(i32 *)((u8 *)enemy + 0x2d90) = 0;
+        }
+        else
+        {
+            enemy->InitMoveAfterSetPos();
+            enemy->FUN_0042deb0();
+            enemy->InitMoveAfterSetPos();
+
+            if (enemy->ownerEnemy != NULL && ((enemy->flags >> 9) & 1))
+            {
+                enemy->moveVec = enemy->ownerEnemy->pos;
+            }
+            enemy->movePos = enemy->pos + enemy->moveVec;
+            *(i32 *)((u8 *)enemy + 0x2d90) = 0;
+        }
+
+        if (enemy->linkedEffect != 0)
+        {
+            *(Float3 *)(enemy->linkedEffect + 0x2a4) = enemy->movePos;
+        }
+
+        if (enemy->aiFlags != 0)
+        {
+            j = (i16)enemy->aiParam0 - 1;
+            for (; j > 0; j--)
+            {
+                *(Float3 *)((u8 *)enemy + 0x3394 + j * 0x1c) =
+                    *(Float3 *)((u8 *)enemy + 0x3394 + (j - 1) * 0x1c);
+                *(Float3 *)((u8 *)enemy + 0x33a0 + j * 0x1c) =
+                    *(Float3 *)((u8 *)enemy + 0x33a0 + (j - 1) * 0x1c);
+                *(i32 *)((u8 *)enemy + 0x33ac + j * 0x1c) =
+                    *(i32 *)((u8 *)enemy + 0x33ac + (j - 1) * 0x1c);
+            }
+            *(Float3 *)((u8 *)enemy + 0x3394) = enemy->movePos;
+            *(Float3 *)((u8 *)enemy + 0x33a0) = *(Float3 *)((u8 *)enemy + 0x2d4c);
+            *(i32 *)((u8 *)enemy + 0x33ac) = *(i32 *)((u8 *)enemy + 0x2d94);
+        }
+
+        if (*(i32 *)((u8 *)enemy + 0x230) == 0)
+        {
+            enemy->flags |= 0x10;
+        }
+
+        if (((enemy->flags >> 4) & 1) == 0 && ((enemy->flags >> 0x18) & 1) == 0)
+        {
+            if (g_GameManager.IsWithinPlayfield(enemy->movePos.x, enemy->movePos.y,
+                                                *(f32 *)(*(i32 *)((u8 *)enemy + 0x230) + 0x30),
+                                                *(f32 *)(*(i32 *)((u8 *)enemy + 0x230) + 0x34)))
+            {
+                enemy->flags |= 0x1000000;
+                goto bullet_section;
+            }
+        }
+
+        if (((enemy->flags >> 0x18) & 1) && ((enemy->flags >> 0x1c) & 1) == 0)
+        {
+            if (enemy->aiFlags == 0)
+            {
+                if (g_GameManager.IsWithinPlayfield(enemy->movePos.x, enemy->movePos.y,
+                                                    *(f32 *)(*(i32 *)((u8 *)enemy + 0x230) + 0x30),
+                                                    *(f32 *)(*(i32 *)((u8 *)enemy + 0x230) + 0x34)) == 0)
+                {
+                    goto enemy_offscreen;
+                }
+            }
+            if (enemy->aiFlags != 0)
+            {
+                if (g_GameManager.IsWithinPlayfield(
+                        *(f32 *)((u8 *)enemy + 0x3394 + ((i16)enemy->aiParam1 - 1) * 0x1c),
+                        *(f32 *)((u8 *)enemy + 0x3398 + ((i16)enemy->aiParam1 - 1) * 0x1c),
+                        *(f32 *)(*(i32 *)((u8 *)enemy + 0x230) + 0x30),
+                        *(f32 *)(*(i32 *)((u8 *)enemy + 0x230) + 0x34)) == 0)
+                {
+                    goto enemy_offscreen;
+                }
+            }
+            goto bullet_section;
+        }
+
+    bullet_section:
+        if (enemy->FUN_0042b490() != 0)
+        {
+            goto run_ecl;
+        }
+        if (enemy->eclDataValue0 >= 0 && enemy->FUN_0042b930() != 0)
+        {
+            goto run_ecl;
+        }
+
+        *(i32 *)((u8 *)enemy + 0x1fc) = *(i32 *)((u8 *)enemy + 0x2e20);
+        g_AnmManager->ExecuteScript((AnmVm *)((u8 *)enemy + 0xc));
+        *(i32 *)((u8 *)enemy + 0x2e20) = *(i32 *)((u8 *)enemy + 0x1fc);
+
+        for (j = 0; j < 2; j++)
+        {
+            if (*(i16 *)((u8 *)enemy + 0x4ca + j * 0x2a4) >= 0)
+            {
+                if (g_AnmManager->ExecuteScript((AnmVm *)((u8 *)enemy + 0x2b0 + j * 0x2a4)) != 0)
+                {
+                    *(i16 *)((u8 *)enemy + 0x4ca + j * 0x2a4) = 0xffff;
+                }
+            }
+        }
+
+        var14 = *(i32 *)0x17d6ed4;
+
+        if (((enemy->flags >> 4) & 1) == 0 && ((enemy->flags >> 5) & 1) == 0 &&
+            ((enemy->flags >> 0xb) & 1) == 0 &&
+            (((enemy->flags >> 0x1f) & 1) == 0 || *(i32 *)0x17d6ed4 != 0))
+        {
+            if ((enemy->flags >> 2) & 1)
+            {
+                enemy->FUN_0042c290(&enemy->movePos, (Float3 *)((u8 *)enemy + 0x2d70));
+                if (enemy->aiFlags != 0)
+                {
+                    hitbox = *(Float3 *)((u8 *)enemy + 0x2d70);
+                    for (j = 1; j < (i16)enemy->aiParam1; j += 6)
+                    {
+                        if ((enemy->aiFlags & 2) != 0)
+                        {
+                            hitbox = *(Float3 *)((u8 *)enemy + 0x2d70) -
+                                     *(Float3 *)((u8 *)enemy + 0x2d70) * (f32)j /
+                                         (f32)(i16)enemy->aiParam1;
+                        }
+                        enemy->FUN_0042c290(&hitbox,
+                                            (Float3 *)((u8 *)enemy + 0x3394 + j * 0x1c));
+                    }
+                }
+            }
+
+            *(i32 *)((u8 *)enemy + 0x3354) = 0;
+
+            if ((enemy->flags >> 6) & 1)
+            {
+                if (((OnUpdateHelpers *)&g_EclGlobalObj)->FUN_004178a0() != 0 &&
+                    enemy->HasOwnerEnemy() != 0 && *(i32 *)0x17d6ed4 == 0)
+                {
+                    var18 = 0;
+                }
+                else
+                {
+                    var18 = ((OnUpdateHelpers *)&g_Player)
+                                ->FUN_00451670(&enemy->movePos, (Float3 *)((u8 *)enemy + 0x2d70),
+                                               (void *)((u8 *)enemy + 0x2e10), &var14);
+                }
+            }
+
+            if (enemy->moveParam1 > 0.0f)
+            {
+                var2c = ((OnUpdateHelpers *)&g_Player)
+                            ->FUN_00451670(&enemy->movePos, (Float3 *)((u8 *)enemy + 0x2d7c),
+                                           (void *)((u8 *)enemy + 0x2e10), &var14);
+                if (var14 == 0)
+                {
+                    if (*(u8 *)0x164d0b1 == 3 || *(u8 *)0x164d0b1 == 0xb)
+                    {
+                        var18 = (i32)((f32)var18 + (f32)var2c / 6.5f);
+                    }
+                    else
+                    {
+                        var18 = (i32)((f32)var18 + (f32)var2c / 1.7f);
+                    }
+                }
+            }
+
+            if (var18 > 0)
+            {
+                if (!((enemy->flags >> 1) & 1) && *(u8 *)0x17d5efb != 0)
+                {
+                    goto damage_score;
+                }
+                if (*(i32 *)0x17d6ed4 != 0)
+                {
+                    goto damage_score;
+                }
+
+                if (((enemy->flags >> 1) & 1) && *(u8 *)0x17d5efb == 0)
+                {
+                    scoreGain = (var18 / (10 - difficulty / 3)) * 10;
+                }
+                else
+                {
+                    scoreGain = (var18 / (30 - difficulty)) * 10;
+                }
+                if (scoreGain > 0x46)
+                {
+                    scoreGain = 0x46;
+                }
+                if (scoreGain == 0)
+                {
+                    if (*(u8 *)0x17d5efb == 0 || !(enemy->eclTimer.AsFrames() & 1))
+                    {
+                        scoreGain = 0xa;
+                    }
+                }
+
+            damage_score:
+                if (var18 > 0x46)
+                {
+                    var18 = 0x46;
+                }
+                g_GameManager.AddScore((var18 / 5) * 10);
+
+                if ((enemy->flags >> 3) & 1)
+                {
+                    if (((OnUpdateHelpers *)&g_EclGlobalObj)->FUN_004178a0() != 0)
+                    {
+                        if (var14 != 0)
+                        {
+                            if (((OnUpdateHelpers *)&g_EclGlobalObj)->FUN_0042dff0() != 0 &&
+                                enemy->HasOwnerEnemy() == 0)
+                            {
+                                if (var18 > 2)
+                                {
+                                    var18 = (i32)((f32)var18 / 2.5f);
+                                }
+                                else if (var18 != 0)
+                                {
+                                    var18 = 1;
+                                }
+                            }
+                            else
+                            {
+                                var18 = 0;
+                            }
+                        }
+                        else
+                        {
+                            if (var18 > 7)
+                            {
+                                var18 /= 7;
+                            }
+                            else if (var18 != 0)
+                            {
+                                var18 = 1;
+                            }
+                        }
+                    }
+
+                    if (enemy->aiTimer > 0)
+                    {
+                        if ((enemy->flags >> 1) & 1)
+                        {
+                            var18 /= 9;
+                        }
+                        else
+                        {
+                            var18 = 0;
+                        }
+                    }
+                    enemy->laserActive -= var18;
+                    *(i32 *)((u8 *)enemy + 0x3354) = var18;
+                    enemy->FUN_0042b370(var18);
+                }
+
+                damaged = 1;
+            }
+        }
+
+        if ((enemy->flags >> 1) & 1)
+        {
+            bossDelta = *(Float3 *)0x18b899c - *(Float3 *)0x17d61ac;
+            movePosL = enemy->movePos - *(Float3 *)0x17d61ac;
+
+            if (*(i32 *)0x18b89b8 == 0 || fabsf(movePosL.x) < fabsf(bossDelta.x))
+            {
+                *(Float3 *)0x18b899c = enemy->movePos;
+            }
+            *(i32 *)0x18b89b8 = 1;
+        }
+        else if (*(i32 *)0x18b89b8 == 0 && *(f32 *)0x18b899c < enemy->movePos.y)
+        {
+            *(Float3 *)0x18b899c = enemy->movePos;
+        }
+
+        if (fabsf(enemy->movePos.x - *(f32 *)0x17d61ac) < 64.0f && enemy->HasOwnerEnemy() == 0 &&
+            (*(i32 *)0x18b89b4 == 0 || *(f32 *)(*(i32 *)0x18b89b4 + 0x2d38) <= enemy->movePos.y))
+        {
+            *(i32 *)0x18b89b4 = (i32)enemy;
+        }
+
+        if ((enemy->anmFlags & 8) != 0 && enemy->laserActive > 0)
+        {
+            enemy->anmFlags &= ~8u;
+        }
+        if (enemy->laserActive > 0 || (enemy->anmFlags & 8) || (enemy->anmFlags & 0x40))
+        {
+            goto after_bullet;
+        }
+
+    laser_or_move:
+        enemy->anmFlags |= 8;
+        *(i32 *)((u8 *)enemy + 0x53cc) = (enemy->eclDataValue0 - enemy->eclTimer.AsFrames()) / 0x3c;
+        enemy->eclDataValue0 = -1;
+
+        for (j = 0; j < 4; j++)
+        {
+            enemy->eclDataArray0[j] = -1;
+        }
+        for (j = 0; j < 4; j++)
+        {
+            if (enemy->dataSlots[j] != NULL)
+            {
+                g_ZunMemory.Free(enemy->dataSlots[j]);
+                enemy->dataSlots[j] = NULL;
+            }
+        }
+
+        if (enemy->HasOwnerEnemy() != 0)
+        {
+            enemy->ownerEnemy->subEnemyCount--;
+        }
+
+        enemy->FUN_0042adb0(1);
+
+        if (*(u8 *)0x17d5efb != 0)
+        {
+            g_GameManager.AddToYoukaiGauge(0xc8, 0);
+        }
+        else
+        {
+            g_GameManager.AddToYoukaiGauge(-0xc8, 0);
+        }
+
+        switch ((enemy->flags >> 0x14) & 7)
+        {
+        case 0:
+            g_GameManager.AddScore(*(i32 *)((u8 *)enemy + 0x2e08));
+            enemy->flags &= ~1u;
+            if (enemy->linkedEffect != 0)
+            {
+                ((AnmVm *)enemy->linkedEffect)->SetInterrupt(3);
+                enemy->linkedEffect = 0;
+            }
+            goto death_common;
+        case 1:
+            g_GameManager.AddScore(*(i32 *)((u8 *)enemy + 0x2e08));
+            enemy->flags |= 0x800000;
+            enemy->flags &= ~4u;
+            enemy->flags &= ~8u;
+            enemy->flags &= ~0x40u;
+            goto death_common;
+        case 2:
+            goto death_continue;
+        case 3:
+            enemy->laserActive = 1;
+            enemy->flags &= ~8u;
+            enemy->flags &= ~0x700000u;
+            g_Gui.SetBossPresent(0);
+            *(u16 *)((u8 *)g_ReplayManager + 0xda) |= 0x20;
+            if ((i8)enemy->byteFlag0 >= 0)
+            {
+                g_EffectManager.SpawnEffect(enemy->byteFlag0, &enemy->movePos, 1, -1);
+                g_EffectManager.SpawnEffect(enemy->byteFlag0, &enemy->movePos, 1, -1);
+                g_EffectManager.SpawnEffect(enemy->byteFlag0, &enemy->movePos, 1, -1);
+            }
+            if (enemy->linkedEffect != 0)
+            {
+                ((AnmVm *)enemy->linkedEffect)->SetInterrupt(3);
+                enemy->linkedEffect = 0;
+            }
+            if ((i8) * (u8 *)0x17d5ef8 == 0)
+            {
+                ((ZunTimer *)0x18b89ec)->SetCurrent(0x5a);
+                *(u8 *)0x17d5ef8 = 3;
+            }
+            enemy->flags &= ~0x40000000u;
+            enemy->flags &= ~0x80000000u;
+            goto death_done;
+        default:
+            goto death_done;
+        }
+
+    death_common:
+        if (enemy->flags & 2)
+        {
+            g_Gui.SetBossPresent(0);
+            enemy->ClearEffectSlots();
+        }
+    death_continue:
+        enemy->FUN_0042bea0(var14);
+
+        if ((enemy->flags & 2) && ((OnUpdateHelpers *)&g_EclGlobalObj)->FUN_004178a0() == 0)
+        {
+            newEnemy = self->RemoveEnemiesByScore(
+                0x1f40, (i32)((OnUpdateHelpers *)&g_BulletManager)->FUN_00430aa0(1, 0x1f40));
+            if (newEnemy != NULL)
+            {
+                g_GameManager.AddScore((i32)newEnemy);
+                ((OnUpdateHelpers *)&g_Player)->FUN_0042dff0();
+            }
+        }
+        enemy->laserActive = 0;
+        *(u16 *)((u8 *)g_ReplayManager + 0xda) |= 0x20;
+
+    death_done:
+        if ((enemy->flags >> 0xa) & 1)
+        {
+            goto after_sound;
+        }
+
+        g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)(i % 2 + 2), enemy->movePos.x);
+
+        if ((i8)enemy->byteFlag0 >= 0)
+        {
+            g_EffectManager.SpawnEffect(enemy->byteFlag0, &enemy->movePos, 1, -1);
+            g_EffectManager.SpawnEffect((u8)enemy->byteFlag1 + 4, &enemy->movePos, 4, -1);
+        }
+
+        if (g_GameManager.GaugeIsExtremelyHuman() || g_GameManager.GaugeIsExtremelyYoukai())
+        {
+            g_ItemManager.SpawnItem(&enemy->movePos, (ItemType)7, 1);
+        }
+
+    after_sound:
+        if ((i16)enemy->savedEclDataValue < 0)
+        {
+            goto after_bullet;
+        }
+
+        enemy->enemy_fun_00415c80();
+        enemy->stackDepth = 0;
+        for (j = 0; j < 4; j++)
+        {
+            enemy->eclDataArray0[j] = -1;
+        }
+        enemy->eclDataValue0 = -1;
+        enemy->ClearDataSlots();
+        memcpy((u8 *)enemy + 0x2e24, (const void *)0x57ad44, 0x84);
+        enemy->rankScaledValue = 0;
+        g_EclInterruptTable.SetupEclContext(&enemy->eclContext, enemy->savedEclDataValue);
+        enemy->savedEclDataValue = 0xffff;
+
+    after_bullet:
+        if ((enemy->flags >> 0xb) & 1)
+        {
+            *(u8 *)((u8 *)enemy + 0x200) = 0xc0;
+            *(u8 *)((u8 *)enemy + 0x201) = 0x20;
+            *(u8 *)((u8 *)enemy + 0x202) = 0x20;
+            *(u8 *)((u8 *)enemy + 0x203) = (u8)(*(i8 *)((u8 *)enemy + 0x1ff) >> 1);
+            *(u32 *)((u8 *)enemy + 0x204) |= 0x20000;
+        }
+        else if (*(u8 *)((u8 *)enemy + 0x3314) != 0)
+        {
+            (*(u8 *)((u8 *)enemy + 0x3314))--;
+            *(u32 *)((u8 *)enemy + 0x204) &= ~0x20000u;
+        }
+        else if (damaged != 0)
+        {
+            if (((enemy->anmFlags >> 4) & 3) < 2)
+            {
+                g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0x14, enemy->movePos.x);
+            }
+            else
+            {
+                g_SoundPlayer.PlaySoundPositionedByIdx((SoundIdx)0x25, enemy->movePos.x);
+            }
+            *(u8 *)((u8 *)enemy + 0x200) = 0x80;
+            *(u8 *)((u8 *)enemy + 0x201) = 0x60;
+            *(u8 *)((u8 *)enemy + 0x202) = 0xff;
+            *(u8 *)((u8 *)enemy + 0x203) = *(u8 *)((u8 *)enemy + 0x1ff);
+            *(u32 *)((u8 *)enemy + 0x204) |= 0x20000;
+            *(u8 *)((u8 *)enemy + 0x3314) = 1;
+        }
+        else
+        {
+            *(u32 *)((u8 *)enemy + 0x204) &= ~0x20000u;
+        }
+
+        if (enemy->flags & 2)
+        {
+            Float3 markerPos;
+
+            if (!g_Gui.IsMsgActive() && enemy->bossMarkerIdx == 0)
+            {
+                g_Gui.SetBossLifeBarMaxSize((f32)enemy->laserActive / enemy->laserData);
+            }
+
+            if ((enemy->flags >> 4) & 1)
+            {
+                markerPos.x = -1000.0f;
+            }
+            else
+            {
+                markerPos.x = enemy->movePos.x + 32.0f;
+            }
+            markerPos.y = 480.0f;
+            markerPos.z = 0.0f;
+            g_AsciiManager.SetBossMarkerPosition(enemy->bossMarkerIdx, &markerPos);
+
+            if (((enemy->anmFlags >> 4) & 3) == 0)
+            {
+                g_AsciiManager.SetBossMarkerState(enemy->bossMarkerIdx,
+                                                  (*(u32 *)((u8 *)enemy + 0x204) >> 0x11) & 1);
+            }
+            else
+            {
+                g_AsciiManager.SetBossMarkerState(enemy->bossMarkerIdx,
+                                                  ((enemy->anmFlags >> 4) & 3) + 1);
+            }
+        }
+
+        enemy->FUN_0042e010();
+
+        if ((i8) * (u8 *)0x160f534 == 0)
+        {
+            enemy->eclTimer.Tick();
+        }
+        if (enemy->aiTimer > 0)
+        {
+            enemy->aiTimer--;
+        }
+        if (((enemy->flags >> 4) & 1) == 0 && (enemy->flags & 1))
+        {
+            *(i32 *)enemy = *(i32 *)((u8 *)self + 0x9dcedc + enemy->enemyType * 4);
+            *(i32 *)((u8 *)self + 0x9dcedc + enemy->enemyType * 4) = (i32)enemy;
+        }
+        continue;
+
+    enemy_offscreen:
+        enemy->flags &= ~1u;
+        enemy->FUN_0042bcf0();
+        continue;
+    }
+
+    if (((OnUpdateHelpers *)((u8 *)self + 0x9dced0))->FUN_0040d410(0xc8) == 0 &&
+        g_GameManager.IsTampered())
+    {
+        return CHAIN_CALLBACK_RESULT_EXIT_GAME_SUCCESS;
+    }
+    ((ZunTimer *)((u8 *)self + 0x9dced0))->Tick();
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }
 
@@ -310,8 +1045,9 @@ Enemy *EnemyManager::SpawnEnemy2(i32 eclSubId, Float3 *pos, i32 life, i32 itemDr
     return NULL;
 }
 
-void EnemyManager::RemoveEnemiesByScore(i32 a0, i32 a1)
+Enemy *EnemyManager::RemoveEnemiesByScore(i32 a0, i32 a1)
 {
+    return NULL;
 }
 
 void Enemy::ClearDataSlots()

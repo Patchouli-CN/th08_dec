@@ -80,6 +80,19 @@ struct Enemy
     void ClearEffectSlots(); // 0x42a820 (op127 boss-marker setup)
     f32 GetEclFloatVar(i32 varId); // ECL var helper (th08 0x420120), thiscall style
 
+    // OnUpdate 遍历阶段调用的未逆向 Enemy 辅助 (thiscall; stub 保留, call 目标按 CSV 命名归一化)
+    void enemy_fun_00415c80();          // 0x415c80 (重置 moveBound1-4)
+    void FUN_0042c420();                // 0x42c420
+    void FUN_0042bcf0();                // 0x42bcf0 (清 flags bit0 后的删除路径)
+    i32 FUN_0042b490();                 // 0x42b490
+    i32 FUN_0042b930();                 // 0x42b930
+    void FUN_0042deb0();                // 0x42deb0
+    void FUN_0042c290(Float3 *a, Float3 *b); // 0x42c290
+    void FUN_0042b370(i32 a0);          // 0x42b370
+    void FUN_0042adb0(i32 a0);          // 0x42adb0
+    void FUN_0042bea0(i32 a0);          // 0x42bea0
+    void FUN_0042e010();                // 0x42e010
+
     // 子敌人链 helper (GetVarValue/GetEclFloatVar varId 0x2770 调用, call 目标归一化为 T)
     i32 IsSubEnemyChainRoot();  // 0x41f000 (ownerEnemy==0 && nextSubEnemy!=0 链根判断)
     i32 HasOwnerEnemy();        // 0x41fd20 (ownerEnemy != 0 判断)
@@ -218,7 +231,7 @@ struct EnemyManager
 {
     void Initialize();
     static ZunResult RegisterChain();
-    static ChainCallbackResult OnUpdate();
+    static ChainCallbackResult OnUpdate(EnemyManager *self);
     static ChainCallbackResult OnDrawHighPrio(EnemyManager *enemyManager);
     static ChainCallbackResult OnDrawImpl(EnemyManager *enemyManager, i32 arg1, i32 arg2);
     static ChainCallbackResult OnDrawLowPrio(EnemyManager *enemyManager);
@@ -227,7 +240,8 @@ struct EnemyManager
     static void CutChain();
     Enemy *SpawnEnemy2(i32 eclSubId, Float3 *pos, i32 life, i32 itemDrop, i32 score,
                        EclContextArgs *args); // 0x42a680 (th07 SpawnEnemyEx equivalent)
-    void RemoveEnemiesByScore(i32 a0, i32 a1);       // 0x42efb0 (遍历删敌人)
+    Enemy *RemoveEnemiesByScore(i32 a0, i32 a1);       // 0x42efb0 (遍历删敌人, 返回命中的敌人)
+    void FUN_0042c3b0();                            // 0x42c3b0 (每帧前置: 定时加分/暂停检测)
 
     unknown_fields(0x0, 0x53d0);
     Enemy enemies[0x1e0];
