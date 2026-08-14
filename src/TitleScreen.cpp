@@ -49,6 +49,21 @@
 namespace th08
 {
 
+/* GameManager::FUN_0046fd5f (0x46fd5f, whether a Last Word spell card is still
+ * locked away) is not yet decompiled. This stub thiscall class keeps the call
+ * site's register/stack shape (this in ecx, one stack arg) identical to the
+ * original binary. */
+class TitleScreenSpellcardAvailabilityHelper
+{
+  public:
+    i32 IsAvailable(i32 card);
+};
+
+i32 TitleScreenSpellcardAvailabilityHelper::IsAvailable(i32 card)
+{
+    return 0;
+}
+
 enum
 {
     TITLE_MENU_ITEM_START_START = 0,
@@ -2493,9 +2508,295 @@ ChainCallbackResult TitleScreen::OnUpdateSpellCardSelect()
 }
 
 /* This function checks the conditions needed to unlock certain Last Word spell cards. */
-// STUB: th08 0x46cbbb
+// FUNCTION: th08 0x46cbbb
+#pragma var_order(i, captureCount, diffCount, diffCount2, i2, lwCount, diffCount3, i4, count5, i5, diffCount6, i6, diffCount7, i7, lwCount8, idCd, idCe, idCf, idD2, idD1, idD0, idD3, idD4, idD5, entryPtr, idD6, idD7, idD8, idD9, idDa, idDb, idDc, idDd)
 void TitleScreen::UnlockLastWordSpellCards()
 {
+    i32 i;
+    i32 captureCount;
+    i32 diffCount;
+    i32 diffCount2;
+    i32 i2;
+    i32 lwCount;
+    i32 diffCount3;
+    i32 i4;
+    i32 count5;
+    i32 i5;
+    i32 diffCount6;
+    i32 i6;
+    i32 diffCount7;
+    i32 i7;
+    i32 lwCount8;
+    i32 idCd;
+    i32 idCe;
+    i32 idCf;
+    i32 idD2;
+    i32 idD1;
+    i32 idD0;
+    i32 idD3;
+    i32 idD4;
+    i32 idD5;
+    i32 entryPtr;
+    i32 idD6;
+    i32 idD7;
+    i32 idD8;
+    i32 idD9;
+    i32 idDa;
+    i32 idDb;
+    i32 idDc;
+    i32 idDd;
+
+    /* Number of spell cards captured at least once in spell practice. */
+    captureCount = 0;
+    for (i = 0; i < 0xde; i++)
+    {
+        if (*(u32 *)(0x160f73c + i * 0x22c + 0xc * 4) != 0)
+        {
+            captureCount++;
+        }
+    }
+
+    /* Count how many of the difficulty-clear entries have the "extra unlocked" flag. */
+    diffCount = 0;
+    for (i = 0; i < 0xc; i++)
+    {
+        if ((*(u16 *)(0x164b9a4 + i * 0x24) & 0x4000) != 0 || (*(u16 *)(0x164b9a4 + i * 0x24 + 2) & 0x4000) != 0 ||
+            (*(u16 *)(0x164b9a4 + i * 0x24 + 4) & 0x4000) != 0 || (*(u16 *)(0x164b9a4 + i * 0x24 + 6) & 0x4000) != 0)
+        {
+            diffCount++;
+        }
+    }
+    if (diffCount >= 2)
+    {
+        idCd = 0xcd;
+        *(u8 *)(0x160f453 + idCd) = (u8)idCd;
+    }
+
+    diffCount2 = 0;
+    for (i2 = 0; i2 < 0xc; i2++)
+    {
+        if ((*(u16 *)(0x164b9a4 + i2 * 0x24) & 0x4000) != 0 || (*(u16 *)(0x164b9a4 + i2 * 0x24 + 2) & 0x4000) != 0 ||
+            (*(u16 *)(0x164b9a4 + i2 * 0x24 + 4) & 0x4000) != 0 || (*(u16 *)(0x164b9a4 + i2 * 0x24 + 6) & 0x4000) != 0)
+        {
+            diffCount2++;
+        }
+    }
+    if (diffCount2 >= 3)
+    {
+        idCe = 0xce;
+        *(u8 *)(0x160f453 + idCe) = (u8)idCe;
+    }
+
+    if (captureCount >= 0x32)
+    {
+        idCf = 0xcf;
+        *(u8 *)(0x160f453 + idCf) = (u8)idCf;
+    }
+
+    /* Count how many of the last word spell cards have been captured. */
+    lwCount = 0;
+    for (i = 0; i < *(i32 *)0x4c6c3c; i++)
+    {
+        if (*(u32 *)(0x160f73c + *(i32 *)(0x4c6b90 + i * 4) * 0x22c + 0xc * 4) != 0)
+        {
+            lwCount++;
+        }
+    }
+    if (lwCount >= 0xf)
+    {
+        idD2 = 0xd2;
+        *(u8 *)(0x160f453 + idD2) = (u8)idD2;
+    }
+
+    if (*(i32 *)(0x162202c + 0xc * 4) != 0 || *(i32 *)(0x16220c8 + 0xc * 4) != 0)
+    {
+        idD1 = 0xd1;
+        *(u8 *)(0x160f453 + idD1) = (u8)idD1;
+    }
+
+    diffCount3 = 0;
+    for (i4 = 0; i4 < 0xc; i4++)
+    {
+        if ((*(u16 *)(0x164b9a4 + i4 * 0x24) & 0x4000) != 0 || (*(u16 *)(0x164b9a4 + i4 * 0x24 + 2) & 0x4000) != 0 ||
+            (*(u16 *)(0x164b9a4 + i4 * 0x24 + 4) & 0x4000) != 0 || (*(u16 *)(0x164b9a4 + i4 * 0x24 + 6) & 0x4000) != 0)
+        {
+            diffCount3++;
+        }
+    }
+    if (diffCount3 >= 4)
+    {
+        idD0 = 0xd0;
+        *(u8 *)(0x160f453 + idD0) = (u8)idD0;
+    }
+
+    if (*(i32 *)(0x1629e24 + 0xc * 4) != 0 || *(i32 *)(0x1629ec0 + 0xc * 4) != 0)
+    {
+        if (*(i32 *)(0x162b17c + 0xc * 4) != 0 || *(i32 *)(0x162b218 + 0xc * 4) != 0)
+        {
+            if (*(i32 *)(0x162318c + 0xc * 4) != 0 || *(i32 *)(0x1623228 + 0xc * 4) != 0)
+            {
+                idD3 = 0xd3;
+                *(u8 *)(0x160f453 + idD3) = (u8)idD3;
+            }
+        }
+    }
+
+    if (*(i32 *)(0x162ba2c + 0xc * 4) != 0 || *(i32 *)(0x162bac8 + 0xc * 4) != 0)
+    {
+        if (*(i32 *)(0x162bc58 + 0xc * 4) != 0 || *(i32 *)(0x162bcf4 + 0xc * 4) != 0)
+        {
+            if (*(i32 *)(0x162be84 + 0xc * 4) != 0 || *(i32 *)(0x162bf20 + 0xc * 4) != 0)
+            {
+                idD4 = 0xd4;
+                *(u8 *)(0x160f453 + idD4) = (u8)idD4;
+            }
+        }
+    }
+
+    if (*(i32 *)(0x162b3a8 + 0xc * 4) != 0 || *(i32 *)(0x162b444 + 0xc * 4) != 0)
+    {
+        if (*(i32 *)(0x162b5d4 + 0xc * 4) != 0 || *(i32 *)(0x162b670 + 0xc * 4) != 0)
+        {
+            if (*(i32 *)(0x162b800 + 0xc * 4) != 0 || *(i32 *)(0x162b89c + 0xc * 4) != 0)
+            {
+                if (*(i32 *)(0x162c0b0 + 0xc * 4) != 0 || *(i32 *)(0x162c14c + 0xc * 4) != 0)
+                {
+                    idD5 = 0xd5;
+                    *(u8 *)(0x160f453 + idD5) = (u8)idD5;
+                }
+            }
+        }
+    }
+
+    /* Check that a fixed list of spell cards (the extra stage cards) have all been captured on shot 6. */
+    count5 = 0;
+    for (i5 = 0; i5 < 49; i5++)
+    {
+        entryPtr = *(i32 *)(0x4c61c8 + i5 * 4) * 0x22c + 0x160f548;
+        if (*(i32 *)(entryPtr + 0x158 + 6 * 4) != 0 || *(i32 *)(entryPtr + 0x1f4 + 6 * 4) != 0)
+        {
+            count5++;
+        }
+    }
+    if (count5 >= 49)
+    {
+        idD6 = 0xd6;
+        *(u8 *)(0x160f453 + idD6) = (u8)idD6;
+    }
+
+    if ((*(u16 *)(0x164ba38) & 0x4000) != 0 || (*(u16 *)(0x164ba3a) & 0x4000) != 0)
+    {
+        idD7 = 0xd7;
+        *(u8 *)(0x160f453 + idD7) = (u8)idD7;
+    }
+
+    if (captureCount >= 0x78)
+    {
+        idD8 = 0xd8;
+        *(u8 *)(0x160f453 + idD8) = (u8)idD8;
+    }
+
+    diffCount6 = 0;
+    for (i6 = 0; i6 < 0xc; i6++)
+    {
+        if ((*(u16 *)(0x164b9a4 + i6 * 0x24) & 0x4000) != 0 || (*(u16 *)(0x164b9a4 + i6 * 0x24 + 2) & 0x4000) != 0 ||
+            (*(u16 *)(0x164b9a4 + i6 * 0x24 + 4) & 0x4000) != 0 || (*(u16 *)(0x164b9a4 + i6 * 0x24 + 6) & 0x4000) != 0)
+        {
+            diffCount6++;
+        }
+    }
+    if (diffCount6 >= 6)
+    {
+        idD9 = 0xd9;
+        *(u8 *)(0x160f453 + idD9) = (u8)idD9;
+    }
+
+    diffCount7 = 0;
+    for (i7 = 0; i7 < 0xc; i7++)
+    {
+        if ((*(u16 *)(0x164b9ac + i7 * 0x24) & 0x100) != 0)
+        {
+            diffCount7++;
+        }
+    }
+    if (diffCount7 >= 3)
+    {
+        idDa = 0xda;
+        *(u8 *)(0x160f453 + idDa) = (u8)idDa;
+    }
+
+    /* Count how many of the last word spell cards have been captured at least 30 times. */
+    lwCount8 = 0;
+    for (i = 0; i < *(i32 *)0x4c6c3c; i++)
+    {
+        if (*(u32 *)(0x160f73c + *(i32 *)(0x4c6b90 + i * 4) * 0x22c + 0xc * 4) != 0)
+        {
+            lwCount8++;
+        }
+    }
+    if (lwCount8 >= 0x1e)
+    {
+        idDb = 0xdb;
+        *(u8 *)(0x160f453 + idDb) = (u8)idDb;
+    }
+
+    if ((*(u16 *)(0x164bb64) & 0xc000) != 0)
+    {
+        idDc = 0xdc;
+        *(u8 *)(0x160f453 + idDc) = (u8)idDc;
+    }
+
+    /* Clearing every Last Word stage unlocks the final Last Word. */
+    if (*(i32 *)(0x162b3a8 + 0xc * 4) != 0 || *(i32 *)(0x162b444 + 0xc * 4) != 0)
+    {
+        if (*(i32 *)(0x162b5d4 + 0xc * 4) != 0 || *(i32 *)(0x162b670 + 0xc * 4) != 0)
+        {
+            if (*(i32 *)(0x162b800 + 0xc * 4) != 0 || *(i32 *)(0x162b89c + 0xc * 4) != 0)
+            {
+                if (*(i32 *)(0x162ba2c + 0xc * 4) != 0 || *(i32 *)(0x162bac8 + 0xc * 4) != 0)
+                {
+                    if (*(i32 *)(0x162bc58 + 0xc * 4) != 0 || *(i32 *)(0x162bcf4 + 0xc * 4) != 0)
+                    {
+                        if (*(i32 *)(0x162be84 + 0xc * 4) != 0 || *(i32 *)(0x162bf20 + 0xc * 4) != 0)
+                        {
+                            if (*(i32 *)(0x162c0b0 + 0xc * 4) != 0 || *(i32 *)(0x162c14c + 0xc * 4) != 0)
+                            {
+                                if (*(i32 *)(0x162c2dc + 0xc * 4) != 0 || *(i32 *)(0x162c378 + 0xc * 4) != 0)
+                                {
+                                    if (*(i32 *)(0x162c508 + 0xc * 4) != 0 || *(i32 *)(0x162c5a4 + 0xc * 4) != 0)
+                                    {
+                                        if (*(i32 *)(0x162c734 + 0xc * 4) != 0 || *(i32 *)(0x162c7d0 + 0xc * 4) != 0)
+                                        {
+                                            if (*(i32 *)(0x162c960 + 0xc * 4) != 0 || *(i32 *)(0x162c9fc + 0xc * 4) != 0)
+                                            {
+                                                if (*(i32 *)(0x162cb8c + 0xc * 4) != 0 || *(i32 *)(0x162cc28 + 0xc * 4) != 0)
+                                                {
+                                                    if (*(i32 *)(0x162cdb8 + 0xc * 4) != 0 || *(i32 *)(0x162ce54 + 0xc * 4) != 0)
+                                                    {
+                                                        if (*(i32 *)(0x162cfe4 + 0xc * 4) != 0 || *(i32 *)(0x162d080 + 0xc * 4) != 0)
+                                                        {
+                                                            if (*(i32 *)(0x162d210 + 0xc * 4) != 0 || *(i32 *)(0x162d2ac + 0xc * 4) != 0)
+                                                            {
+                                                                if (*(i32 *)(0x162d43c + 0xc * 4) != 0 || *(i32 *)(0x162d4d8 + 0xc * 4) != 0)
+                                                                {
+                                                                    idDd = 0xdd;
+                                                                    *(u8 *)(0x160f453 + idDd) = (u8)idDd;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 #pragma var_order(vm, i2, i, position)
@@ -3141,9 +3442,233 @@ i32 TitleScreen::MoveCursorHorizontal(i32 menuLength)
     return 0;
 }
 
-// STUB: th08 0x46d7f9
+/* Formats the spell card info lines displayed on the right side of the
+ * spell-card select screen, depending on the currently selected sub-menu. */
+// FUNCTION: th08 0x46d7f9
+#pragma var_order(card, i, totalAttempts, buf, buf2, catk1, catk2, catk3, catk4, nameA, labelB, nameB, flagD, flagD2, flagF, textF, flagG, textG)
 void TitleScreen::FormatSpellCardInfo()
 {
+    i32 card;
+    i32 i;
+    i32 totalAttempts;
+    Catk *catk1;
+    Catk *catk2;
+    Catk *catk3;
+    Catk *catk4;
+    const char *nameA;
+    const char *labelB;
+    const char *nameB;
+    i32 flagD;
+    i32 flagD2;
+    i32 flagF;
+    const char *textF;
+    i32 flagG;
+    const char *textG;
+    char buf[0x80];
+    char buf2[0x80];
+
+    if (this->currentScreenState == 1 && this->unk0xc29c == 0)
+    {
+        return;
+    }
+
+    card = g_SpellcardNumbersPerStage[*(i32 *)0x164d2cc][this->cursor];
+
+    totalAttempts = g_GameManager.catkData[card].inGameHistory.attempts[SHOT_ALL] +
+                    g_GameManager.catkData[card].spellPracticeHistory.attempts[SHOT_ALL];
+
+    if (this->currentScreenState == 0 || this->unk0xc29c == 0xb)
+    {
+        if (totalAttempts == 0)
+        {
+            nameA = TH_TITLE_SPELLCARD_NOT_UNLOCKED;
+        }
+        else
+        {
+            nameA = g_GameManager.catkData[card].spellName;
+        }
+
+        ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+            g_AnmManager, &this->spellCardInfoVms[0], 0xffffff, 0, TH_TITLE_SPELLCARD_INFO_NO,
+            ((const char *(__fastcall *)(i32, i32))0x46d763)(card + 1, 3), nameA);
+    }
+
+    if (this->currentScreenState == 0 || this->unk0xc29c == 9)
+    {
+        if (((i32(__fastcall *)(i32))0x414540)(card) != 0)
+        {
+            labelB = (const char *)0x4b9440;
+        }
+        else
+        {
+            labelB = (const char *)0x4b4cbc;
+        }
+
+        if (totalAttempts == 0)
+        {
+            nameB = TH_TITLE_SPELLCARD_NOT_UNLOCKED;
+        }
+        else
+        {
+            nameB = g_GameManager.catkData[card].spellOwnerName;
+        }
+
+        ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+            g_AnmManager, &this->spellCardInfoVms[1], 0xffffff, 0, TH_TITLE_SPELLCARD_INFO_USER, labelB, nameB,
+            ((const char **)0x4c8628)[Spellcard::GetDifficultyFromSpellCard(card)]);
+    }
+
+    if (this->currentScreenState == 0)
+    {
+        ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+            g_AnmManager, &this->spellCardInfoVms[2], 0xffffff, 0, TH_TITLE_SPELLCARD_INFO_ACQUIRED,
+            ((const char *(__fastcall *)(i32))0x453cfa)(*(u8 *)0x164d0b1));
+    }
+
+    if (Spellcard::GetDifficultyFromSpellCard(card) <= 4)
+    {
+        catk1 = &g_GameManager.catkData[card];
+
+        flagD = (*(i32 *)((u8 *)catk1 + 0x124 + 0xc * 4) != 0) || (*(i32 *)((u8 *)catk1 + 0x1c0 + 0xc * 4) != 0);
+        if (flagD == 0)
+        {
+            if (this->currentScreenState == 0 || this->unk0xc29c == 7)
+            {
+                ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+                    g_AnmManager, &this->spellCardInfoVms[3], 0xffffff, 0, TH_TITLE_SPELLCARD_INFO_STATS_DASH);
+            }
+        }
+        else
+        {
+            if (this->currentScreenState == 0 || this->unk0xc29c == 7)
+            {
+                ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+                    g_AnmManager, &this->spellCardInfoVms[3], 0xffffff, 0, TH_TITLE_SPELLCARD_INFO_STATS_NUM,
+                    catk1->spellPracticeHistory.captures[*(u8 *)0x164d0b1],
+                    catk1->spellPracticeHistory.attempts[*(u8 *)0x164d0b1],
+                    catk1->inGameHistory.captures[*(u8 *)0x164d0b1], catk1->inGameHistory.attempts[*(u8 *)0x164d0b1],
+                    catk1->spellPracticeHistory.maxBonus[*(u8 *)0x164d0b1],
+                    catk1->spellPracticeHistory.captures[SHOT_ALL],
+                    catk1->spellPracticeHistory.attempts[SHOT_ALL], catk1->inGameHistory.captures[SHOT_ALL],
+                    catk1->inGameHistory.attempts[SHOT_ALL], catk1->spellPracticeHistory.maxBonus[SHOT_ALL]);
+            }
+        }
+    }
+    else
+    {
+        catk2 = &g_GameManager.catkData[card];
+
+        flagD2 = (*(i32 *)((u8 *)catk2 + 0x124 + 0xc * 4) != 0) || (*(i32 *)((u8 *)catk2 + 0x1c0 + 0xc * 4) != 0);
+        if (flagD2 == 0)
+        {
+            if (this->currentScreenState == 0 || this->unk0xc29c == 7)
+            {
+                ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+                    g_AnmManager, &this->spellCardInfoVms[3], 0xffffff, 0, TH_TITLE_SPELLCARD_INFO_STATS_DASH);
+            }
+        }
+        else
+        {
+            if (this->currentScreenState == 0 || this->unk0xc29c == 7)
+            {
+                ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+                    g_AnmManager, &this->spellCardInfoVms[3], 0xffffff, 0, TH_TITLE_SPELLCARD_INFO_STATS_MIXED,
+                    catk2->spellPracticeHistory.attempts[*(u8 *)0x164d0b1],
+                    catk2->spellPracticeHistory.maxBonus[*(u8 *)0x164d0b1],
+                    catk2->spellPracticeHistory.captures[SHOT_ALL],
+                    catk2->spellPracticeHistory.attempts[SHOT_ALL],
+                    catk2->spellPracticeHistory.maxBonus[SHOT_ALL]);
+            }
+        }
+    }
+
+    if (this->currentScreenState == 0)
+    {
+        ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+            g_AnmManager, &this->spellCardInfoVms[4], 0xffffff, 0, TH_TITLE_SPELLCARD_INFO_SUPPLEMENT);
+    }
+
+    if (this->currentScreenState == 0 || this->unk0xc29c == 5)
+    {
+        catk3 = &g_GameManager.catkData[card];
+
+        flagF = (*(i32 *)((u8 *)catk3 + 0x124 + 0xc * 4) != 0) || (*(i32 *)((u8 *)catk3 + 0x1c0 + 0xc * 4) != 0);
+        if (flagF == 0 && card >= 0xcc && card <= 0xdd &&
+            ((TitleScreenSpellcardAvailabilityHelper *)&g_GameManager)->IsAvailable(card) == 0)
+        {
+            ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+                g_AnmManager, &this->spellCardInfoVms[5], 0xffffff, 0,
+                *(const char **)(0x4c82c8 + (card - 0xcc) * 0x30), *(i32 *)(0x4c82cc + (card - 0xcc) * 0x30) + 1,
+                *(i32 *)(0x4c82d0 + (card - 0xcc) * 0x30) + 1, *(i32 *)(0x4c82d4 + (card - 0xcc) * 0x30) + 1,
+                *(i32 *)(0x4c82d8 + (card - 0xcc) * 0x30) + 1, *(i32 *)(0x4c82dc + (card - 0xcc) * 0x30) + 1);
+        }
+        else
+        {
+            memset(buf, 0, sizeof(buf));
+            strncpy(buf, catk3->spellCommentLine1, 0x40);
+
+            if (catk3->spellPracticeHistory.captures[SHOT_ALL] != 0)
+            {
+                textF = buf;
+            }
+            else
+            {
+                textF = TH_TITLE_SPELLCARD_INFO_QMARKS;
+            }
+
+            ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+                g_AnmManager, &this->spellCardInfoVms[5], 0xffffff, 0, textF);
+        }
+    }
+
+    if (this->currentScreenState == 0 || this->unk0xc29c == 3)
+    {
+        catk4 = &g_GameManager.catkData[card];
+
+        flagG = (*(i32 *)((u8 *)catk4 + 0x124 + 0xc * 4) != 0) || (*(i32 *)((u8 *)catk4 + 0x1c0 + 0xc * 4) != 0);
+        if (flagG == 0 && card >= 0xcc && card <= 0xdd &&
+            ((TitleScreenSpellcardAvailabilityHelper *)&g_GameManager)->IsAvailable(card) == 0)
+        {
+            ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+                g_AnmManager, &this->spellCardInfoVms[6], 0xffffff, 0,
+                *(const char **)(0x4c82e0 + (card - 0xcc) * 0x30), *(i32 *)(0x4c82e4 + (card - 0xcc) * 0x30) + 1,
+                *(i32 *)(0x4c82e8 + (card - 0xcc) * 0x30) + 1, *(i32 *)(0x4c82ec + (card - 0xcc) * 0x30) + 1,
+                *(i32 *)(0x4c82f0 + (card - 0xcc) * 0x30) + 1, *(i32 *)(0x4c82f4 + (card - 0xcc) * 0x30) + 1);
+        }
+        else
+        {
+            memset(buf2, 0, sizeof(buf2));
+            strncpy(buf2, catk4->spellCommentLine2, 0x40);
+
+            if (catk4->spellPracticeHistory.captures[SHOT_ALL] != 0)
+            {
+                textG = buf2;
+            }
+            else
+            {
+                textG = TH_TITLE_SPELLCARD_INFO_QMARKS;
+            }
+
+            ((void(__cdecl *)(AnmManager *, void *, u32, u32, const char *, ...))0x4663b0)(
+                g_AnmManager, &this->spellCardInfoVms[6], 0xffffff, 0, textG);
+        }
+    }
+
+    this->spellCardInfoVms[5].pos.x = 96.0f;
+    this->spellCardInfoVms[6].pos.x = 96.0f;
+
+    if (this->currentScreenState == 0 || this->unk0xc29c == 3)
+    {
+        for (i = 0; i < 7; i++)
+        {
+            *(u8 *)((u8 *)this + 0x1211f + i * 0x2a4) |= 0xff;
+        }
+    }
+
+    if (this->unk0xc29c != 0)
+    {
+        this->unk0xc29c--;
+    }
 }
 
 // This function is 100% matching except for stack nonsense cause by AnmLoaded::InitializeAndSetSprite.
