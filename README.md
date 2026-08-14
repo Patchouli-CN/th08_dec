@@ -5,7 +5,11 @@
   <img alt="Decomp Progress" src="resources/progress.svg">
 </picture>
 
-> **当前 RunEcl (0x4184b0) 字节匹配进度：72.08%** — 184/184 opcode 全部实现，帧布局对齐至 /Od 匿名临时下限（帧 0x600 vs 原版 0x5c4，余 15 槽为编译器匿名临时无法绑定）。ECL 变量系统 4 getter 99%+（GetVarValue 99.81%、GetIntPtr/GetFloatPtr 100%），EclLerp/ComputeSinCos/OnDrawLowPrioImpl 等 100%。reccmp：Implemented 45.29% (942/2080)、Accuracy 91.93%。
+> **当前进度**：
+> - **函数实现率（func）93.31%**（约 2107 个函数中 93% 已实现为源码；568 个函数字节匹配 99%+）
+> - **已对齐函数平均匹配率（Accuracy）91.22%**
+> - **RunEcl (0x4184b0) 72.08%** — 184/184 opcode 全部实现，帧布局对齐至 /Od 匿名临时下限。ECL 变量系统 4 getter 99%+，EclLerp/ComputeSinCos/OnDrawLowPrioImpl 等 100%。
+> - **字节大小率（size）14.8%** — 低的因：多数核心大函数（EnemyManager/BulletManager 更新循环、绘制系统）仍为 stub/低匹配，占字节大头。这是剩余主要工作。
 
 [![Discord][discord-badge]][discord] <- click here to join discord server.
 
