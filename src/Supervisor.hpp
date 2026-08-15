@@ -443,5 +443,6 @@ struct ZunTimer
 
     void SetCurrent(i32 value);
     void SetCurrentImpl(i32 value);
+    i32 operator%(i32 divisor); /* 0x40d410 */
 };
 }; // namespace th08

@@ -54,11 +54,7 @@ struct Float3
     Float3 operator+(const Float3 &other);  /* out-of-line @ 0x409080 */
     Float3 operator-(const Float3 &other);  /* out-of-line @ 0x4090d0 */
 
-    Float3 operator/(f32 divisor)
-    {
-        f32 inv = 1.0f / divisor;
-        return Float3(inv * this->x, inv * this->y, inv * this->z);
-    }
+    Float3 operator/(f32 divisor); /* out-of-line @ 0x40c7d0 (inv = 1/divisor 逐分量乘) */
 
     Float3 *operator+=(const Float3 &other); /* out-of-line @ 0x410a70 */
 

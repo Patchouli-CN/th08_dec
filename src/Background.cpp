@@ -1206,6 +1206,13 @@ Float3 Float3::operator*(f32 scale)
     return Float3(scale * this->x, scale * this->y, scale * this->z);
 }
 
+// FUNCTION: th08 0x40c7d0
+Float3 Float3::operator/(f32 divisor)
+{
+    f32 inv = 1.0f / divisor;
+    return Float3(inv * this->x, inv * this->y, inv * this->z);
+}
+
 // FUNCTION: th08 0x408fc0 (cubic interpolation between four samples, t in [0,1])
 f32 __stdcall FUN_00408fc0(f32 a, f32 b, f32 c, f32 d, f32 t)
 {

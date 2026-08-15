@@ -172,6 +172,7 @@ struct Gui
     void FreeMsgFile();
     i32 MsgWait();
     i32 IsBossPortraitVisible();      // 0x437d87 (boss portrait vmD active & animating)
+    void FUN_00437ddd(i32 arg);       // 0x437ddd (stub; EnemyManager 死亡流程调用, this=g_Gui)
     i32 IsMsgActive();                // 0x4358bb (message currently displayed)
     void UpdateBossHud();             // 0x435900 (per-frame boss life-bar/spell timer update)
     void DrawGameScene();

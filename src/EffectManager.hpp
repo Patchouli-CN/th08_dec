@@ -60,6 +60,7 @@ struct EffectManager
     AnmVm *SpawnEffectAtSlot(i32 a, Float3 *pos, i32 b, i32 c, i32 d); // 0x425870 (在指定槽 particles[b+0x280] 生成特效)
     void *AllocEffectSlot(i32 type, Float3 *pos, i32 b, i32 c); // 0x425b70 (claim an effect slot)
     void SpawnEffectLocal(i32 a0, Float3 *pos, Float3 *localPos, i32 a1, i32 a2); // 0x425650 (op140; 带局部位置生成特效)
+    void DrawUnkTypeEffects();                         // 0x428100 (stub; OnDraw 调用, this=g_EffectManager)
 
     i32 nextSlotIdx;                     // 0x0  (SpawnEffect 轮转分配游标: particles[nextSlotIdx++], 绕 0x200)
     unknown_fields(0x4, 0x18);

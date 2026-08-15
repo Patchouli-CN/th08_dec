@@ -55,26 +55,6 @@ Float3 *__fastcall PlayerPosCenter(Float3 *vec)
     return vec;
 }
 
-// Out-of-line D3DXVECTOR3 operator-/operator+ (thiscall: this in ecx, both args on
-// stack, callee cleans up). Original code at 0x4090d0 / 0x409080. fn_diff normalizes
-// the call target to T, so the stub bodies never get compared.
-class D3DVectorOps
-{
-  public:
-    Float3 *Sub(Float3 *subtrahend, Float3 *result);
-    Float3 *Add(Float3 *addend, Float3 *result);
-};
-
-Float3 *D3DVectorOps::Sub(Float3 *subtrahend, Float3 *result)
-{
-    return NULL;
-}
-
-Float3 *D3DVectorOps::Add(Float3 *addend, Float3 *result)
-{
-    return NULL;
-}
-
 // STUB: th08 0x40d3d0
 i32 __fastcall FUN_0040d3d0(ZunTimer *timer)
 {
@@ -847,7 +827,6 @@ i32 Player::UpdateMovement()
     PlayerOption *opt;
     PlayerOption *opt2;
     i32 i, i2, i3, j, k;
-    f32 local1[3], local2[3], local3[3], local4[3], local5[3], local6[3];
     i32 youkaiDelta;
     f32 varA0;
     i32 gauge;
@@ -1081,13 +1060,14 @@ i32 Player::UpdateMovement()
         PlayerPosCenter(&this->positionCenter)->y = g_PlayerBoundaryTop + g_PlayerBoundaryHeight;
 
     /* Recompute the shot direction vectors (and the item grab box) for the three
-     * shot speed settings. The temporaries are uninitialized like in the original. */
-    this->shotVector1 = *((D3DVectorOps *)&this->positionCenter)->Sub((Float3 *)local1, (Float3 *)&this->shotSpeed3d4);
-    this->shotVector2 = *((D3DVectorOps *)&this->positionCenter)->Add((Float3 *)local2, (Float3 *)&this->shotSpeed3d4);
-    this->shotVector3 = *((D3DVectorOps *)&this->positionCenter)->Sub((Float3 *)local3, (Float3 *)&this->shotSpeed3e0);
-    this->shotVector4 = *((D3DVectorOps *)&this->positionCenter)->Add((Float3 *)local4, (Float3 *)&this->shotSpeed3e0);
-    this->grabItemTopLeft = *((D3DVectorOps *)&this->positionCenter)->Sub((Float3 *)local5, (Float3 *)&this->shotSpeed3ec);
-    this->grabItemBottomRight = *((D3DVectorOps *)&this->positionCenter)->Add((Float3 *)local6, (Float3 *)&this->shotSpeed3ec);
+     * shot speed settings. 原版 0x44bc02-0x44bd0b: Float3::operator-/+ (0x4090d0/0x409080)
+     * thiscall, 隐藏返回槽; shotSpeed3d4/3e0/3ec 为 f32 标量但按 Float3 引用读取。 */
+    this->shotVector1 = this->positionCenter - *(Float3 *)&this->shotSpeed3d4;
+    this->shotVector2 = this->positionCenter + *(Float3 *)&this->shotSpeed3d4;
+    this->shotVector3 = this->positionCenter - *(Float3 *)&this->shotSpeed3e0;
+    this->shotVector4 = this->positionCenter + *(Float3 *)&this->shotSpeed3e0;
+    this->grabItemTopLeft = this->positionCenter - *(Float3 *)&this->shotSpeed3ec;
+    this->grabItemBottomRight = this->positionCenter + *(Float3 *)&this->shotSpeed3ec;
 
     /* Run the update callback of each armed option. */
     for (k = 0; k < 4u; k++)

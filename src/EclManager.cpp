@@ -122,12 +122,6 @@ Enemy *__fastcall InitEnemySpawnData(Enemy *enemy);                            /
 f32 __stdcall EclAtan2(f32 a, f32 b); // wraps CRT atan2 (original 0x41f090)
 
 // 辅助类: GetVarValue/GetEclFloatVar 中调用的未逆向 helper (thiscall 视图; call 目标归一化为 T)。
-class D3DVectorOps // 与 Player.cpp 同名类共享符号 (Float3::operator- @ 0x4090d0)
-{
-  public:
-    Float3 *Sub(Float3 *subtrahend, Float3 *result);
-};
-
 class Float3LenOps // Float3::Length @ 0x40b4c0 (thiscall, 返回 ST0)
 {
   public:
@@ -148,8 +142,6 @@ class RngF32InRangeOps // Rng::GetRandomF32InRange @ 0x40d390 (thiscall, 原版�
   public:
     f32 InRange(f32 range);
 };
-
-// D3DVectorOps::Sub 定义在 Player.cpp (0x4090d0 stub), 此处仅声明共用符号。
 
 f32 Float3LenOps::Length()
 {
@@ -375,7 +367,8 @@ i32 __fastcall GetVarValue(Enemy *enemy, i32 varId)
     case 0x2740:
         return (i32)g_Player.AngleToPlayer(&enemy->movePos);
     case 0x2742:
-        ((D3DVectorOps *)&g_EclExitLeftBound)->Sub((Float3 *)&vecX, &enemy->movePos);
+        /* Float3::operator- (0x4090d0): vecX = (Float3*)&g_EclExitLeftBound - enemy->movePos */
+        *(Float3 *)&vecX = *(Float3 *)&g_EclExitLeftBound - enemy->movePos;
         return (i32)((Float3LenOps *)(Float3 *)&vecX)->Length();
     case 0x2771:
         return g_Player.IsYoukai();
@@ -731,7 +724,8 @@ f32 Enemy::GetEclFloatVar(i32 varId)
                          ? this->GetSubEnemyChainCount()
                          : (this->HasOwnerEnemy() ? this->ownerEnemy->GetSubEnemyChainCount() : 0));
     case 0x2742:
-        ((D3DVectorOps *)&g_EclExitLeftBound)->Sub((Float3 *)&vecX, &this->movePos);
+        /* Float3::operator- (0x4090d0): vecX = (Float3*)&g_EclExitLeftBound - this->movePos */
+        *(Float3 *)&vecX = *(Float3 *)&g_EclExitLeftBound - this->movePos;
         return ((Float3LenOps *)(Float3 *)&vecX)->Length();
     case 0x2771:
         return (f32)g_Player.IsYoukai();

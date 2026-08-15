@@ -265,6 +265,13 @@ struct Player
     void DeactivateShotSlot();
     void ResetShotSlot();
     void ClampChargeShotTimer();
+
+    /* 弹幕碰撞帮手 stub（内部未逆向；PDB 名对齐 reccmp-functions.csv）。
+     * this=g_Player；OnUpdate (BulletManager) 以 thiscall 调用。 */
+    i32 FUN_0044a230(Float3 *pos, Float3 *collisionSize);  /* 0x44a230 */
+    i32 FUN_0044a470(Float3 *pos, Float3 *collisionSize);  /* 0x44a470 */
+    i32 CalcLaserHitbox(Float3 *hitboxPos, f32 *length, Float3 *pos, f32 angle, i32 isNewPhase); /* 0x44a6a0 */
+    i32 FUN_00451670(Float3 *a, Float3 *b, void *c, i32 *d); /* 0x451670 */
 };
 
 DIFFABLE_EXTERN(Player, g_Player);

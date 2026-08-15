@@ -1,5 +1,114 @@
 # 更新日志 (Changelog)
 
+## 2026-08-15 — 第十轮：CSV 大扫除（找回"已实现未登记"函数）+ Float3 运算符修复
+
+- **系统性扫描发现**：PDB 有 178 个源码已实现函数在 reccmp-functions.csv 无对应名
+  （语义化改名后 CSV 未同步 → 完全不参与匹配，"白做"）。两轮共补登/改名 **38 处**，
+  其中 7 个直接 100%、多个 90%+。**Progress 40.80% → 41.04%**。
+- **coordinator 直接修 20 个**（有 FUNCTION marker 高置信）：
+  ResetStringsCount、InterpolateCamera(99.5%)、UpdateStageTint、GetSubEnemyChainCount、
+  SetSubVmAnm(95.8%)、SetMoveAngleToPlayer、SetBossLifeBarSegment、SetBossLifeSegmentColor、
+  ComputeSinCos、IsBossPortraitVisible、ShowClock、UpdateClockNoon、ResetClock、
+  IsStopped、FinalBCleared、UpdateInvulnerability(100%)、UpdateBoundaryIndicatorTargets(100%)、
+  ResetShotSlot(100%)、UpdateBullets、UpdateBulletVms。
+- **子代理 B 补登 18 个**（原版反汇编 + PDB demangle 双重验证）：
+  EclGlobalObj::SetGlobalFlag/SetGlobalFlag2/SetTargetPos、RemoveEnemiesByScore（修双 th08::）、
+  SetupLaserMove（补类）、GetDifficultyFromSpellCard(100%)、AddSpellcardTime(100%)、
+  ResetSpellcard、UpdateReplay、StartRecording、StartReplay、StopRecording、CreateFamiliarPopup、
+  5 个 FUN_xxx 加 th08:: 前缀。存疑清单：源码 stub 冲突（IsSpellcardActive 等）、未定位 ctor、
+  CRT/x3d_D3DX 库函数合理跳过。
+- **Float3::operator+/operator- 假匹配清除**：Player.cpp/EclManager.cpp 的
+  D3DVectorOps::Sub/Add dummy stub 删除（假实现顶掉了 Background.cpp 的真实现），
+  8 处调用点改自然 `positionCenter -/+ *(Float3*)&shotSpeed3d4` 形式——
+  operator+/-/+= 全部恢复 100% 匹配。
+- **经验入库**：CSV 名必须 = 我方 PDB demangle 名；marker 回溯定位不可靠（跨函数误配），
+  地址必须反汇编原版验证语义；源码 STUB/FUNCTION 注释是可靠定位线索。
+
+## 2026-08-15 — 第五~九轮：弹型 helper 全量反编译 + EnemyManager 绘制/回调对齐
+
+- **弹型行为 helper 全部反编译（14 个，其中 11 个 100%）**（Accuracy 89.40% / Progress 40.80%）：
+  - **100%**：FUN_004337f0、FUN_00432170、FUN_00432210、FUN_004322b0（目标角转向：
+    vel+=fc0×speed + EclAngleFromDxDy）、FUN_00432390（匀速螺旋）、FUN_00432460
+    （减速+转向递增）、FUN_004325a0、FUN_004326e0（瞄准玩家：AngleToPlayer 嵌套
+    AddNormalizeAngle）、FUN_004329f0（x 环绕，**double 比较+float 加法精度混用怪癖**）、
+    FUN_00432830 99.15%（边界反弹：双向反弹+flagsDAC&0x400 垂直条件）
+  - **FUN_00432aa0 97.83%**（y 环绕；剩余为 reccmp 符号解析伪影，字节正确）
+  - **FUN_0042ffc0 70.22%**（0x81b 最大 helper：行为安装分发器——0x18 结构数组遍历、
+    16 个 case 分派（跳表+cmp 链）、-990/-999 哨兵、LaserData pack(2)+0x24 间隙、
+    this@-0x21c 对齐；剩余：fbcTmp 槽位互斥、cmp 0x3e/0x3f、符号伪影）
+  - **FUN_004321b0 68.42%**（链头倒序清零；剩余为符号伪影，字节正确）
+  - **DrawSingleBullet 59.89%**（state 跳表选 vms、视口偏移、白化、SetZRotation）
+- **EnemyManager::OnDrawImpl (0x42e140) → 84.18%**：var_order 18 变量、块变量
+  liveness 复用（sinA→angle2 槽、fade→angle 槽、dataPtr 内联、alpha/b→saved1fc
+  高字节）、angle2 参数去 j（原版 aiParam2*0x1c 不含 j）、dataPtr 指针算术 bug 修复
+  （i32* 步进 → u8* 字节偏移，6 处）。
+- **EnemyManager::DeletedCallback (0x42ee80) → 92.42%**：var_order(i, enemy,
+  markerPos)（markerPos 12 字节外层变量必须进列表）。
+- **EnemyManager::AddedCallback (0x42ebf0)**：结构差异清单已记录（0x42ec72 if 条件区、
+  0x42ed24 memset 死代码区），待后续任务。
+- **经验入库**：reccmp 符号解析不对称伪影（RECOMP 有 PDB size vs ORIG CSV 无 size →
+  大位移/立即数被误解析为 g_X+OFFSET，字节正确不可 cpp 修复）、standalone 验证必须用
+  项目 VC7 cl（VS2022 cl 槽位/代码生成不同导致错误结论）、var_order 必须包含全部外层
+  变量（漏 12 字节 Float3 会把后续变量推深）。
+
+## 2026-08-15 — 第四轮：弹型 helper 反编译 + EnemyManager 栈对齐
+
+- **3 个 helper 达成 100% 完美匹配**（Accuracy 88.87% / Progress 40.56%）：
+  - **`FUN_004337f0` (0x4337f0, ItemManager 初始化)**：`memset(0x17b094)` + `itemListTail=&itemListHead`。
+  - **`Bullet::FUN_00432170` (0x432170, 槽复位)**：state=0 + 两个 timer SetCurrent(0)。
+  - **`Bullet::FUN_00432210` (0x432210, flagsDAC bit0 行为)**：0xf80 计时器≤0x10 时 5.0f
+    减速曲线 + `vel.FromAngleMagnitude(angle, (tmp+unkD68)×g_ShotSpeed)`，否则翻转 bit0。
+- **`BulletManager::FUN_004321b0` (0x4321b0) 68.42%**：6 个弹型链头倒序清零
+  （chainHeads[5]..[0] 独立赋值，正序 for 形状不符）。
+- **`BulletManager::DrawSingleBullet` (0x432f20) 59.89%**（stub 36.36% →）：state 跳表选
+  vms[1..4]/vms[0]、视口偏移坐标（左右显式 `.Float3::Float3()` 构造迫使表达式物化
+  -0x10/-0x14）、color1 白化、`SetZRotation(AddNormalizeAngle(π/2+angle, 0))`、Draw2D。
+  5 槽 var_order 对齐；残余差异仅判别序列（store-sub-store，编译器限制）。
+- **`EnemyManager::OnUpdate` (0x42c660) 42.21% → 58.94%**：39 槽位表全提取，
+  `#pragma var_order` 19 变量逐槽对齐、声明顺序照原版构造序、循环变量拆分
+  （loopVar64/-0x64、loopVar78/-0x78）、新增 deadFloat70（-0x70，ZUN bloat 死构造）。
+- **7 个未登记全局补登**（reccmp-globals.csv + EnemyManager.cpp 17 处裸地址替换）：
+  g_Unknown164d0a8/g_Unknown164d0ac（人类/总帧计数器，比率写入 0x164cfb8）、
+  g_17d6ed4（全库只读状态标志）、g_BossPos/g_BossEnemy/g_BossPosFlag
+  （boss 位置跟踪，0x18b899c 系列）、g_18b89ec（playerState 切换计时器）。
+
+## 2026-08-15 — BulletManager 三函数 + 工具链修复
+
+- **工具链修复：var_order 插件恢复**。发现 scripts/prefix 的 C1XX.DLL 被 create_devenv.py
+  的 install_compiler_sdk 覆盖为原版（插件丢失），导致所有 `#pragma var_order` 失效
+  （C4068 警告、变量按声明序分配）——RemoveAllBullets 从 87.83% 掉到 59.35% 的元凶。
+  重新编译安装 pragma_var_order 插件后：RemoveAllBullets 恢复 87.83%、
+  BulletManager::OnUpdate 38.00% → **58.70%**、OnDraw 83.33% → **86.67%**、
+  Accuracy 86.46% → 88.68%。
+- **BulletManager::OnUpdate (0x431240) 58.70%**：switch 跳表 case 0 直接指向
+  state1_update 体（消除多余 jmp 导致的 290 行失配）、stateTmp 显式化
+  （store→reload→sub→store）、state 2/3/4 早退形状、`Float3 tmp = vel / X` 拷贝初始化
+  （隐藏返回槽复用）、补上缺失的 `b->vms[0].SetZRotation(AddNormalizeAngle(1.5707964f +
+  b->angle, 0.0f))`（0x431d1f-431d40）、var_order 槽位对齐原版 19 槽。
+- **BulletManager::OnDraw (0x432b50) 86.67%**：var_order 6 外层槽、
+  第二层绘制独立槽 varD8/varD4、10 处 `.Float3::Float3()` 显式构造、补第二层条件
+  `(unk599[0]==0 || runState!=0)`。
+- **BulletManager::AddedCallback (0x433070) 53.29%**：删 slot/sprite 局部、
+  BULLET_TEMPLATE() 宏复刻 imul+add 寻址、碰撞尺寸 switch 修正（表值 4 属 default
+  6/6/3）、spriteId 原地 `-=2`/`-=8`。另修复 FUNCTION marker 行号错配
+  （VC7 起始行=签名前最后非注释行导致 AddedCallback 的 marker 匹配到 DeletedCallback
+  实体、DeletedCallback 100% 丢失）——移除该 marker 后 DeletedCallback 恢复 100%。
+- **跨类 helper stub 全部成员化对齐 CSV**：EnemyManager 的 8 个帮手
+  （Player::FUN_00451670、Spellcard::spellcard_fun_004178a0/FUN_0042dff0、
+  EclManager::GetTimelineCount/GetTimeline、ZunTimer::operator%、
+  BulletManager::FUN_00430aa0(0x1f40,1) 参数顺序修正、AnmManager::DrawVertices、
+  Gui::FUN_00437ddd 新增）——EnemyManager::OnUpdate 调用点全部归一化。
+- **CSV 语义名同步**（reccmp-functions.csv + mapping.csv）：0x41fd20→HasOwnerEnemy、
+  0x42bc90→ClearDataSlots、0x418450→EclInterruptTable::SetupEclContext、
+  0x4230c0→Gui::SetBossLifeBarMaxSize、0x4358bb→Gui::IsMsgActive、
+  0x44a470→Player::FUN_0044a470、删除 0x40d3b0 重复行。
+- **15 处裸地址全局语义化**（EnemyManager）：g_PlayerCharacter、g_PlayerFlags
+  （附带 i32→u32 修复 sar→shr）、g_EclExitLeftBound、g_Player.isYoukaiMode/
+  playerState、g_GameManager.unk2C。未登记符号清单（0x164d0a8/0x164d0ac、
+  0x17d6ed4、0x18b899c/0x18b89b4/0x18b89b8、0x18b89ec）待登记。
+- **Float3::operator/ 改为 out-of-line**（0x40c7d0 是按值返回的独立实体，
+  原内联版形状错误），定义移至 Background.cpp。
+
 ## 2026-08-10
 
 - **一批小函数反编译完成（100%）**：`Supervisor::PlayMusic`（MIDI/WAV 分支完整）、

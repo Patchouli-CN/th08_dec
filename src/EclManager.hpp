@@ -99,6 +99,11 @@ struct EclManager
     ZunResult Load(const char *path);
     ZunResult RunEcl(Enemy *enemy);
 
+    /* 跨类 thiscall 帮手 stub（内部未逆向；PDB 名对齐 reccmp-functions.csv）。
+     * 原版以 this=0x4eccb8 (g_EclInterruptTable 地址) 调用。 */
+    i32 GetTimelineCount();      /* 0x42dfb0 */
+    void *GetTimeline(i32 idx);  /* 0x42dfd0 */
+
     void *eclFile;
     void **subTable;
 };

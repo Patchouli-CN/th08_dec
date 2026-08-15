@@ -27,6 +27,15 @@ DIFFABLE_STATIC(AnmLoaded, g_EnemyAnmLoaded2);
 DIFFABLE_STATIC(ChainElem, g_EnemyManagerCalcChain);
 DIFFABLE_STATIC(ChainElem, g_EnemyManagerDrawChainHighPrio);
 DIFFABLE_STATIC(ChainElem, g_EnemyManagerDrawChainLowPrio);
+DIFFABLE_EXTERN(f32, g_EclExitLeftBound); /* EclManager.cpp 定义, 0x17d61ac (玩家位置 x) */
+/* 未登记全局补登（reccmp-globals.csv 同步；语义见注释与 OnUpdate 反汇编）。 */
+DIFFABLE_STATIC(i32, g_Unknown164d0a8);   /* 0x164d0a8 人类模式(非 youkai)累计帧数 (OnUpdate 条件自增) */
+DIFFABLE_STATIC(i32, g_Unknown164d0ac);   /* 0x164d0ac 游戏内累计帧数 (OnUpdate 每帧自增; 0x43ae8f 清零) */
+DIFFABLE_STATIC(i32, g_17d6ed4);          /* 0x17d6ed4 只读状态标志 (全库无写; var14 来源) */
+DIFFABLE_STATIC(Float3, g_BossPos);       /* 0x18b899c boss 敌人位置跟踪 (OnUpdate 写 enemy->movePos) */
+DIFFABLE_STATIC(Enemy *, g_BossEnemy);    /* 0x18b89b4 当前 boss 敌人指针 (移除时清零) */
+DIFFABLE_STATIC(i32, g_BossPosFlag);      /* 0x18b89b8 boss 位置有效标志 (OnUpdate 置 1) */
+DIFFABLE_STATIC(ZunTimer, g_18b89ec);     /* 0x18b89ec playerState 0→3 切换计时器 */
 
 // FUNCTION: th08 0x429e00
 void EnemyManager::Initialize()
@@ -147,59 +156,42 @@ void EclTimeline::FUN_0042a8a0()
 {
 }
 
-// Cross-class thiscall helpers used by OnUpdate that are not yet defined in their owning class.
-// Dummy receiver type: only the this-pointer (ecx) and the stack args matter for the call shape;
-// the callee bodies stay stubs (kept as-is per the handoff, call targets normalize by CSV name).
-struct OnUpdateHelpers
-{
-    i32 FUN_00451670(Float3 *a, Float3 *b, void *c, i32 *d); // Player::FUN_00451670 0x451670
-    i32 FUN_004178a0();                                      // 0x4178a0 (on g_EclGlobalObj)
-    i32 FUN_0042dff0();                                      // 0x42dff0 (on g_EclGlobalObj)
-    i32 GetTimelineCount();                                  // 0x42dfb0 (on g_EclInterruptTable)
-    void *GetTimeline(i32 idx);                              // 0x42dfd0
-    void *FUN_00430aa0(i32 a, i32 b);                        // BulletManager 0x430aa0 (on g_BulletManager)
-    i32 FUN_0040d410(i32 divisor);                           // 0x40d410 ZunTimer modulo (on frame timer)
-};
-
-i32 OnUpdateHelpers::FUN_00451670(Float3 *, Float3 *, void *, i32 *)
+/* 跨类 thiscall 帮手 stub（内部未逆向；PDB 名对齐 reccmp-functions.csv，
+ * 使 OnUpdate/OnDrawImpl 的调用目标可归一化）。 */
+i32 Player::FUN_00451670(Float3 *, Float3 *, void *, i32 *)
 {
     return 0;
 }
-i32 OnUpdateHelpers::FUN_004178a0()
+i32 Spellcard::spellcard_fun_004178a0()
 {
     return 0;
 }
-i32 OnUpdateHelpers::FUN_0042dff0()
+i32 Spellcard::FUN_0042dff0()
 {
     return 0;
 }
-i32 OnUpdateHelpers::GetTimelineCount()
+i32 EclManager::GetTimelineCount()
 {
     return 0;
 }
-void *OnUpdateHelpers::GetTimeline(i32)
+void *EclManager::GetTimeline(i32)
 {
     return NULL;
 }
-void *OnUpdateHelpers::FUN_00430aa0(i32, i32)
-{
-    return NULL;
-}
-i32 OnUpdateHelpers::FUN_0040d410(i32)
+i32 ZunTimer::operator%(i32)
 {
     return 0;
 }
-
-// OnDrawImpl 调用的 AnmManager::DrawVertices (0x464c60) 跨类 thiscall 帮手。
-// 接收器是 g_AnmManager (ecx); 内部未逆向, 保持 stub (OnUpdateHelpers 同款模式)。
-struct EnemyDrawHelpers
+void *BulletManager::FUN_00430aa0(i32, i32)
 {
-    ZunResult DrawVertices(AnmVm *vm, void *vertices, i32 count); // 0x464c60
-};
-
-ZunResult EnemyDrawHelpers::DrawVertices(AnmVm *, void *, i32)
+    return NULL;
+}
+ZunResult AnmManager::DrawVertices(AnmVm *, void *, i32)
 {
     return ZUN_SUCCESS;
+}
+void Gui::FUN_00437ddd(i32)
+{
 }
 
 // OnUpdate 遍历阶段调用的 Enemy 辅助 stub (thiscall 视图; 内部未逆向, 保持 stub)。
@@ -243,47 +235,58 @@ void EnemyManager::FUN_0042c3b0()
 }
 
 // FUNCTION: th08 0x42c660
+/* 栈槽位对齐原版（var_order 从 -0x4 向下；Float3 占 3 槽，x 在最大负偏移）。
+ * 槽位证据：原版反汇编 0x42c660-0x42de95 — movePosL x@-0xc, difficulty@-0x10,
+ * var14@-0x14, var18@-0x18, i@-0x1c, hitbox x@-0x28, var2c@-0x2c, j@-0x30,
+ * damaged@-0x34, enemy@-0x38, scoreGain@-0x3c, bossDelta x@-0x48,
+ * damageBox1 x@-0x54, damageBox0 x@-0x60, loopVar64@-0x64, deadFloat70@-0x70,
+ * newEnemy@-0x74, loopVar78@-0x78, markerPos x@-0x84。 */
+#pragma var_order(movePosL, difficulty, var14, var18, i, hitbox, var2c, j, damaged, enemy, scoreGain, bossDelta, damageBox1, damageBox0, loopVar64, deadFloat70, newEnemy, loopVar78, markerPos)
 ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 {
+    /* 声明顺序（初始化/构造顺序）对齐原版 0x42c671-0x42c690：
+     * var14=0 → hitbox 构造 → bossDelta 构造 → movePosL 构造 → difficulty=0xa。
+     * 槽位由上方 var_order 控制（与声明顺序独立）。 */
+    i32 var14 = 0;      // -0x14
+    Float3 hitbox;      // -0x28
+    Float3 bossDelta;   // -0x48
     Float3 movePosL;    // -0xc
     i32 difficulty = 0xa; // -0x10
-    i32 var14 = 0;      // -0x14
     i32 var18;          // -0x18
     i32 i;              // -0x1c
-    Float3 hitbox;      // -0x28
     i32 var2c;          // -0x2c
     i32 j;              // -0x30
     i32 damaged;        // -0x34
     Enemy *enemy;       // -0x38
     i32 scoreGain;      // -0x3c
-    Float3 bossDelta;   // -0x48
+    i32 loopVar64;      // -0x64 激光区循环变量 (eclDataArray0/dataSlots 清零循环)
     Enemy *newEnemy;    // -0x74
+    i32 loopVar78;      // -0x78 after_bullet 区循环变量 (eclDataArray0 清零循环)
 
     if (g_Gui.IsMsgActive() == 0)
     {
         g_164d30c++;
         if (((ZunTimer *)((u8 *)self + 0x9dced0))->AsFrames() >= 0x10)
         {
-            (*(i32 *)0x164d0ac)++;
-            if (*(u8 *)0x17d5efb == 0)
+            g_Unknown164d0ac++;
+            if (g_Player.isYoukaiMode == 0)
             {
-                (*(i32 *)0x164d0a8)++;
+                g_Unknown164d0a8++;
             }
         }
     }
 
-    if ((*(i32 *)0x164d0b4 >> 0xa) & 1)
+    if ((g_PlayerFlags >> 0xa) & 1)
     {
         return CHAIN_CALLBACK_RESULT_CONTINUE;
     }
 
-    if ((((*(i32 *)0x164d0b4 >> 0xd) & 1) != 0) && (*(i32 *)((u8 *)self + 0x9dcda0) != 0))
+    if ((((g_PlayerFlags >> 0xd) & 1) != 0) && (*(i32 *)((u8 *)self + 0x9dcda0) != 0))
     {
         Float3 damageBox0 = Float3(384.0f, 448.0f, 0.0f);
         Float3 damageBox1 = Float3(192.0f, 224.0f, 0.0f);
-        ((OnUpdateHelpers *)&g_Player)->FUN_00451670(&damageBox1, &damageBox0,
-                                                     (void *)(*(i32 *)((u8 *)self + 0x9dcda0) + 0x2e10),
-                                                     &var14);
+        g_Player.FUN_00451670(&damageBox1, &damageBox0,
+                              (void *)(*(i32 *)((u8 *)self + 0x9dcda0) + 0x2e10), &var14);
     }
 
     self->FUN_0042c3b0();
@@ -293,12 +296,12 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
     *(i32 *)((u8 *)self + 0x9dcee0) = 0;
     *(i32 *)((u8 *)self + 0x9dcedc) = 0;
 
-    for (i = 0; i < ((OnUpdateHelpers *)&g_EclInterruptTable)->GetTimelineCount(); i++)
+    for (i = 0; i < ((EclManager *)&g_EclInterruptTable)->GetTimelineCount(); i++)
     {
         if (*(i32 *)((u8 *)self + 0x9dcddc + i * 0x10) == 0)
         {
             *(i32 *)((u8 *)self + 0x9dcddc + i * 0x10) =
-                (i32)((OnUpdateHelpers *)&g_EclInterruptTable)->GetTimeline(i);
+                (i32)((EclManager *)&g_EclInterruptTable)->GetTimeline(i);
         }
         ((EclTimeline *)((u8 *)self + 0x9dcdd0 + i * 0x10))->FUN_0042a8a0();
     }
@@ -309,9 +312,9 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
     {
         if ((enemy->flags & 1) == 0)
         {
-            if ((Enemy *)0x18b89b4 == enemy)
+            if (g_BossEnemy == enemy)
             {
-                *(i32 *)0x18b89b4 = 0;
+                g_BossEnemy = NULL;
             }
             continue;
         }
@@ -327,8 +330,8 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
         (*(i32 *)((u8 *)self + 0x9dcdc4))++;
 
-        if ((((enemy->flags >> 0x1e) & 1) != 0 && *(i32 *)0x17d6ed4 == 0 &&
-             (i8) * (u8 *)0x17d5ef8 == 0) ||
+        if ((((enemy->flags >> 0x1e) & 1) != 0 && g_17d6ed4 == 0 &&
+             g_Player.playerState == 0) ||
             ((enemy->anmFlags >> 7) & 1))
         {
             enemy->eclTimer--;
@@ -455,11 +458,11 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
             }
         }
 
-        var14 = *(i32 *)0x17d6ed4;
+        var14 = g_17d6ed4;
 
         if (((enemy->flags >> 4) & 1) == 0 && ((enemy->flags >> 5) & 1) == 0 &&
             ((enemy->flags >> 0xb) & 1) == 0 &&
-            (((enemy->flags >> 0x1f) & 1) == 0 || *(i32 *)0x17d6ed4 != 0))
+            (((enemy->flags >> 0x1f) & 1) == 0 || g_17d6ed4 != 0))
         {
             if ((enemy->flags >> 2) & 1)
             {
@@ -485,27 +488,25 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
             if ((enemy->flags >> 6) & 1)
             {
-                if (((OnUpdateHelpers *)&g_EclGlobalObj)->FUN_004178a0() != 0 &&
-                    enemy->HasOwnerEnemy() != 0 && *(i32 *)0x17d6ed4 == 0)
+                if (((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0() != 0 &&
+                    enemy->HasOwnerEnemy() != 0 && g_17d6ed4 == 0)
                 {
                     var18 = 0;
                 }
                 else
                 {
-                    var18 = ((OnUpdateHelpers *)&g_Player)
-                                ->FUN_00451670(&enemy->movePos, (Float3 *)((u8 *)enemy + 0x2d70),
-                                               (void *)((u8 *)enemy + 0x2e10), &var14);
+                    var18 = g_Player.FUN_00451670(&enemy->movePos, (Float3 *)((u8 *)enemy + 0x2d70),
+                                                  (void *)((u8 *)enemy + 0x2e10), &var14);
                 }
             }
 
             if (enemy->moveParam1 > 0.0f)
             {
-                var2c = ((OnUpdateHelpers *)&g_Player)
-                            ->FUN_00451670(&enemy->movePos, (Float3 *)((u8 *)enemy + 0x2d7c),
-                                           (void *)((u8 *)enemy + 0x2e10), &var14);
+                var2c = g_Player.FUN_00451670(&enemy->movePos, (Float3 *)((u8 *)enemy + 0x2d7c),
+                                              (void *)((u8 *)enemy + 0x2e10), &var14);
                 if (var14 == 0)
                 {
-                    if (*(u8 *)0x164d0b1 == 3 || *(u8 *)0x164d0b1 == 0xb)
+                    if (g_PlayerCharacter == 3 || g_PlayerCharacter == 0xb)
                     {
                         var18 = (i32)((f32)var18 + (f32)var2c / 6.5f);
                     }
@@ -518,16 +519,16 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
             if (var18 > 0)
             {
-                if (!((enemy->flags >> 1) & 1) && *(u8 *)0x17d5efb != 0)
+                if (!((enemy->flags >> 1) & 1) && g_Player.isYoukaiMode != 0)
                 {
                     goto damage_score;
                 }
-                if (*(i32 *)0x17d6ed4 != 0)
+                if (g_17d6ed4 != 0)
                 {
                     goto damage_score;
                 }
 
-                if (((enemy->flags >> 1) & 1) && *(u8 *)0x17d5efb == 0)
+                if (((enemy->flags >> 1) & 1) && g_Player.isYoukaiMode == 0)
                 {
                     scoreGain = (var18 / (10 - difficulty / 3)) * 10;
                 }
@@ -541,7 +542,7 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
                 }
                 if (scoreGain == 0)
                 {
-                    if (*(u8 *)0x17d5efb == 0 || !(enemy->eclTimer.AsFrames() & 1))
+                    if (g_Player.isYoukaiMode == 0 || !(enemy->eclTimer.AsFrames() & 1))
                     {
                         scoreGain = 0xa;
                     }
@@ -556,11 +557,11 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
                 if ((enemy->flags >> 3) & 1)
                 {
-                    if (((OnUpdateHelpers *)&g_EclGlobalObj)->FUN_004178a0() != 0)
+                    if (((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0() != 0)
                     {
                         if (var14 != 0)
                         {
-                            if (((OnUpdateHelpers *)&g_EclGlobalObj)->FUN_0042dff0() != 0 &&
+                            if (((Spellcard *)&g_EclGlobalObj)->FUN_0042dff0() != 0 &&
                                 enemy->HasOwnerEnemy() == 0)
                             {
                                 if (var18 > 2)
@@ -612,24 +613,26 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
         if ((enemy->flags >> 1) & 1)
         {
-            bossDelta = *(Float3 *)0x18b899c - *(Float3 *)0x17d61ac;
-            movePosL = enemy->movePos - *(Float3 *)0x17d61ac;
+            bossDelta = g_BossPos - *(Float3 *)&g_EclExitLeftBound;
+            movePosL = enemy->movePos - *(Float3 *)&g_EclExitLeftBound;
 
-            if (*(i32 *)0x18b89b8 == 0 || fabsf(movePosL.x) < fabsf(bossDelta.x))
+            /* 比较方向对齐原版 0x42d3df（先求 bossDelta.x 存 -0xf0，再求 movePosL.x 作 ST0）。 */
+            if (g_BossPosFlag == 0 || fabsf(bossDelta.x) > fabsf(movePosL.x))
             {
-                *(Float3 *)0x18b899c = enemy->movePos;
+                g_BossPos = enemy->movePos;
             }
-            *(i32 *)0x18b89b8 = 1;
+            g_BossPosFlag = 1;
         }
-        else if (*(i32 *)0x18b89b8 == 0 && *(f32 *)0x18b899c < enemy->movePos.y)
+        /* 原版是两个独立 if（0x42d425 后 fallthrough 到 0x42d42f 检查），非 else-if。 */
+        if (g_BossPosFlag == 0 && g_BossPos.y < enemy->movePos.y)
         {
-            *(Float3 *)0x18b899c = enemy->movePos;
+            g_BossPos = enemy->movePos;
         }
 
-        if (fabsf(enemy->movePos.x - *(f32 *)0x17d61ac) < 64.0f && enemy->HasOwnerEnemy() == 0 &&
-            (*(i32 *)0x18b89b4 == 0 || *(f32 *)(*(i32 *)0x18b89b4 + 0x2d38) <= enemy->movePos.y))
+        if (fabsf(enemy->movePos.x - g_EclExitLeftBound) < 64.0f && enemy->HasOwnerEnemy() == 0 &&
+            (g_BossEnemy == NULL || g_BossEnemy->pos.y <= enemy->movePos.y))
         {
-            *(i32 *)0x18b89b4 = (i32)enemy;
+            g_BossEnemy = enemy;
         }
 
         if ((enemy->anmFlags & 8) != 0 && enemy->laserActive > 0)
@@ -643,19 +646,21 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
     laser_or_move:
         enemy->anmFlags |= 8;
+        /* ZUN bloat: 声明未使用的 Float3（原版 0x42d566 有无条件构造调用，-0x70 槽）。 */
+        Float3 deadFloat70;
         *(i32 *)((u8 *)enemy + 0x53cc) = (enemy->eclDataValue0 - enemy->eclTimer.AsFrames()) / 0x3c;
         enemy->eclDataValue0 = -1;
 
-        for (j = 0; j < 4; j++)
+        for (loopVar64 = 0; loopVar64 < 4; loopVar64++)
         {
-            enemy->eclDataArray0[j] = -1;
+            enemy->eclDataArray0[loopVar64] = -1;
         }
-        for (j = 0; j < 4; j++)
+        for (loopVar64 = 0; loopVar64 < 4; loopVar64++)
         {
-            if (enemy->dataSlots[j] != NULL)
+            if (enemy->dataSlots[loopVar64] != NULL)
             {
-                g_ZunMemory.Free(enemy->dataSlots[j]);
-                enemy->dataSlots[j] = NULL;
+                g_ZunMemory.Free(enemy->dataSlots[loopVar64]);
+                enemy->dataSlots[loopVar64] = NULL;
             }
         }
 
@@ -666,7 +671,7 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
         enemy->FUN_0042adb0(1);
 
-        if (*(u8 *)0x17d5efb != 0)
+        if (g_Player.isYoukaiMode != 0)
         {
             g_GameManager.AddToYoukaiGauge(0xc8, 0);
         }
@@ -712,10 +717,10 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
                 ((AnmVm *)enemy->linkedEffect)->SetInterrupt(3);
                 enemy->linkedEffect = 0;
             }
-            if ((i8) * (u8 *)0x17d5ef8 == 0)
+            if (g_Player.playerState == 0)
             {
-                ((ZunTimer *)0x18b89ec)->SetCurrent(0x5a);
-                *(u8 *)0x17d5ef8 = 3;
+                g_18b89ec.SetCurrent(0x5a);
+                g_Player.playerState = 3;
             }
             enemy->flags &= ~0x40000000u;
             enemy->flags &= ~0x80000000u;
@@ -733,14 +738,15 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
     death_continue:
         enemy->FUN_0042bea0(var14);
 
-        if ((enemy->flags & 2) && ((OnUpdateHelpers *)&g_EclGlobalObj)->FUN_004178a0() == 0)
+        if ((enemy->flags & 2) && ((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0() == 0)
         {
-            newEnemy = self->RemoveEnemiesByScore(
-                0x1f40, (i32)((OnUpdateHelpers *)&g_BulletManager)->FUN_00430aa0(1, 0x1f40));
+            newEnemy = g_EnemyManager.RemoveEnemiesByScore(
+                0x1f40, (i32)g_BulletManager.FUN_00430aa0(0x1f40, 1));
             if (newEnemy != NULL)
             {
                 g_GameManager.AddScore((i32)newEnemy);
-                ((OnUpdateHelpers *)&g_Player)->FUN_0042dff0();
+                /* 原版 0x42d961: Gui::FUN_00437ddd (0x437ddd, this=g_Gui, arg=newEnemy) thiscall。 */
+                (&g_Gui)->FUN_00437ddd((i32)newEnemy);
             }
         }
         enemy->laserActive = 0;
@@ -773,9 +779,9 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
         enemy->enemy_fun_00415c80();
         enemy->stackDepth = 0;
-        for (j = 0; j < 4; j++)
+        for (loopVar78 = 0; loopVar78 < 4; loopVar78++)
         {
-            enemy->eclDataArray0[j] = -1;
+            enemy->eclDataArray0[loopVar78] = -1;
         }
         enemy->eclDataValue0 = -1;
         enemy->ClearDataSlots();
@@ -837,7 +843,7 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
             {
                 markerPos.x = enemy->movePos.x + 32.0f;
             }
-            markerPos.y = 480.0f;
+            markerPos.y = 472.0f; /* 原版 0x42dd12 常量 0x43ec0000 (= 472.0f) */
             markerPos.z = 0.0f;
             g_AsciiManager.SetBossMarkerPosition(enemy->bossMarkerIdx, &markerPos);
 
@@ -855,7 +861,7 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
         enemy->FUN_0042e010();
 
-        if ((i8) * (u8 *)0x160f534 == 0)
+        if (g_GameManager.unk2C == 0)
         {
             enemy->eclTimer.Tick();
         }
@@ -876,7 +882,7 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
         continue;
     }
 
-    if (((OnUpdateHelpers *)((u8 *)self + 0x9dced0))->FUN_0040d410(0xc8) == 0 &&
+    if (((ZunTimer *)((u8 *)self + 0x9dced0))->operator%(0xc8) == 0 &&
         g_GameManager.IsTampered())
     {
         return CHAIN_CALLBACK_RESULT_EXIT_GAME_SUCCESS;
@@ -891,6 +897,12 @@ ChainCallbackResult EnemyManager::OnDrawHighPrio(EnemyManager *enemyManager)
 }
 
 // FUNCTION: th08 0x42e140
+/* 栈槽位对齐原版（var_order 从 -0x4 向下；18 个函数作用域变量）。
+ * 槽位证据：原版反汇编 0x42e140-0x42eb05 — savedScaleY@-0x4, savedScaleX@-0x8,
+ * i@-0xc, saved1fc@-0x10, ec@-0x14, j@-0x18, enemy@-0x1c, var2@-0x20, var@-0x24,
+ * count@-0x28, angle2@-0x2c, acc@-0x30, prevAngle@-0x34, ptr@-0x38, step@-0x3c,
+ * angle@-0x40, cosA@-0x44, span@-0x48。块变量（PathB sinA/dataPtr）默认分配。 */
+#pragma var_order(savedScaleY, savedScaleX, i, saved1fc, ec, j, enemy, var2, var, count, angle2, acc, prevAngle, ptr, step, angle, cosA, span)
 // OnDrawImpl 绘制敌人。OnDrawHighPrio 遍历敌机类型链表 0..1 (arg1=0,arg2=2),
 // OnDrawLowPrio 遍历 2..3 (arg1=2,arg2=4)。链表头数组在 enemyManager+0x9dcedc,
 // 每节点 next 指针在 Enemy+0x0 (OnUpdate 建立)。
@@ -976,9 +988,11 @@ ChainCallbackResult EnemyManager::OnDrawImpl(EnemyManager *enemyManager, i32 arg
                             }
                             if (enemy->aiFlags & 4)
                             {
-                                u8 alpha = *(u8 *)((u8 *)&saved1fc + 3);
+                                /* alpha 内联到 saved1fc 高字节（原版 42e467/42e46b 读两次 -0xd）。 */
                                 *(u8 *)((u8 *)enemy + 0x1ff) =
-                                    (u8)((i32)alpha - (i32)alpha * j / (i32)(i16)enemy->aiParam0);
+                                    (u8)((i32)*(u8 *)((u8 *)&saved1fc + 3) -
+                                         (i32)*(u8 *)((u8 *)&saved1fc + 3) * j /
+                                             (i32)(i16)enemy->aiParam0);
                             }
                             enemy->primaryVm.pos =
                                 *(Float3 *)((u8 *)enemy + 0x3394 + j * 0x1c) +
@@ -993,8 +1007,8 @@ ChainCallbackResult EnemyManager::OnDrawImpl(EnemyManager *enemyManager, i32 arg
                 else
                 {
                     // PathB: 累积 trail 点, 按角度线性/共线剔除后生成带状顶点 (0x1c 步进) 提交 DrawVertices。
-                    f32 sinA;
-                    i32 *dataPtr = *(i32 **)((u8 *)enemy + 0x230);
+                    /* 原版块变量不占独立槽：sinA 复用 angle2(-0x2c)、fade 复用 angle(-0x40)、
+                     * dataPtr 不物化（每次读 enemy+0x230）、alpha/b 复用 saved1fc 高字节(-0xd)。 */
 
                     count = 0;
                     for (j = 0; j < (i16)enemy->aiParam0; j += (i16)enemy->aiParam2)
@@ -1006,9 +1020,11 @@ ChainCallbackResult EnemyManager::OnDrawImpl(EnemyManager *enemyManager, i32 arg
 
                     if (count > 2)
                     {
-                        span = *(f32 *)((u8 *)dataPtr + 0x28) - *(f32 *)((u8 *)dataPtr + 0x20);
+                        span = *(f32 *)((u8 *)(*(i32 **)((u8 *)enemy + 0x230)) + 0x28) -
+                               *(f32 *)((u8 *)(*(i32 **)((u8 *)enemy + 0x230)) + 0x20);
                         step = span / (f32)((count + 1) / 2 - 1);
-                        acc = *(f32 *)((u8 *)dataPtr + 0x28) + enemy->primaryVm.prefix.uvScrollPos.x;
+                        acc = *(f32 *)((u8 *)(*(i32 **)((u8 *)enemy + 0x230)) + 0x28) +
+                              enemy->primaryVm.prefix.uvScrollPos.x;
                         ptr = (u8 *)enemy + 0x3e14;
 
                         for (j = 0; j < (i16)enemy->aiParam0 &&
@@ -1030,8 +1046,9 @@ ChainCallbackResult EnemyManager::OnDrawImpl(EnemyManager *enemyManager, i32 arg
                             {
                                 angle2 = FUN_0042eb10(*(f32 *)((u8 *)enemy + 0x33ac +
                                                                (j + (i16)enemy->aiParam2 - 1) * 0x1c),
+                                                      /* 参数2 原版 0x42e6c5-0x42e6dc 不含 j（照抄 ZUN）。 */
                                                       *(f32 *)((u8 *)enemy + 0x33ac +
-                                                               (j + (i16)enemy->aiParam2) * 0x1c),
+                                                               (i16)enemy->aiParam2 * 0x1c),
                                                       0.5f);
                                 if (fabsf(prevAngle - angle) < 1.0e-5f && fabsf(angle - angle2) < 1.0e-5f)
                                 {
@@ -1041,50 +1058,57 @@ ChainCallbackResult EnemyManager::OnDrawImpl(EnemyManager *enemyManager, i32 arg
                             }
                             prevAngle = angle;
 
+                            /* sinf 提前到 cosf 前（原版 0x42e754/0x42e760），
+                             * 结果存 angle2 槽（-0x2c, 与剔除判断的 angle2 复用）。 */
+                            angle2 = sinf(angle);
                             cosA = cosf(angle);
                             var = 0.0f;
-                            var2 = savedScaleY * *(f32 *)((u8 *)dataPtr + 0x30) / 2.0f;
+                            var2 = savedScaleY * *(f32 *)((u8 *)(*(i32 **)((u8 *)enemy + 0x230)) + 0x30) / 2.0f;
 
                             if (enemy->aiFlags & 2)
                             {
-                                f32 fade = 1.0f - (f32)j / (f32)(i16)enemy->aiParam0;
-                                var *= fade;
-                                var2 *= fade;
+                                /* fade 复用 angle 槽（-0x40, 原版 0x42e7b7 存 -0x40）。 */
+                                angle = 1.0f - (f32)j / (f32)(i16)enemy->aiParam0;
+                                var *= angle;
+                                var2 *= angle;
                             }
 
                             *(i32 *)(ptr + 0x2c) = *(i32 *)((u8 *)enemy + 0x1fc);
                             *(i32 *)(ptr + 0x10) = *(i32 *)(ptr + 0x2c);
                             if (enemy->aiFlags & 4)
                             {
-                                u8 b = (u8)((i32)*(u8 *)((u8 *)&saved1fc + 3) -
-                                            (i32)*(u8 *)((u8 *)&saved1fc + 3) * j /
-                                                (i32)(i16)enemy->aiParam0);
-                                *(u8 *)(ptr + 0x2f) = b;
-                                *(u8 *)(ptr + 0x13) = b;
+                                /* b 内联到 saved1fc 高字节（原版 42e7f8/42e7fc 读两次 -0xd），
+                                 * 第二次写从 ptr+0x2f 读回（原版 42e81f）。 */
+                                *(u8 *)(ptr + 0x2f) =
+                                    (u8)((i32)*(u8 *)((u8 *)&saved1fc + 3) -
+                                         (i32)*(u8 *)((u8 *)&saved1fc + 3) * j /
+                                             (i32)(i16)enemy->aiParam0);
+                                *(u8 *)(ptr + 0x13) = *(u8 *)(ptr + 0x2f);
                             }
 
-                            sinA = sinf(angle);
                             *(Float3 *)ptr = *(Float3 *)((u8 *)enemy + 0x3394 + j * 0x1c);
-                            *(f32 *)(ptr + 0x0) += cosA * var - sinA * var2 + 32.0f;
-                            *(f32 *)(ptr + 0x4) += sinA * var + cosA * var2 + 16.0f;
+                            *(f32 *)(ptr + 0x0) += cosA * var - angle2 * var2 + 32.0f;
+                            *(f32 *)(ptr + 0x4) += angle2 * var + cosA * var2 + 16.0f;
                             *(f32 *)(ptr + 0x14) = acc;
                             *(f32 *)(ptr + 0x18) =
-                                *(f32 *)((u8 *)dataPtr + 0x24) + enemy->primaryVm.prefix.uvScrollPos.y;
+                                *(f32 *)((u8 *)(*(i32 **)((u8 *)enemy + 0x230)) + 0x24) +
+                                enemy->primaryVm.prefix.uvScrollPos.y;
                             ptr += 0x1c;
 
                             *(Float3 *)ptr = *(Float3 *)((u8 *)enemy + 0x3394 + j * 0x1c);
-                            *(f32 *)(ptr + 0x0) += cosA * var + sinA * var2 + 32.0f;
-                            *(f32 *)(ptr + 0x4) += sinA * var - cosA * var2 + 16.0f;
+                            *(f32 *)(ptr + 0x0) += cosA * var + angle2 * var2 + 32.0f;
+                            *(f32 *)(ptr + 0x4) += angle2 * var - cosA * var2 + 16.0f;
                             *(f32 *)(ptr + 0x14) = acc;
                             *(f32 *)(ptr + 0x18) =
-                                *(f32 *)((u8 *)dataPtr + 0x2c) + enemy->primaryVm.prefix.uvScrollPos.y;
+                                *(f32 *)((u8 *)(*(i32 **)((u8 *)enemy + 0x230)) + 0x2c) +
+                                enemy->primaryVm.prefix.uvScrollPos.y;
                             ptr += 0x1c;
                         }
 
                         if (count > 2)
                         {
-                            ((EnemyDrawHelpers *)g_AnmManager)
-                                ->DrawVertices(&enemy->primaryVm, (void *)((u8 *)enemy + 0x3e14), count);
+                            g_AnmManager->DrawVertices(&enemy->primaryVm,
+                                                       (void *)((u8 *)enemy + 0x3e14), count);
                         }
                     }
                 }
@@ -1159,7 +1183,7 @@ ZunResult EnemyManager::AddedCallback(EnemyManager *enemyManager)
 
     if (!IsDisableResourceReload())
     {
-        if ((*(u32 *)0x164d0b4 >> 0xe) & 1)
+        if ((g_PlayerFlags >> 0xe) & 1)
         {
             if (*(i16 *)0x164d0b8 < 0xcd)
             {
@@ -1200,7 +1224,7 @@ ZunResult EnemyManager::AddedCallback(EnemyManager *enemyManager)
 
     if (!IsDisableResourceReload())
     {
-        if ((*(u32 *)0x164d0b4 >> 0xe) & 1)
+        if ((g_PlayerFlags >> 0xe) & 1)
         {
             if (*(i16 *)0x164d0b8 >= 0xcd)
             {
@@ -1246,10 +1270,15 @@ ZunResult EnemyManager::AddedCallback(EnemyManager *enemyManager)
     return ZUN_SUCCESS;
 }
 
+// FUNCTION: th08 0x42ee80
+/* 栈槽位对齐原版：i@-0x4、enemy@-0x8、markerPos x@-0x14（原版 42ee91/42ee94/42ef13；
+ * this 副本 -0x18 编译器生成，sub esp 0x18）。markerPos 是外层变量（1298 行），
+ * 不列入 var_order 会默认占位把 enemy 推后（实测 enemy@-0x14）。 */
+#pragma var_order(i, enemy, markerPos)
 ZunResult EnemyManager::DeletedCallback(EnemyManager *enemyManager)
 {
-    Enemy *enemy;
     i32 i;
+    Enemy *enemy;
 
     enemy = &enemyManager->enemies[0];
     for (i = 0; i < 0x1e0; i++, enemy++)

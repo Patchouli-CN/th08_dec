@@ -142,6 +142,7 @@ th08::g_SupervisorLoadingVms,0x17ceac0,global
 th08::g_MusicRoom,0x17cf4c8,global
 th08::g_Player,0x17d5ef8,global
 th08::g_EclExitLeftBound,0x17d61ac,global
+th08::g_17d6ed4,0x17d6ed4,global
 th08::g_17d61b0,0x17d61b0,global
 th08::g_17d61b4,0x17d61b4,global
 th08::g_ReplayManager,0x18b8a28,global
@@ -179,6 +180,10 @@ th08::g_SpellcardBgmOverride,0x4e4b64,global
 th08::g_PlayerShtFile,0x18b896c,global
 th08::g_PlayerShtFile2,0x18b8970,global
 th08::g_UnkTimeOrbValueFlag,0x18b8974,global
+th08::g_BossPos,0x18b899c,global
+th08::g_BossEnemy,0x18b89b4,global
+th08::g_BossPosFlag,0x18b89b8,global
+th08::g_18b89ec,0x18b89ec,global
 th08::g_ItemAutoCollectTimer,0x18b89d4,global
 th08::g_UnkAutoCollectTimer,0x18b89bc,global
 th08::g_BulletPool,0xf6f710,global
@@ -201,6 +206,8 @@ th08::g_PlayerTargetY,0x164d2e8,global
 th08::g_Unknown164d2cc,0x164d2cc,global
 th08::g_CurFrameCount,0x164d09c,global
 th08::g_GameManagerState,0x164d0a4,global
+th08::g_Unknown164d0a8,0x164d0a8,global
+th08::g_Unknown164d0ac,0x164d0ac,global
 th08::g_StageClearFlag,0x164d2d8,global
 th08::g_CsumFloat,0x164d2fc,global
 th08::g_GlobalNoRetryClears,0x164bb54,global
