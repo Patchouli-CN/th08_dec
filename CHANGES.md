@@ -1,5 +1,24 @@
 # 更新日志 (Changelog)
 
+## 2026-08-15 — 第十一~十二轮：dummy 类清除 + 未登记函数清零 + IsSpellcardActive 真实现
+
+- **4 个 dummy 类错配清除**（CSV 用 dummy 类名登记 → 调用点不归一化、真实现被埋没）：
+  - `Float3::Length` @ 0x40b4c0（新声明+Background.cpp 定义，**100%**）
+  - `Rng::GetRandomF32InRange` @ 0x40d390（CSV 改名 + EclManager 自然调用，**100%**）
+  - `Enemy::FUN_0042adb0`（Player.cpp StubThiscall42adb0 删除，调用点改 `((Enemy*)...)->FUN_0042adb0`）
+  - `AsciiManager::CreateFamiliarPopup`（Gui.cpp StubThiscallAsciiManagerCreatePopup4 删除，97.69%）
+- **8 个未登记函数补登**（隐式 ctor 用数组构造/析构链定位）：UpdateChargeShotTimer(97.75%)、
+  Float3::Float3 双 ctor、FUN_00416130、EclContext::EclContext(95.24%)、~AnmManager(100%)、
+  PlayerOption::PlayerOption、PlayerBulletVm::PlayerBulletVm。**"已实现未登记"清零**。
+- **IsSpellcardActive 方案 A**：删除返回 0 的 stub（EnemyManager.cpp），保留 Spellcard.cpp
+  真实现（flags&1），10 处调用点统一——**100% 匹配 + ~20 处原版调用点归一化**。
+- **GetFlag0/1/3/14 冗余删除**（源码重复实现，对应位已确认）：8 处 GetFlag14 调用点改
+  IsSpellPractice（**100%**）、IsDemoMode **100%**、IsReplay 84.2%、IsPracticeMode 82.4%。
+- **Progress 41.04% → 43.03%**；经验入库：隐式 ctor 定位法（数组构造 ctor 指针）、
+  scalar deleting destructor 定位法、CSV 名必须 = PDB demangle 名（带参名导致长期未匹配）。
+- 已知限制：Float3 双 ctor 重名串位（reccmp 重名匹配 pop 顺序，Ambiguous match 警告，
+  字节正确，接受）。
+
 ## 2026-08-15 — 第十轮：CSV 大扫除（找回"已实现未登记"函数）+ Float3 运算符修复
 
 - **系统性扫描发现**：PDB 有 178 个源码已实现函数在 reccmp-functions.csv 无对应名

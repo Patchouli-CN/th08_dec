@@ -1200,6 +1200,13 @@ Float3 Float3::operator-(const Float3 &other)
     return Float3(this->x - other.x, this->y - other.y, this->z - other.z);
 }
 
+// FUNCTION: th08 0x40b4c0
+/* 长度: 反汇编 40b4c0-40b4f9: x*x+y*y+z*z 累加后 call 0x40b440 (sqrt 包装), 返回 ST0。 */
+f32 Float3::Length()
+{
+    return (f32)sqrtf(this->x * this->x + this->y * this->y + this->z * this->z);
+}
+
 // FUNCTION: th08 0x409120
 Float3 Float3::operator*(f32 scale)
 {

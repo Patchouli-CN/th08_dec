@@ -122,12 +122,6 @@ Enemy *__fastcall InitEnemySpawnData(Enemy *enemy);                            /
 f32 __stdcall EclAtan2(f32 a, f32 b); // wraps CRT atan2 (original 0x41f090)
 
 // 辅助类: GetVarValue/GetEclFloatVar 中调用的未逆向 helper (thiscall 视图; call 目标归一化为 T)。
-class Float3LenOps // Float3::Length @ 0x40b4c0 (thiscall, 返回 ST0)
-{
-  public:
-    f32 Length();
-};
-
 class EclSpellcardVars // g_Spellcard/g_EclGlobalObj @ 0x4ea670 的 flag getter (原版 flag 位)
 {
   public:
@@ -136,17 +130,6 @@ class EclSpellcardVars // g_Spellcard/g_EclGlobalObj @ 0x4ea670 的 flag getter 
     i32 IsExtraActive();    // 0x405260 (bit9)
     i32 GetSpellcardFlag(); // 0x41fdd0 (子对象方法)
 };
-
-class RngF32InRangeOps // Rng::GetRandomF32InRange @ 0x40d390 (thiscall, 原版未内联)
-{
-  public:
-    f32 InRange(f32 range);
-};
-
-f32 Float3LenOps::Length()
-{
-    return 0.0f;
-}
 
 i32 EclSpellcardVars::GetTimeOrbsExtra()
 {
@@ -166,11 +149,6 @@ i32 EclSpellcardVars::IsExtraActive()
 i32 EclSpellcardVars::GetSpellcardFlag()
 {
     return 0;
-}
-
-f32 RngF32InRangeOps::InRange(f32 range)
-{
-    return 0.0f;
 }
 
 // GetVarValue: case 顺序照原版发射顺序 (跳表索引与源码顺序解耦)。default 兜底返回 varId。
@@ -369,7 +347,7 @@ i32 __fastcall GetVarValue(Enemy *enemy, i32 varId)
     case 0x2742:
         /* Float3::operator- (0x4090d0): vecX = (Float3*)&g_EclExitLeftBound - enemy->movePos */
         *(Float3 *)&vecX = *(Float3 *)&g_EclExitLeftBound - enemy->movePos;
-        return (i32)((Float3LenOps *)(Float3 *)&vecX)->Length();
+        return (i32)((Float3 *)&vecX)->Length();
     case 0x2771:
         return g_Player.IsYoukai();
     case 0x2772:
@@ -586,7 +564,7 @@ f32 Enemy::GetEclFloatVar(i32 varId)
     case 0x2733:
         return g_Rng.GetRandomF32Signed();
     case 0x2762:
-        return ((RngF32InRangeOps *)&g_Rng)->InRange(6.2831855f) - 3.1415927f;
+        return g_Rng.GetRandomF32InRange(6.2831855f) - 3.1415927f;
     case 0x2738:
         return (f32)*(i32 *)((u8 *)&g_GameManager + 0x30);
     case 0x2739:
@@ -726,7 +704,7 @@ f32 Enemy::GetEclFloatVar(i32 varId)
     case 0x2742:
         /* Float3::operator- (0x4090d0): vecX = (Float3*)&g_EclExitLeftBound - this->movePos */
         *(Float3 *)&vecX = *(Float3 *)&g_EclExitLeftBound - this->movePos;
-        return ((Float3LenOps *)(Float3 *)&vecX)->Length();
+        return ((Float3 *)&vecX)->Length();
     case 0x2771:
         return (f32)g_Player.IsYoukai();
     case 0x2773:

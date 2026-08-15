@@ -277,7 +277,6 @@ struct Spellcard
 
     /* 跨类 thiscall 帮手 stub（内部未逆向；PDB 名对齐 reccmp-functions.csv）。
      * 原版以 this=0x4ea670 (g_EclGlobalObj 地址) 调用。 */
-    i32 spellcard_fun_004178a0(); /* 0x4178a0 */
     i32 FUN_0042dff0();           /* 0x42dff0 */
 
     u32 flags;

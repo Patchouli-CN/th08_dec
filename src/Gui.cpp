@@ -47,17 +47,6 @@ u32 FUN_00438ffd()
     return *(u32 *)0x17ce8c4;
 }
 
-/* AsciiManager::CreatePopup4 (0x403600) 尚未在 AsciiManager.hpp 声明；用 stub thiscall 类生成同构调用。 */
-class StubThiscallAsciiManagerCreatePopup4
-{
-  public:
-    void CreatePopup4(Float3 *position, i32 number, i32 param3, u32 color);
-};
-
-void StubThiscallAsciiManagerCreatePopup4::CreatePopup4(Float3 *position, i32 number, i32 param3, u32 color)
-{
-}
-
 /* ScreenEffect::DrawSquareShaded 在头文件里声明为 static(__cdecl)，而原版是 __fastcall；
  * 用 __fastcall 函数指针直调 0x45b490 以匹配原版寄存器传参。 */
 typedef void(__fastcall *GuiDrawSquareShadedProc)(ZunRect *, D3DCOLOR, D3DCOLOR, D3DCOLOR, D3DCOLOR);
@@ -192,7 +181,7 @@ ZunResult Gui::ActualAddedCallback()
         }
         g_GuiStageClearAnmA->SetAndExecuteScriptIdx(&this->impl->vmH, 0x1a);
         g_GuiStageClearAnmA->SetAndExecuteScriptIdx(&this->impl->vmL, 0x19);
-        if (g_GameManager.GetFlag14() != 0)
+        if (g_GameManager.IsSpellPractice() != 0)
         {
             if (g_CurrentSpellcardNumber >= 0xcd)
             {
@@ -230,7 +219,7 @@ ZunResult Gui::ActualAddedCallback()
     g_Gui.ResetClock();
     this->timesAnm->ExecuteAnmIdx(&this->impl->vmC, 0);
     this->timesAnm->SetSprite(&this->impl->vmC, (i32)g_GameManager.GetClockTime());
-    if (g_GameManager.GetFlag14() == 0)
+    if (g_GameManager.IsSpellPractice() == 0)
     {
         /* 0x4c74c0：[关卡][角色] 二维 msg .dat 文件名表。 */
         if (this->LoadMsg((const char *)*(i32 *)(0x4c74c0 + g_Unknown164d2cc * 0x30 + g_PlayerCharacter * 4)) !=
@@ -1824,9 +1813,8 @@ void Gui::DrawBossHud()
         {
             textPos = Float3(2.0f, 29.0f, 0.0f);
             g_AsciiManager.SetScale(1.0f, 1.0f);
-            ((StubThiscallAsciiManagerCreatePopup4 *)&g_AsciiManager)
-                ->CreatePopup4(&textPos, ((Enemy *)g_BulletObjects[0])->GetSubEnemyChainCount(),
-                               *(i32 *)((u8 *)g_BulletObjects[0] + 0x3380), 0xfff0f00f);
+            g_AsciiManager.CreateFamiliarPopup(&textPos, ((Enemy *)g_BulletObjects[0])->GetSubEnemyChainCount(),
+                                               *(i32 *)((u8 *)g_BulletObjects[0] + 0x3380), 0xfff0f00f);
         }
     }
 

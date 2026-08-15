@@ -22,7 +22,7 @@ th08::AsciiManager::CreatePopup2,0x403330,0x129,__thiscall,,void,AsciiManager*,_
 th08::AsciiManager::CreatePopup3,0x403460,0x19b,__thiscall,,void,AsciiManager*,_D3DVECTOR*,i32,u32,unsigned long
 th08::AsciiManager::CreateFamiliarPopup,0x403600,0x1a4,__thiscall,,void,AsciiManager*,i32,i32,u32
 th08::PauseMenu::OnUpdatePauseMenu,0x4037b0,0xf3a,__thiscall,,u32,PauseMenu*
-D3DXVECTOR3::D3DXVECTOR3,0x404720,0x2a,__thiscall,,_D3DVECTOR*,_D3DVECTOR*,f32,f32,f32
+th08::Float3::Float3,0x404720,0x2a,__thiscall,,Float3*,Float3*,f32,f32,f32
 th08::PauseMenu::OnDrawPauseMenu,0x404750,0x135,__thiscall,,void,PauseMenu*
 th08::RetryMenu::OnUpdateRetryMenu,0x404890,0x9b2,__thiscall,,u32,RetryMenu*
 th08::Spellcard::FUN_00405260,0x405260,0x16,unknown,,u8
@@ -103,9 +103,9 @@ th08::Background::LoadStageData,0x409ce0,0x256,__thiscall,,u32,Background*,char*
 th08::Background::UpdateStageTint,0x409f40,0x262,__thiscall,,u32,Background*
 th08::Background::FUN_0040a1b0,0x40a1b0,0x128a,__thiscall,,u8,Background*,u32
 _sqrtf,0x40b440,0x15,__fastcall,,f32,f32
-D3DXVECTOR3::D3DXVECTOR3,0x40b460,0xe,__thiscall,,_D3DVECTOR*,_D3DVECTOR*
+th08::Float3::Float3,0x40b460,0xe,__thiscall,,Float3*,Float3*
 FUN_0040b470,0x40b470,0x49,unknown,,u8,u8
-FUN_0040b4c0,0x40b4c0,0x3a,unknown,,u8
+th08::Float3::Length,0x40b4c0,0x3a,__thiscall,,f32,Float3*
 FUN_0040b500,0x40b500,0x31,unknown,,u8
 FUN_0040b540,0x40b540,0x36,unknown,,u8
 th08::VertexDiffuseXyzrhw::VertexDiffuseXyzrhw,0x40b580,0x16,unknown,,u8
@@ -209,7 +209,7 @@ FUN_00415ce0,0x415ce0,0x25,unknown,,u8
 FUN_00415d10,0x415d10,0x47,__thiscall,,u8,void*,u8
 FUN_00415d60,0x415d60,0x19f,unknown,,u8,u8,u8,u8
 FUN_00415f00,0x415f00,0x22e,unknown,,u8,u8,u8,u8
-FUN_00416130,0x416130,0x27,unknown,,u8
+th08::FUN_00416130,0x416130,0x27,unknown,,u8
 FUN_00416160,0x416160,0x46,__thiscall,,u8,void*,u8,u8
 FUN_004161b0,0x4161b0,0x91b,unknown,,u8
 FUN_00416ad0,0x416ad0,0x18,unknown,,u8
@@ -217,7 +217,7 @@ FUN_00416af0,0x416af0,0x20,unknown,,u8
 th08::Spellcard::AddSpellcardTime,0x416b10,0x76,unknown,,u8,u8
 FUN_00416b90,0x416b90,0xcc5,unknown,,u8
 FUN_00417860,0x417860,0x3b,unknown,,u8
-th08::Spellcard::spellcard_fun_004178a0,0x4178a0,0x13,unknown,,u8
+th08::Spellcard::IsSpellcardActive,0x4178a0,0x13,unknown,,u8
 FUN_004178c0,0x4178c0,0x695,unknown,,u8
 th08::Spellcard::RegisterChain,0x417f60,0xaf,unknown,,u8
 FUN_00418010,0x418010,0x13,unknown,,u8
@@ -385,14 +385,14 @@ th08::EnemyManager::Initialize,0x429e00,0x405,__thiscall,,void,EnemyManager*
 th08::EnemyManager::EnemyManager,0x42a210,0x61,__thiscall,,void*,EnemyManager*
 FUN_0042a280,0x42a280,0x18a,unknown,,u8
 FUN_0042a410,0x42a410,0x34,unknown,,u8
-FUN_0042a450,0x42a450,0x3e,unknown,,u8
+th08::EclContext::EclContext,0x42a450,0x3e,unknown,,u8
 FUN_0042a490,0x42a490,0x21,unknown,,u8
 FUN_0042a4c0,0x42a4c0,0x19,unknown,,u8
 FUN_0042a4e0,0x42a4e0,0x199,unknown,,u8,u8,u8,u8,u8,u8,u8
 FUN_0042a680,0x42a680,0x19d,unknown,,u8,u8,u8,u8,u8,u8,u8
 FUN_0042a820,0x42a820,0x73,unknown,,u8
 FUN_0042a8a0,0x42a8a0,0x4c0,unknown,,u8
-FUN_0042adb0,0x42adb0,0x538,unknown,,u8,u8
+th08::Enemy::FUN_0042adb0,0x42adb0,0x538,__thiscall,,void,Enemy*,i32
 FUN_0042b2f0,0x42b2f0,0x75,unknown,,u8
 FUN_0042b370,0x42b370,0x120,unknown,,u8,u8
 FUN_0042b490,0x42b490,0x49c,unknown,,u8
@@ -588,7 +588,7 @@ th08::Rotate,0x43ee30,0x5b,__fastcall,,void,_D3DVECTOR*,_D3DVECTOR*,f32
 th08::ZunMemory::ZunMemory,0x43ee90,0x1b,__thiscall,,ZunMemory*,ZunMemory*
 th08::ZunMemory::~ZunMemory,0x43eeb0,0x54,__thiscall,,void,ZunMemory*
 th08::GameErrorContext::GameErrorContext,0x43ef10,0x30,__thiscall,,GameErrorContext*,GameErrorContext*
-th08::MidiTimer::OnTimerElapsed,0x43ef40,0xb,__fastcall,,void,void*
+th08::AnmManager::~AnmManager,0x43ef40,0xb,__fastcall,,void,void*
 th08::Supervisor::IsShotSlowEnabled,0x43ef50,0x15,__thiscall,,u8,Supervisor*
 th08::Supervisor::EnterCriticalSectionWrapper,0x43ef70,0x3f,__thiscall,,void,Supervisor*,i32
 th08::Supervisor::LeaveCriticalSectionWrapper,0x43efb0,0x3f,__thiscall,,void,Supervisor*,i32
@@ -744,9 +744,9 @@ FUN_00449bee,0x449bee,0x1c,unknown,,u8
 FUN_00449c0a,0x449c0a,0x6f,unknown,,u8
 th08::Supervisor::IsMusicPreloadEnabled,0x449c79,0x18,__thiscall,,u32,Supervisor*
 th08::Player::Player,0x449ca0,0x1a6,__thiscall,,Player*,Player*
-FUN_00449e50,0x449e50,0x4e,__thiscall,,AnmVm*,void*
+th08::Player::PlayerOption::PlayerOption,0x449e50,0x4e,__thiscall,,AnmVm*,void*
 FUN_00449ea0,0x449ea0,0x42,unknown,,u8
-FUN_00449ef0,0x449ef0,0x57,unknown,,u8
+th08::PlayerBulletVm::PlayerBulletVm,0x449ef0,0x57,unknown,,u8
 FUN_00449f50,0x449f50,0x16,unknown,,u8
 FUN_00449f70,0x449f70,0x73,unknown,,u8
 FUN_00449ff0,0x449ff0,0x233,unknown,,u8,u8
@@ -818,7 +818,7 @@ FUN_00450f60,0x450f60,0x1e7,unknown,,u8
 th08::Player::UpdateBullets,0x451150,0x194,unknown,,u8
 th08::Player::UpdateBulletVms,0x4512f0,0x10c,unknown,,u8
 th08::Player::DrawBulletVms,0x451400,0xf1,unknown,,u8
-FUN_00451500,0x451500,0x137,unknown,,u8
+th08::Player::UpdateChargeShotTimer,0x451500,0x137,unknown,,u8
 th08::Player::ClampChargeShotTimer,0x451640,0x2d,unknown,,u8
 FUN_00451670,0x451670,0x66e,unknown,,u8,u8,u8,u8,u8
 FUN_00451ce0,0x451ce0,0x6c,unknown,,u8,u8,u8

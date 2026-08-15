@@ -3,6 +3,7 @@
 #include "Player.hpp"
 #include "AsciiManager.hpp"
 #include "EffectManager.hpp"
+#include "EnemyManager.hpp"
 #include "GameManager.hpp"
 #include "Gui.hpp"
 #include "ItemManager.hpp"
@@ -76,17 +77,6 @@ void __fastcall FUN_00450f60(Player *player, i32 frames)
 
 // STUB: th08 0x416130
 void __fastcall FUN_00416130(void *p)
-{
-}
-
-// STUB: th08 0x42adb0 (thiscall: ecx + one stack arg, callee cleans up)
-class StubThiscall42adb0
-{
-  public:
-    void FUN_0042adb0(i32 arg);
-};
-
-void StubThiscall42adb0::FUN_0042adb0(i32 arg)
 {
 }
 
@@ -435,7 +425,7 @@ void Player::UpdateShooting()
                 {
                     if (g_BulletObjects[i] != 0)
                     {
-                        ((StubThiscall42adb0 *)(g_BulletObjects[i]))->FUN_0042adb0(0);
+                        ((Enemy *)g_BulletObjects[i])->FUN_0042adb0(0);
                         /* 子弹对象内：0x2dfc 状态字清零、0x3324 标志清 bit30。 */
                         *(i32 *)(g_BulletObjects[i] + 0x2dfc) = 0;
                         *(i32 *)(g_BulletObjects[i] + 0x3324) &= 0xbfffffff;
@@ -1465,7 +1455,7 @@ ZunResult Player::AddedCallback(Player *player)
 
     player->playerState = 1;
 
-    player->invulnerabilityTimer.SetCurrent(g_GameManager.GetFlag14() ? 0xa : 0x78);
+    player->invulnerabilityTimer.SetCurrent(g_GameManager.IsSpellPractice() ? 0xa : 0x78);
 
     player->unk2 = 1;
 

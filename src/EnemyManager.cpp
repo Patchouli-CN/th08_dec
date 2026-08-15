@@ -162,10 +162,6 @@ i32 Player::FUN_00451670(Float3 *, Float3 *, void *, i32 *)
 {
     return 0;
 }
-i32 Spellcard::spellcard_fun_004178a0()
-{
-    return 0;
-}
 i32 Spellcard::FUN_0042dff0()
 {
     return 0;
@@ -488,7 +484,7 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
             if ((enemy->flags >> 6) & 1)
             {
-                if (((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0() != 0 &&
+                if (((Spellcard *)&g_EclGlobalObj)->IsSpellcardActive() != 0 &&
                     enemy->HasOwnerEnemy() != 0 && g_17d6ed4 == 0)
                 {
                     var18 = 0;
@@ -557,7 +553,7 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
 
                 if ((enemy->flags >> 3) & 1)
                 {
-                    if (((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0() != 0)
+                    if (((Spellcard *)&g_EclGlobalObj)->IsSpellcardActive() != 0)
                     {
                         if (var14 != 0)
                         {
@@ -738,7 +734,7 @@ ChainCallbackResult EnemyManager::OnUpdate(EnemyManager *self)
     death_continue:
         enemy->FUN_0042bea0(var14);
 
-        if ((enemy->flags & 2) && ((Spellcard *)&g_EclGlobalObj)->spellcard_fun_004178a0() == 0)
+        if ((enemy->flags & 2) && ((Spellcard *)&g_EclGlobalObj)->IsSpellcardActive() == 0)
         {
             newEnemy = g_EnemyManager.RemoveEnemiesByScore(
                 0x1f40, (i32)g_BulletManager.FUN_00430aa0(0x1f40, 1));

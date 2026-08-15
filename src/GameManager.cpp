@@ -1482,26 +1482,6 @@ i32 GameManager::IsSoloYoukai()
     return this->shotType >= 4 && (this->shotType & 1) != 0;
 }
 
-u32 GameManager::GetFlag0()
-{
-    return this->flags.isPracticeMode;
-}
-
-u32 GameManager::GetFlag1()
-{
-    return this->flags.isDemoMode;
-}
-
-u32 GameManager::GetFlag3()
-{
-    return this->flags.isReplay;
-}
-
-u32 GameManager::GetFlag14()
-{
-    return this->flags.isSpellPractice;
-}
-
 i32 GameManager::GetYoukaiGauge()
 {
     return this->globals->youkaiGauge;
@@ -1697,7 +1677,7 @@ void FUN_00438046()
         FUN_00437f5c(0x12);
         break;
     case 2:
-        if (g_GameManager.GetFlag14() != 0 && g_GameManager.IsSpellNumberEqualTo(0xd6) != 0)
+        if (g_GameManager.IsSpellPractice() != 0 && g_GameManager.IsSpellNumberEqualTo(0xd6) != 0)
             FUN_00437f5c(0x13);
         else if (g_GameManager.IsSpellNumberEqualTo(0xd8) != 0)
             FUN_00437f5c(0x1a);
@@ -1716,7 +1696,7 @@ void FUN_00438046()
         FUN_00437f5c(0x14);
         break;
     case 4:
-        if (g_GameManager.GetFlag14() != 0 && g_GameManager.IsSpellNumberEqualTo(0xd4) != 0)
+        if (g_GameManager.IsSpellPractice() != 0 && g_GameManager.IsSpellNumberEqualTo(0xd4) != 0)
             FUN_00437f5c(0x15);
         else
             FUN_00437f5c(0x16);
@@ -1725,7 +1705,7 @@ void FUN_00438046()
         FUN_00437f5c(0x17);
         break;
     case 6:
-        if (g_GameManager.GetFlag14() != 0)
+        if (g_GameManager.IsSpellPractice() != 0)
         {
             if (g_GameManager.IsSpellNumberInRange(0x93, 0x96) != 0)
                 FUN_00437f5c(0x17);
@@ -1736,7 +1716,7 @@ void FUN_00438046()
             FUN_00437f5c(0x17);
         break;
     case 7:
-        if (g_GameManager.GetFlag14() != 0 && g_GameManager.IsSpellNumberInRange(0xbf, 0xc1) == 0 &&
+        if (g_GameManager.IsSpellPractice() != 0 && g_GameManager.IsSpellNumberInRange(0xbf, 0xc1) == 0 &&
             g_GameManager.IsSpellNumberEqualTo(0xd5) != 0)
             FUN_00437f5c(0x19);
         else

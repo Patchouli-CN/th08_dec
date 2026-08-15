@@ -36,6 +36,8 @@ struct Float3
         }
     }
 
+    f32 Length(); /* out-of-line @ 0x40b4c0 (x²+y²+z² 开方, 返回 ST0) */
+
     void FromRotatedVec2(float angle, float vecX, float vecY)
     {
         __asm

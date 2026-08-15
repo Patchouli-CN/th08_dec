@@ -131,10 +131,6 @@ struct GameManager
     f32 ScaleFloatBasedOnRank(f32 min, f32 max);
     i32 IsSoloHuman();
     i32 IsSoloYoukai();
-    u32 GetFlag0();
-    u32 GetFlag1();
-    u32 GetFlag3();
-    u32 GetFlag14();
     i32 GetYoukaiGauge();
     i32 IsSpellNumberEqualTo(i32 spellcardIdx);
     u32 IsSpellNumberInRange(i32 a, i32 b);

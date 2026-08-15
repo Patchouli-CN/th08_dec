@@ -788,7 +788,7 @@ void RetryMenu::OnDrawRetryMenu()
         }
 
         /* 0x160f538：当前进行中的符卡/流程计数，小于 4 时显示 4 个菜单项。 */
-        if (g_GameManager.GetFlag14() == 0 && *(i32 *)0x160f538 < 4)
+        if (g_GameManager.IsSpellPractice() == 0 && *(i32 *)0x160f538 < 4)
         {
             for (i = 0; i < 4; i++)
             {
